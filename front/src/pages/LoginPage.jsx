@@ -5,7 +5,7 @@ import '../styles/custom.css';
 const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
 
 const LoginPage = () => {
-  //자체 로그인 시 username/password 변수 - 백엔드 확인 후 변경할 수도 있음
+  //자체 로그인 시 username/password 변수 - 백엔드 확인 후 변경할거임
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
