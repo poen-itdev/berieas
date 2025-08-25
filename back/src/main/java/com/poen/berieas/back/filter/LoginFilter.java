@@ -3,7 +3,13 @@ package com.poen.berieas.back.filter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
-
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -16,30 +22,24 @@ import org.springframework.security.web.servlet.util.matcher.PathPatternRequestM
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.StreamUtils;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.ServletInputStream;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
-public class LoginFilter extends AbstractAuthenticationProcessingFilter{
-    
-    public static final String SPRING_SECURITY_FORM_USERNAME_KEY = "username";
+    private final AuthenticationSuccessHandler authenticationSuccessHandler;
 
-    public static final String SPRING_SECURITY_FORM_PASSWORD_KEY = "password";
+    public static final String SPRING_SECURITY_FORM_USERNAME_KEY = "memberId";
+
+    public static final String SPRING_SECURITY_FORM_PASSWORD_KEY = "memberPw";
 
     private static final RequestMatcher DEFAULT_ANT_PATH_REQUEST_MATCHER = PathPatternRequestMatcher.withDefaults()
             .matcher(HttpMethod.POST, "/login");
 
     private String usernameParameter = SPRING_SECURITY_FORM_USERNAME_KEY;
+
     private String passwordParameter = SPRING_SECURITY_FORM_PASSWORD_KEY;
-    private final AuthenticationSuccessHandler authenticationSuccessHandler;
 
     public LoginFilter(AuthenticationManager authenticationManager, AuthenticationSuccessHandler authenticationSuccessHandler) {
-        
+
         super(DEFAULT_ANT_PATH_REQUEST_MATCHER, authenticationManager);
         this.authenticationSuccessHandler = authenticationSuccessHandler;
     }
@@ -76,7 +76,6 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter{
     }
 
     protected void setDetails(HttpServletRequest request, UsernamePasswordAuthenticationToken authRequest) {
-
         authRequest.setDetails(this.authenticationDetailsSource.buildDetails(request));
     }
 
@@ -87,3 +86,4 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter{
         authenticationSuccessHandler.onAuthenticationSuccess(request, response, authResult);
     }
 }
+
