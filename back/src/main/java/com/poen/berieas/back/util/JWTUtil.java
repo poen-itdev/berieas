@@ -18,7 +18,7 @@ public class JWTUtil {
 
     static {
 
-        String secretKeyString = "poenitdevelopoperations";
+        String secretKeyString = "poenitdevelopoperations1234567890";
         secretKey = new SecretKeySpec(secretKeyString.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
 
         accessTokenExpiresIn = 3600L * 1000; // 1시간

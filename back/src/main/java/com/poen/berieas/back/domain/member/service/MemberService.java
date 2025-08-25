@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.poen.berieas.back.domain.jwt.service.JwtService;
 import com.poen.berieas.back.domain.member.dto.MemberRequestDto;
 import com.poen.berieas.back.domain.member.entity.Member;
 import com.poen.berieas.back.domain.member.entity.RoleType;
@@ -26,6 +27,7 @@ public class MemberService implements UserDetailsService{
     
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     //== 존재 여부 ==//
     public Boolean existMember(MemberRequestDto dto) {
@@ -68,10 +70,14 @@ public class MemberService implements UserDetailsService{
         Member member = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new UsernameNotFoundException(memberId));
 
+        System.out.println(passwordEncoder.matches("로그인시입력한패스워드", member.getMemberPw()));
+        System.out.println(member.getMemberId());
+
         // 조회한 entity를 기반으로 UserDetails를 만들어서 반환
         return User.builder()
             .username(member.getMemberId())
             .password(member.getMemberPw())
+            .authorities(member.getRole().name())
             .build();
 
 
@@ -95,5 +101,5 @@ public class MemberService implements UserDetailsService{
         return memberRepository.save(member).getMemberId();
     }
 
-    
+    //== 회원 탈퇴 ==//  
 }
