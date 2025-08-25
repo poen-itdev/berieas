@@ -41,7 +41,7 @@ public class JwtService {
     }
 
     // JWT 발급 memberId 기반 삭제 메소드 (탈퇴시)
-    public void removeRefreshUser(String memberId) {
+    public void removeRefreshMember(String memberId) {
         
         refreshRepository.deleteByMemberId(memberId);
     }
