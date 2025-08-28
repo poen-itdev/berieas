@@ -68,7 +68,6 @@ public class Member {
     public void updateMember(MemberRequestDto dto) {
 
         this.memberId = dto.getMemberId();
-        this.memberPw = dto.getMemberPw();
         this.memberEmail = dto.getMemberEmail();
         this.memberName = dto.getMemberName();
     }

@@ -108,7 +108,8 @@ public class MemberService implements UserDetailsService{
         SecurityContext context = SecurityContextHolder.getContext();
         String sessionRole = context.getAuthentication().getAuthorities().iterator().next().getAuthority();
 
-        boolean isAdmin = sessionRole.equals("ROLE" + RoleType.ADMIN.name());
+        boolean isAdmin = sessionRole.equals(RoleType.ADMIN.name());
+        // boolean isAdmin = sessionRole.equals("ROLE" + RoleType.ADMIN.name());
 
         if(!isAdmin) {
             throw new AccessDeniedException("관리자만 삭제할 수 있습니다.");
@@ -126,11 +127,11 @@ public class MemberService implements UserDetailsService{
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
 
+        System.out.println(memberId);
+
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new UsernameNotFoundException("해당 멤버를 찾을 수 없습니다." + memberId));
 
         return new MemberResponseDto(memberId, member.getMemberName(), member.getMemberEmail());
     }
-
-    
 }

@@ -10,6 +10,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -46,14 +47,15 @@ public class MemberController {
     }
 
     // 멤버 정보
-    @GetMapping(value = "/member/info", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping("/member/info")
     public MemberResponseDto memberMeApi() {
 
+        System.out.println("Controller 호출!!!!!!!!!!!!!!!!!!!!!!");
         return memberService.readMember();
     }
 
     // 멤버 수정
-    @GetMapping(value = "/member/update", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/member/update", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateMemberApi(
         @Validated(MemberRequestDto.updateGroup.class) @RequestBody MemberRequestDto dto) throws AccessDeniedException {
 
@@ -65,6 +67,7 @@ public class MemberController {
     public ResponseEntity<Boolean> deleteMemberApi(
         @Validated(MemberRequestDto.deleteGroup.class) @RequestBody MemberRequestDto dto) throws AccessDeniedException {
 
+            System.out.println("Controller 호출!!!!!!!!!!!!!!!!!!!!!!");
             memberService.deleteMember(dto);
             return ResponseEntity.status(200).body(true);
     }
