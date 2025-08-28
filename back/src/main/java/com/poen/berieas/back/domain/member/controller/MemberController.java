@@ -5,12 +5,17 @@ import java.util.Map;
 
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.poen.berieas.back.domain.member.dto.MemberRequestDto;
+import com.poen.berieas.back.domain.member.dto.MemberResponseDto;
 import com.poen.berieas.back.domain.member.service.MemberService;
 
 import lombok.RequiredArgsConstructor;
@@ -41,6 +46,29 @@ public class MemberController {
         return ResponseEntity.status(201).body(responseBody);
     }
 
-    // 로그인 
+    // 멤버 정보
+    @GetMapping("/member/info")
+    public MemberResponseDto memberMeApi() {
+
+        System.out.println("Controller 호출!!!!!!!!!!!!!!!!!!!!!!");
+        return memberService.readMember();
+    }
+
+    // 멤버 수정
+    @PutMapping(value = "/member/update", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> updateMemberApi(
+        @Validated(MemberRequestDto.updateGroup.class) @RequestBody MemberRequestDto dto) throws AccessDeniedException {
+
+            return ResponseEntity.status(200).body(memberService.updateMember(dto));
+    }
     
+    // 멤버 제거
+    @DeleteMapping(value = "/member/delete", consumes = MediaType.APPLICATION_JSON_VALUE) 
+    public ResponseEntity<Boolean> deleteMemberApi(
+        @Validated(MemberRequestDto.deleteGroup.class) @RequestBody MemberRequestDto dto) throws AccessDeniedException {
+
+            System.out.println("Controller 호출!!!!!!!!!!!!!!!!!!!!!!");
+            memberService.deleteMember(dto);
+            return ResponseEntity.status(200).body(true);
+    }
 }

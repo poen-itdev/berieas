@@ -1,8 +1,9 @@
 package com.poen.berieas.back.domain.member.service;
 
-import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.poen.berieas.back.domain.jwt.service.JwtService;
 import com.poen.berieas.back.domain.member.dto.MemberRequestDto;
+import com.poen.berieas.back.domain.member.dto.MemberResponseDto;
 import com.poen.berieas.back.domain.member.entity.Member;
 import com.poen.berieas.back.domain.member.entity.RoleType;
 import com.poen.berieas.back.domain.member.repository.MemberRepository;
@@ -70,9 +72,6 @@ public class MemberService implements UserDetailsService{
         Member member = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new UsernameNotFoundException(memberId));
 
-        System.out.println(passwordEncoder.matches("로그인시입력한패스워드", member.getMemberPw()));
-        System.out.println(member.getMemberId());
-
         // 조회한 entity를 기반으로 UserDetails를 만들어서 반환
         return User.builder()
             .username(member.getMemberId())
@@ -101,5 +100,38 @@ public class MemberService implements UserDetailsService{
         return memberRepository.save(member).getMemberId();
     }
 
-    //== 회원 탈퇴 ==//  
+    //== 회원 탈퇴 ==// 
+    @Transactional
+    public void deleteMember(MemberRequestDto dto) throws AccessDeniedException {
+
+        // 관리자만 삭제 가능 검증
+        SecurityContext context = SecurityContextHolder.getContext();
+        String sessionRole = context.getAuthentication().getAuthorities().iterator().next().getAuthority();
+
+        boolean isAdmin = sessionRole.equals(RoleType.ADMIN.name());
+        // boolean isAdmin = sessionRole.equals("ROLE" + RoleType.ADMIN.name());
+
+        if(!isAdmin) {
+            throw new AccessDeniedException("관리자만 삭제할 수 있습니다.");
+        }
+
+        // 멤버 제거 
+        memberRepository.deleteByMemberId(dto.getMemberId());
+
+        // Refresh 토큰 제거
+        jwtService.removeRefreshMember(dto.getMemberId());
+    }
+
+    //== 멤버 본인 정보 조회 ==//
+    public MemberResponseDto readMember() {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        System.out.println(memberId);
+
+        Member member = memberRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new UsernameNotFoundException("해당 멤버를 찾을 수 없습니다." + memberId));
+
+        return new MemberResponseDto(memberId, member.getMemberName(), member.getMemberEmail());
+    }
 }
