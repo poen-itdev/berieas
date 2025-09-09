@@ -50,7 +50,6 @@ public class MemberController {
     @GetMapping("/member/info")
     public MemberResponseDto memberMeApi() {
 
-        System.out.println("Controller 호출!!!!!!!!!!!!!!!!!!!!!!");
         return memberService.readMember();
     }
 
@@ -67,7 +66,6 @@ public class MemberController {
     public ResponseEntity<Boolean> deleteMemberApi(
         @Validated(MemberRequestDto.deleteGroup.class) @RequestBody MemberRequestDto dto) throws AccessDeniedException {
 
-            System.out.println("Controller 호출!!!!!!!!!!!!!!!!!!!!!!");
             memberService.deleteMember(dto);
             return ResponseEntity.status(200).body(true);
     }

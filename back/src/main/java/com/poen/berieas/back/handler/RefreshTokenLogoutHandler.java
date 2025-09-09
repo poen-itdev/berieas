@@ -16,7 +16,7 @@ import com.poen.berieas.back.util.JWTUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-public class RefreshTokenLogoutHandler implements LogoutHandler{
+public class RefreshTokenLogoutHandler implements LogoutHandler {
     
     private final JwtService jwtService;
 

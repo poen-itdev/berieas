@@ -42,6 +42,12 @@ public class Member {
     @Column(name = "member_email")
     private String memberEmail;
 
+    @Column(name = "member_department")
+    private String memberDepartment;
+
+    @Column(name = "member_position")
+    private String memberPosition;
+
     @Column(name = "use_yn")
     private String useYn;
 
