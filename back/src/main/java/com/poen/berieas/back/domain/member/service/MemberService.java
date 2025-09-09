@@ -3,6 +3,7 @@ package com.poen.berieas.back.domain.member.service;
 import java.time.LocalDateTime;
 
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -52,6 +53,8 @@ public class MemberService implements UserDetailsService{
             .memberPw(passwordEncoder.encode(dto.getMemberPw()))
             .memberName(dto.getMemberName())
             .memberEmail(dto.getMemberEmail())
+            .memberDepartment(dto.getMemberDepartment())
+            .memberPosition(dto.getMemberPosition())
             .useYn("Y")
             .regId("admin")
             .regDate(LocalDateTime.now())
@@ -87,13 +90,17 @@ public class MemberService implements UserDetailsService{
     public String updateMember(MemberRequestDto dto) throws AccessDeniedException {
 
         String sessionMemberName = SecurityContextHolder.getContext().getAuthentication().getName();
-        if(!sessionMemberName.equals(dto.getMemberId())) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream()
+                          .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
-            throw new AccessDeniedException("본인 계정만 수정 가능");
+        if(!sessionMemberName.equals(dto.getMemberId()) && isAdmin) {
+
+            throw new AccessDeniedException("본인 계정 또는 관리자만 수정 가능");
         }
 
         Member member = memberRepository.findByMemberId(dto.getMemberId())
-                .orElseThrow(() -> new UsernameNotFoundException(dto.getMemberId()));
+                        .orElseThrow(() -> new UsernameNotFoundException(dto.getMemberId()));
 
         member.updateMember(dto);
 
@@ -126,8 +133,6 @@ public class MemberService implements UserDetailsService{
     public MemberResponseDto readMember() {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        System.out.println(memberId);
 
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new UsernameNotFoundException("해당 멤버를 찾을 수 없습니다." + memberId));

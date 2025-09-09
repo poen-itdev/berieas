@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchy;
 import org.springframework.security.access.hierarchicalroles.RoleHierarchyImpl;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -97,11 +96,19 @@ public class SecurityConfig {
         //=================================== CORS 설정 ===================================//
 
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
-
-        http    
                 .logout(logout -> logout
-                    .addLogoutHandler(new RefreshTokenLogoutHandler(jwtService)));
+                    .logoutUrl("/logout")
+                    .addLogoutHandler(new RefreshTokenLogoutHandler(jwtService))
+                    .logoutSuccessHandler((request, response, authentication) -> {
+                        System.out.println("Logout Success Handler 실행됨");
+                        response.setStatus(HttpServletResponse.SC_OK);
+                        response.setContentType("application/json;charset=UTF-8");
+                        response.getWriter().write("{\"message\": \"Logout success\"}");
+                    })
+                );
+
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         // 기본 Form 기반 인증 필터 disable
         http
