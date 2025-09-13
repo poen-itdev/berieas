@@ -47,6 +47,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response)
             throws AuthenticationException {
+                
         if (!request.getMethod().equals("POST")) {
             throw new AuthenticationServiceException("Authentication method not supported: " + request.getMethod());
         }
@@ -57,8 +58,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
             ObjectMapper objectMapper = new ObjectMapper();
             ServletInputStream inputStream = request.getInputStream();
             String messageBody = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
-            loginMap = objectMapper.readValue(messageBody, new TypeReference<>() {
-            });
+            loginMap = objectMapper.readValue(messageBody, new TypeReference<>() {});
 
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -69,8 +69,13 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
         String password = loginMap.get(passwordParameter);
         password = (password != null) ? password : "";
 
-        UsernamePasswordAuthenticationToken authRequest = UsernamePasswordAuthenticationToken.unauthenticated(username,
-                password);
+        System.out.println("입력한 password: " + password);
+
+        // UsernamePasswordAuthenticationToken authRequest =
+        // new UsernamePasswordAuthenticationToken(username, password);
+
+        UsernamePasswordAuthenticationToken authRequest = UsernamePasswordAuthenticationToken.unauthenticated(username,password);
+
         setDetails(request, authRequest);
         return this.getAuthenticationManager().authenticate(authRequest);
     }

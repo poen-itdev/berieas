@@ -6,6 +6,7 @@ import java.util.Map;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -68,5 +69,19 @@ public class MemberController {
 
             memberService.deleteMember(dto);
             return ResponseEntity.status(200).body(true);
+    }
+    
+    // 비밀번호 변경
+    @PostMapping(value = "/member/changepassword", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> changePasswordAtFirstLoginApi(
+            @Validated(MemberRequestDto.passwordGroup.class) @RequestBody MemberRequestDto dto,
+            Authentication authentication) {
+
+        
+        String memberId = authentication.getName();
+        System.out.println("memberId===============" + memberId);
+
+        memberService.changePasswordAtFirstLogin(memberId, dto);
+        return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.");
     }
 }

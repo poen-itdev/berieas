@@ -19,11 +19,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "member")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -68,6 +70,9 @@ public class Member {
     @Enumerated(EnumType.STRING)
     @Column(name = "role")
     private RoleType role;
+
+    @Column(name = "is_first_login")
+    private String isFirstLogin;
 
 
     //== 메서드 ==// 
