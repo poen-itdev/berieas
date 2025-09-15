@@ -1,23 +1,42 @@
 import React, { useState } from 'react';
-import { Form, Button, Card } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import {
+  Box,
+  Card,
+  CardContent,
+  TextField,
+  Button,
+  Typography,
+  Alert,
+  Container,
+} from '@mui/material';
 import '../styles/custom.css';
 
-const BACKEND_API_BASE_URL = import.meta.env.VITE_BACKEND_API_BASE_URL;
+const BACKEND_API_BASE_URL =
+  import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:8080';
+
+// 환경 변수 디버깅
+console.log(
+  'VITE_BACKEND_API_BASE_URL:',
+  import.meta.env.VITE_BACKEND_API_BASE_URL
+);
+console.log('BACKEND_API_BASE_URL:', BACKEND_API_BASE_URL);
 
 const LoginPage = () => {
-  //자체 로그인 시 username/password 변수 - 백엔드 확인 후 변경할거임
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const navigate = useNavigate();
+  const [memberId, setMemberId] = useState('');
+  const [memberPw, setMemberPw] = useState('');
   const [error, setError] = useState('');
-
-  //자체 로그인 이벤트
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
 
-    if (username === '' || password === '') {
+    if (memberId === '' || memberPw === '') {
       setError('아이디와 비밀번호를 입력해주세요.');
+      setIsLoading(false);
       return;
     }
 
@@ -28,58 +47,136 @@ const LoginPage = () => {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ memberId, memberPw }),
       });
       if (!response.ok) throw new Error('로그인 실패');
 
       const data = await response.json();
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
+
+      // 로그인 성공 후 대시보드로 이동
+      navigate('/dashboard');
     } catch (error) {
       setError('아이디 또는 비밀번호가 틀렸습니다.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="login-container d-flex align-items-center justify-content-center">
-      <Card className="login-card">
-        <Card.Body className="p-4">
-          <Card.Title className="text-center mb-4 login-title">
-            BERIEAS
-          </Card.Title>
-          <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3 d-flex flex-column align-items-start">
-              <Form.Label className=" login-label">USER ID</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="아이디를 입력하세요"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="login-input"
+    <Container maxWidth="sm">
+      <Box
+        sx={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Card
+          sx={{
+            width: '100%',
+            maxWidth: 380,
+            height: 430,
+            borderRadius: 3,
+            boxShadow: 3,
+            bgcolor: '#F9F9F9',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <CardContent
+            sx={{
+              p: 4,
+            }}
+          >
+            <Typography
+              variant="h4"
+              component="h1"
+              align="center"
+              sx={{ mb: 2, fontWeight: 900, color: '#3275FC' }}
+            >
+              BERIEAS
+            </Typography>
+
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="memberId"
+                label="User ID"
+                name="memberId"
+                autoComplete="username"
+                autoFocus
+                value={memberId}
+                onChange={(e) => setMemberId(e.target.value)}
+                sx={{ background: '#fff' }}
               />
-            </Form.Group>
-            <Form.Group className="mb-3 d-flex flex-column align-items-start">
-              <Form.Label className="login-label">PASSWORD</Form.Label>
-              <Form.Control
+
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="memberPw"
+                label="Password"
                 type="password"
-                placeholder="비밀번호를 입력하세요"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="login-input"
+                id="memberPw"
+                autoComplete="current-password"
+                value={memberPw}
+                onChange={(e) => setMemberPw(e.target.value)}
+                sx={{ background: '#fff' }}
               />
-            </Form.Group>
-            {error && (
-              <div className="alert alert-danger mb-3" role="alert">
-                {error}
-              </div>
-            )}
-            <Button type="submit" className="w-100 login-btn">
-              로그인
-            </Button>
-          </Form>
-        </Card.Body>
-      </Card>
-    </div>
+
+              {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {error}
+                </Alert>
+              )}
+
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                disabled={isLoading}
+                sx={{
+                  mt: 2,
+                  mb: 2,
+                  py: 1.5,
+                  borderRadius: 2,
+                  '&:hover': {
+                    transform: 'translateY(-2px)',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 8px 25px rgba(50, 117, 252, 0.3)',
+                  },
+                }}
+              >
+                {isLoading ? 'sign in...' : 'Sign In'}
+              </Button>
+
+              <Box sx={{ textAlign: 'center' }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    color: 'text.secondary',
+                    cursor: 'pointer',
+                    '&:hover': {
+                      textDecoration: 'underline',
+                    },
+                  }}
+                  onClick={() => navigate('/find-account')}
+                >
+                  아이디/비밀번호 찾기
+                </Typography>
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </Box>
+    </Container>
   );
 };
 
