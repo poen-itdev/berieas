@@ -10,17 +10,14 @@ import {
   Alert,
   Container,
 } from '@mui/material';
+import { API_URLS } from '../config/api';
 import '../styles/custom.css';
-
-const BACKEND_API_BASE_URL =
-  import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:8080';
 
 // 환경 변수 디버깅
 console.log(
   'VITE_BACKEND_API_BASE_URL:',
   import.meta.env.VITE_BACKEND_API_BASE_URL
 );
-console.log('BACKEND_API_BASE_URL:', BACKEND_API_BASE_URL);
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -41,7 +38,7 @@ const LoginPage = () => {
     }
 
     try {
-      const response = await fetch(`${BACKEND_API_BASE_URL}/login`, {
+      const response = await fetch(API_URLS.LOGIN, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,11 +49,20 @@ const LoginPage = () => {
       if (!response.ok) throw new Error('로그인 실패');
 
       const data = await response.json();
+
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
 
-      // 로그인 성공 후 대시보드로 이동
-      navigate('/dashboard');
+      // 사용자별 비밀번호 변경 여부 확인
+      const hasChangedPassword = localStorage.getItem(
+        `hasChangedPassword_${memberId}`
+      );
+
+      if (!hasChangedPassword) {
+        navigate('/reset-password');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       setError('아이디 또는 비밀번호가 틀렸습니다.');
     } finally {
