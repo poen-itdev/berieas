@@ -1,6 +1,7 @@
 package com.poen.berieas.back.domain.member.controller;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.MediaType;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.poen.berieas.back.domain.member.dto.MemberListResponseDto;
 import com.poen.berieas.back.domain.member.dto.MemberRequestDto;
 import com.poen.berieas.back.domain.member.dto.MemberResponseDto;
 import com.poen.berieas.back.domain.member.dto.PasswordResetRequestDto;
@@ -115,5 +117,13 @@ public class MemberController {
 
         memberService.resetPassword(memberId, dto);
         return ResponseEntity.ok("비밀번호 재설정 완료");
+    }
+
+    // 회원 리스트
+    @GetMapping(value = "/member/members", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<MemberListResponseDto>> getAllMembersApi() {
+
+        List<MemberListResponseDto> members = memberService.getAllMembers();
+        return ResponseEntity.ok(members);
     }
 }

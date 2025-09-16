@@ -1,7 +1,9 @@
 package com.poen.berieas.back.domain.member.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -19,6 +21,7 @@ import com.poen.berieas.back.domain.email.entity.PasswordResetRequest;
 import com.poen.berieas.back.domain.email.repository.PasswordResetRequestRepository;
 import com.poen.berieas.back.domain.email.service.EmailService;
 import com.poen.berieas.back.domain.jwt.service.JwtService;
+import com.poen.berieas.back.domain.member.dto.MemberListResponseDto;
 import com.poen.berieas.back.domain.member.dto.MemberRequestDto;
 import com.poen.berieas.back.domain.member.dto.MemberResponseDto;
 import com.poen.berieas.back.domain.member.dto.PasswordResetRequestDto;
@@ -244,5 +247,21 @@ public class MemberService implements UserDetailsService{
         // 새 비밀번호 해싱 후 저장
         member.setMemberPw(passwordEncoder.encode(dto.getMemberPw()));
         memberRepository.save(member);
+    }
+
+    // 회원 리스트
+    public List<MemberListResponseDto> getAllMembers() {
+
+        List<Member> members = memberRepository.findAll();
+
+        return members.stream()
+                .map(member -> new MemberListResponseDto(
+                    member.getMemberName(),
+                    member.getMemberDepartment(),
+                    member.getMemberPosition(),
+                    member.getMemberId(),
+                    member.getMemberEmail(),
+                    member.getUseYn()
+                )).collect(Collectors.toList());
     }
 }
