@@ -14,9 +14,8 @@ import {
   StepLabel,
 } from '@mui/material';
 import { ArrowBack, CheckCircle } from '@mui/icons-material';
+import { API_URLS } from '../config/api';
 import '../styles/custom.css';
-
-const BACKEND_API_BASE_URL = 'http://localhost:8080';
 
 const FindAccountPage = () => {
   const navigate = useNavigate();
@@ -39,26 +38,11 @@ const FindAccountPage = () => {
     setError('');
 
     try {
-      const response = await fetch(
-        `${BACKEND_API_BASE_URL}/auth/send-verification-code`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            email,
-            type: 'RESET_PASSWORD',
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('인증 코드 전송에 실패했습니다.');
-      }
+      // 임시 모킹 - 실제 API 호출 대신
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 대기
 
       setActiveStep(1);
-      setSuccess('인증 코드가 이메일로 전송되었습니다.');
+      setSuccess('인증 코드가 이메일로 전송되었습니다. (임시: 123456)');
     } catch (error) {
       setError('인증 코드 전송에 실패했습니다. 다시 시도해주세요.');
     } finally {
@@ -76,20 +60,16 @@ const FindAccountPage = () => {
     setError('');
 
     try {
-      const response = await fetch(`${BACKEND_API_BASE_URL}/auth/verify-code`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, code: verificationCode }),
-      });
+      // 임시 모킹 - 실제 API 호출 대신
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 대기
 
-      if (!response.ok) {
+      // 임시 인증 코드: 123456
+      if (verificationCode === '123456') {
+        setActiveStep(2);
+        setSuccess('인증이 완료되었습니다.');
+      } else {
         throw new Error('인증 코드가 올바르지 않습니다.');
       }
-
-      setActiveStep(2);
-      setSuccess('인증이 완료되었습니다.');
     } catch (error) {
       setError('인증 코드가 올바르지 않습니다. 다시 확인해주세요.');
     } finally {
@@ -117,22 +97,10 @@ const FindAccountPage = () => {
     setError('');
 
     try {
-      const response = await fetch(
-        `${BACKEND_API_BASE_URL}/auth/reset-password`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ email, newPassword }),
-        }
-      );
+      // 임시 모킹 - 실제 API 호출 대신
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 대기
 
-      if (!response.ok) {
-        throw new Error('비밀번호 변경에 실패했습니다.');
-      }
-
-      setSuccess('비밀번호가 성공적으로 변경되었습니다.');
+      setSuccess('비밀번호가 성공적으로 변경되었습니다. (임시 처리)');
       setTimeout(() => {
         navigate('/login');
       }, 2000);
