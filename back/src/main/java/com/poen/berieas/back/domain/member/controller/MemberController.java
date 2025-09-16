@@ -17,8 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.poen.berieas.back.domain.member.dto.MemberRequestDto;
 import com.poen.berieas.back.domain.member.dto.MemberResponseDto;
+import com.poen.berieas.back.domain.member.dto.PasswordResetRequestDto;
+import com.poen.berieas.back.domain.member.dto.VerifyCodeRequestDto;
 import com.poen.berieas.back.domain.member.service.MemberService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -79,9 +82,38 @@ public class MemberController {
 
         
         String memberId = authentication.getName();
-        System.out.println("memberId===============" + memberId);
 
         memberService.changePasswordAtFirstLogin(memberId, dto);
         return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다. 다시 로그인해주세요.");
+    }
+
+    // 인증코드 전송
+    @PostMapping(value = "/member/send-code", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> sendCodeApi(@Valid @RequestBody PasswordResetRequestDto dto) {
+
+        memberService.sendEmail(dto);
+        return ResponseEntity.ok("인증 코드 전송 완료");
+    }
+
+    // 인증 코드 검증
+    @PostMapping(value = "/member/verify-code", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> verifyCodeApi(@RequestBody VerifyCodeRequestDto dto) {
+
+        boolean ok = memberService.verifyCode(dto);
+        if(ok) return ResponseEntity.ok("인증 성공");
+        
+        return ResponseEntity.status(400).body("인증 코드 불일치");
+    }
+
+    // 새 비밀번호 재설정
+    @PostMapping(value = "/member/reset-password", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> resetPasswordApi(
+            @Validated(MemberRequestDto.passwordGroup.class) @RequestBody MemberRequestDto dto,
+            Authentication authentication) {
+
+        String memberId = authentication.getName();
+
+        memberService.resetPassword(memberId, dto);
+        return ResponseEntity.ok("비밀번호 재설정 완료");
     }
 }

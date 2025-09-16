@@ -15,5 +15,8 @@ public interface MemberRepository extends JpaRepository<Member, String>{
     // 회원 삭제
     void deleteByMemberId(String memberId);
 
+    // 비밀번호 재설정 //
+    Boolean existsByMemberEmail(String memberEmail);
 
+    Optional<Member> findByMemberEmail(String memberEmail);
 }

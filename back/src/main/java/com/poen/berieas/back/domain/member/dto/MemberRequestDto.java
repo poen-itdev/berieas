@@ -25,7 +25,7 @@ public class MemberRequestDto {
     @NotBlank(groups = {addGroup.class, updateGroup.class})
     private String memberName;
 
-    @Email(groups = {addGroup.class, updateGroup.class})
+    @Email(groups = {addGroup.class, updateGroup.class, existGroup.class})
     private String memberEmail;
 
     @NotBlank(groups = {addGroup.class, updateGroup.class})

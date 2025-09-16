@@ -1,6 +1,7 @@
 package com.poen.berieas.back.domain.member.service;
 
 import java.time.LocalDateTime;
+import java.util.Random;
 
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
@@ -14,9 +15,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.poen.berieas.back.domain.email.entity.PasswordResetRequest;
+import com.poen.berieas.back.domain.email.repository.PasswordResetRequestRepository;
+import com.poen.berieas.back.domain.email.service.EmailService;
 import com.poen.berieas.back.domain.jwt.service.JwtService;
 import com.poen.berieas.back.domain.member.dto.MemberRequestDto;
 import com.poen.berieas.back.domain.member.dto.MemberResponseDto;
+import com.poen.berieas.back.domain.member.dto.PasswordResetRequestDto;
+import com.poen.berieas.back.domain.member.dto.VerifyCodeRequestDto;
 import com.poen.berieas.back.domain.member.entity.Member;
 import com.poen.berieas.back.domain.member.entity.RoleType;
 import com.poen.berieas.back.domain.member.repository.MemberRepository;
@@ -31,6 +37,8 @@ public class MemberService implements UserDetailsService{
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final PasswordResetRequestRepository passwordResetRequestRepository;
+    private final EmailService emailService;
 
     //== 존재 여부 ==//
     public Boolean existMember(MemberRequestDto dto) {
@@ -154,7 +162,7 @@ public class MemberService implements UserDetailsService{
         return new MemberResponseDto(memberId, member.getMemberName(), member.getMemberEmail());
     }
 
-    // 비밀번호 변경
+    // 최초 로그인 시 비밀번호 변경
     @Transactional
     public void changePasswordAtFirstLogin(String memberId, MemberRequestDto dto) {
 
@@ -174,6 +182,67 @@ public class MemberService implements UserDetailsService{
         boolean matches = passwordEncoder.matches(dto.getMemberPw(), encoded);
         System.out.println("바로 매칭 결과: " + matches);
         member.setIsFirstLogin("N"); // 첫 로그인 완료 처리
+        memberRepository.save(member);
+    }
+
+    // 인증 코드 생성 후 이메일 전송
+    @Transactional
+    public void sendEmail(PasswordResetRequestDto dto) {
+
+        // 이메일 존재 확인
+        if(!memberRepository.existsByMemberEmail(dto.getEmail())) {
+            
+            throw new IllegalArgumentException("해당 이메일을 찾을 수 없습니다. 다시 입력해주세요.");
+        }
+
+        // 6자리 인증 코드 생성
+        String code = String.format("%06d", new Random().nextInt(900000) + 100000);
+        
+        // 인증코드와 유효시간 저장
+        PasswordResetRequest request = new PasswordResetRequest();
+        request.setEmail(dto.getEmail());
+        request.setCode(code);
+        request.setExpireTime(LocalDateTime.now().plusMinutes(3)); // 3분 유효
+
+        passwordResetRequestRepository.save(request);
+
+        // 이메일 전송
+        String subject = "비밀번호 재설정 인증 코드";
+        String body = "인증 코드: " + code + "\n유효기간: 3분";
+        emailService.sendEmail(dto.getEmail(), subject, body);
+    }
+
+    // 이메일 인증 코드 검증
+    @Transactional
+    public boolean verifyCode(VerifyCodeRequestDto dto) {
+        PasswordResetRequest request = passwordResetRequestRepository.findTopByCodeAndUsedOrderByCreatedAtDesc(dto.getCode(), false)
+            .orElseThrow(() -> new IllegalArgumentException("인증 코드가 없습니다."));
+
+        // 유효기간 확인
+        if (request.getExpireTime().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("인증 코드가 만료되었습니다.");
+        }
+
+        // 코드 비교
+        if (!request.getCode().equals(dto.getCode())) {
+            return false;
+        }
+
+        // 성공하면 사용 처리
+        request.setUsed(true);
+        passwordResetRequestRepository.save(request);
+        return true;
+    }
+
+    // 비밀번호 재설정
+    @Transactional
+    public void resetPassword(String memberId, MemberRequestDto dto) {
+
+        Member member = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // 새 비밀번호 해싱 후 저장
+        member.setMemberPw(passwordEncoder.encode(dto.getMemberPw()));
         memberRepository.save(member);
     }
 }
