@@ -40,6 +40,6 @@ out/
 *.class
 
 # Spring Boot 설정 파일 (민감정보 제외)
-application.properties
+# application.properties
 application.yml
 .env

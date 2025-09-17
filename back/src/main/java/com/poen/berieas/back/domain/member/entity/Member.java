@@ -78,8 +78,9 @@ public class Member {
     //== 메서드 ==// 
     public void updateMember(MemberRequestDto dto) {
 
-        this.memberId = dto.getMemberId();
         this.memberEmail = dto.getMemberEmail();
         this.memberName = dto.getMemberName();
+        this.memberDepartment = dto.getMemberDepartment();
+        this.memberPosition = dto.getMemberPosition();
     }
 }

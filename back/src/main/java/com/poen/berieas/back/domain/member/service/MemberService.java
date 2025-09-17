@@ -114,15 +114,16 @@ public class MemberService implements UserDetailsService{
     @Transactional
     public String updateMember(MemberRequestDto dto) throws AccessDeniedException {
 
-        String sessionMemberName = SecurityContextHolder.getContext().getAuthentication().getName();
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth.getAuthorities().stream()
-                          .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+                          .anyMatch(a -> a.getAuthority().equals("ADMIN"));
 
-        if(!sessionMemberName.equals(dto.getMemberId()) && isAdmin) {
+        System.out.println(isAdmin);
 
-            throw new AccessDeniedException("본인 계정 또는 관리자만 수정 가능");
-        }
+        if (!isAdmin) {
+
+        throw new AccessDeniedException("관리자만 회원 정보를 수정할 수 있습니다.");
+        }  
 
         Member member = memberRepository.findByMemberId(dto.getMemberId())
                         .orElseThrow(() -> new UsernameNotFoundException(dto.getMemberId()));
@@ -249,7 +250,7 @@ public class MemberService implements UserDetailsService{
         memberRepository.save(member);
     }
 
-    // 회원 리스트
+    // 전체 회원 리스트
     public List<MemberListResponseDto> getAllMembers() {
 
         List<Member> members = memberRepository.findAll();
@@ -264,4 +265,37 @@ public class MemberService implements UserDetailsService{
                     member.getUseYn()
                 )).collect(Collectors.toList());
     }
+
+    // 재직자 리스트
+    public List<MemberListResponseDto> getActiveMembers() {
+
+        List<Member> activeMembers = memberRepository.findActiveMembers();
+
+        return activeMembers.stream()
+                .map(activeMember -> new MemberListResponseDto(
+                    activeMember.getMemberName(),
+                    activeMember.getMemberDepartment(),
+                    activeMember.getMemberPosition(),
+                    activeMember.getMemberId(),
+                    activeMember.getMemberEmail(),
+                    activeMember.getUseYn()
+                )).collect(Collectors.toList());
+    }
+
+    // 퇴사자 리스트
+    public List<MemberListResponseDto> getRetiredMembers() {
+
+        List<Member> retiredMembers = memberRepository.findRetiredMembers();
+
+        return retiredMembers.stream()
+                .map(retiredMember -> new MemberListResponseDto(
+                    retiredMember.getMemberName(),
+                    retiredMember.getMemberDepartment(),
+                    retiredMember.getMemberPosition(),
+                    retiredMember.getMemberId(),
+                    retiredMember.getMemberEmail(),
+                    retiredMember.getUseYn()
+                )).collect(Collectors.toList());
+    }
+
 }
