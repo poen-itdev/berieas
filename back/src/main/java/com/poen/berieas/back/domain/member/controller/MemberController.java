@@ -119,11 +119,29 @@ public class MemberController {
         return ResponseEntity.ok("비밀번호 재설정 완료");
     }
 
-    // 회원 리스트
+    // 전체 회원 리스트
     @GetMapping(value = "/member/members", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MemberListResponseDto>> getAllMembersApi() {
 
         List<MemberListResponseDto> members = memberService.getAllMembers();
         return ResponseEntity.ok(members);
     }
+
+    // 재직자 리스트
+    @GetMapping(value = "/member/active-members", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<MemberListResponseDto>> getActiveMembersApi() {
+
+        List<MemberListResponseDto> activeMembers = memberService.getActiveMembers();
+        return ResponseEntity.ok(activeMembers);
+    }
+
+    // 퇴사자 리스트
+    @GetMapping(value = "/member/retired-members", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<MemberListResponseDto>> getRetiredMembersApi() {
+
+        List<MemberListResponseDto> retiredMembers = memberService.getRetiredMembers();
+        return ResponseEntity.ok(retiredMembers);
+    }
+
+
 }

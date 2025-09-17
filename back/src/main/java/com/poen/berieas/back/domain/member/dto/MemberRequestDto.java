@@ -16,7 +16,7 @@ public class MemberRequestDto {
     public interface updateGroup {} // 회원 수정시
     public interface deleteGroup {} // 회원 삭제시
     
-    @NotBlank(groups = {existGroup.class, addGroup.class, updateGroup.class, deleteGroup.class}) @Size(min = 2)
+    @NotBlank(groups = {existGroup.class, addGroup.class, deleteGroup.class}) @Size(min = 2)
     private String memberId;
 
     @NotBlank(groups = {addGroup.class, passwordGroup.class}) @Size(min = 4)
