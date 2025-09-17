@@ -30,6 +30,7 @@ import com.poen.berieas.back.domain.member.entity.Member;
 import com.poen.berieas.back.domain.member.entity.RoleType;
 import com.poen.berieas.back.domain.member.repository.MemberRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -108,29 +109,6 @@ public class MemberService implements UserDetailsService{
         System.out.println("UserDetails password: " + userDetails.getPassword());
 
         return userDetails;
-    }
-
-    //== 로그인 회원 정보 수정 ==//
-    @Transactional
-    public String updateMember(MemberRequestDto dto) throws AccessDeniedException {
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth.getAuthorities().stream()
-                          .anyMatch(a -> a.getAuthority().equals("ADMIN"));
-
-        System.out.println(isAdmin);
-
-        if (!isAdmin) {
-
-        throw new AccessDeniedException("관리자만 회원 정보를 수정할 수 있습니다.");
-        }  
-
-        Member member = memberRepository.findByMemberId(dto.getMemberId())
-                        .orElseThrow(() -> new UsernameNotFoundException(dto.getMemberId()));
-
-        member.updateMember(dto);
-
-        return memberRepository.save(member).getMemberId();
     }
 
     //== 회원 탈퇴 ==// 
@@ -250,7 +228,7 @@ public class MemberService implements UserDetailsService{
         memberRepository.save(member);
     }
 
-    // 전체 회원 리스트
+    // 전체 멤버 리스트
     public List<MemberListResponseDto> getAllMembers() {
 
         List<Member> members = memberRepository.findAll();
@@ -298,4 +276,48 @@ public class MemberService implements UserDetailsService{
                 )).collect(Collectors.toList());
     }
 
+    // 멤버 수정
+    @Transactional
+    public String updateMember(String memberId, MemberRequestDto dto) throws AccessDeniedException{
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ADMIN"));
+
+        if (!isAdmin) {
+            throw new AccessDeniedException("관리자만 수정할 수 있습니다.");
+        }
+
+        Member member = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다. id=" + memberId));
+
+        member.updateMember(dto);
+        memberRepository.save(member);
+
+        return member.getMemberId();
+    }
+
+    // 멤버 비활성화
+    @Transactional
+    public void deactivateMember(String memberId) throws AccessDeniedException{
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        boolean isAdmin = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ADMIN"));
+
+        if (!isAdmin) {
+            throw new AccessDeniedException("관리자만 수정할 수 있습니다.");
+        }
+
+        Member member = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다. id=" + memberId));
+
+        if ("N".equals(member.getUseYn())) {
+            member.setUseYn("Y");
+        } else {
+            member.setUseYn("N");
+        }
+
+        memberRepository.save(member);
+    }
 }
