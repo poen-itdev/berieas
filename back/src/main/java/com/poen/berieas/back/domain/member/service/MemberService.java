@@ -196,7 +196,11 @@ public class MemberService implements UserDetailsService{
 
     // 이메일 인증 코드 검증
     @Transactional
-    public boolean verifyCode(VerifyCodeRequestDto dto) {
+    public boolean verifyCode(VerifyCodeRequestDto dto, String memberId) {
+
+        Member member = memberRepository.findByMemberId(memberId)
+        .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다."));
+
         PasswordResetRequest request = passwordResetRequestRepository.findTopByCodeAndUsedOrderByCreatedAtDesc(dto.getCode(), false)
             .orElseThrow(() -> new IllegalArgumentException("인증 코드가 없습니다."));
 

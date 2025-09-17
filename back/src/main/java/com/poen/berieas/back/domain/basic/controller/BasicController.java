@@ -29,11 +29,11 @@ public class BasicController {
         return ResponseEntity.ok(departments);
     }
 
-    @GetMapping(value = "/teams", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<TeamResponseDto>> getTeamsApi(@RequestBody CodeKeyRequestDto dto) {
+    // @GetMapping(value = "/teams", consumes = MediaType.APPLICATION_JSON_VALUE)
+    // public ResponseEntity<List<TeamResponseDto>> getTeamsApi(@RequestBody CodeKeyRequestDto dto) {
         
-        List<TeamResponseDto> teams = basicService.getTeams(dto.getCodeKey());
+    //     List<TeamResponseDto> teams = basicService.getTeams(dto.getCodeKey());
 
-        return ResponseEntity.ok(teams);
-    }
+    //     return ResponseEntity.ok(teams);
+    // }
 }
