@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -57,14 +58,6 @@ public class MemberController {
     public MemberResponseDto memberMeApi() {
 
         return memberService.readMember();
-    }
-
-    // 멤버 수정
-    @PutMapping(value = "/member/update", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> updateMemberApi(
-        @Validated(MemberRequestDto.updateGroup.class) @RequestBody MemberRequestDto dto) throws AccessDeniedException {
-
-            return ResponseEntity.status(200).body(memberService.updateMember(dto));
     }
     
     // 멤버 제거
@@ -143,5 +136,22 @@ public class MemberController {
         return ResponseEntity.ok(retiredMembers);
     }
 
+    // 멤버 수정
+    @PutMapping(value = "/member/update/{memberId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> updateMemberApi(
+        @PathVariable String memberId,
+        @Validated @RequestBody MemberRequestDto dto
+    ) {
 
+        String updatedId = memberService.updateMember(memberId, dto);
+        return ResponseEntity.ok(updatedId);
+    }
+
+    // 멤버 비활성화
+    @PostMapping(value = "/member/deactivate/{memberId}")
+    public ResponseEntity<String> deactivateMemberApi(@PathVariable String memberId) {
+
+        memberService.deactivateMember(memberId);
+        return ResponseEntity.ok("변경되었습니다.");
+    }
 }
