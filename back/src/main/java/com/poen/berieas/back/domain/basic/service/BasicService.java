@@ -33,15 +33,15 @@ public class BasicService {
     }
 
     // 팀 리스트
-    public List<TeamResponseDto> getTeams(String codeKey) {
+    // public List<TeamResponseDto> getTeams(String codeKey) {
 
-        List<Basic> teams = basicRepository.getTeams(codeKey);
+    //     List<Basic> teams = basicRepository.getTeams(codeKey);
 
-        System.out.println(teams);
+    //     System.out.println(teams);
         
-        return teams.stream()
-            .map(team -> new TeamResponseDto(
-                team.getName()
-            )).collect(Collectors.toList());
-    }
+    //     return teams.stream()
+    //         .map(team -> new TeamResponseDto(
+    //             team.getName()
+    //         )).collect(Collectors.toList());
+    // }
 }

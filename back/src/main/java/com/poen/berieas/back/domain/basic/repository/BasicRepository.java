@@ -14,6 +14,6 @@ public interface BasicRepository extends JpaRepository<Basic, Integer>{
     List<Basic> getDepartments();
 
     // 팀 리스트 
-    @Query("select b from Basic b where b.codeKey = :codeKey")
-    List<Basic> getTeams(String codeKey);
+    // @Query("select b from Basic b where b.codeKey = :codeKey")
+    // List<Basic> getTeams(String codeKey);
 }
