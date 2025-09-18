@@ -26,112 +26,63 @@ public class ApprovalDetail {
     
     @Id
     @Column(name = "approval_no")
-    private Integer approvalNo;
+    private int approvalNo;
 
-    @Column(name = "approval_start_date")
-    private LocalDateTime approvalStartDate;
+    @Column(name = "form_no")
+    private LocalDateTime formNo;
 
-    @Column(name = "approval_end_date")
-    private LocalDateTime approvalEndDate;
+    @Column(name = "approval_type")
+    private LocalDateTime approvalType;
 
-    @Column(name = "approval_id")
-    private String approvalId;
+    @Column(name = "approval_title")
+    private String approvalTitle;
 
-    @Column(name = "approval_name")
-    private String approvalName;
+    @Column(name = "approval_document")
+    private String approvalDocument;
 
-    @Column(name = "approval_department")
-    private String approvalDepartment;
+    @Column(name = "approval_attach_path1")
+    private String approvalAttachPath1;
+    @Column(name = "approval_attach_file1")
+    private String approvalAttachFile1;
+    @Column(name = "approval_attach_info1")
+    private String approvalAttachInfo1;
 
-    @Column(name = "approval_position")
-    private String approvalPosition;
-
-    @Column(name = "approval_status")
-    private String approvalStatus;
-
-    @Column(name = "approval_detail_link")
-    private String approvalDetailLink;
-
-    @Column(name = "sign_id1")
-    private String signId1;
-
-    @Column(name = "sign_date1")
-    private LocalDateTime signDate1;
+    @Column(name = "approval_attach_path2")
+    private String approvalAttachPath2;
+    @Column(name = "approval_attach_file2")
+    private String approvalAttachFile2;
+    @Column(name = "approval_attach_info2")
+    private LocalDateTime approvalAttachInfo2;
 
     @Lob
-    @Column(name = "sign_remark1")
-    private String signRemark1;
+    @Column(name = "approval_attach_path3")
+    private String approvalAttachPath3;
+    @Column(name = "approval_attach_file3")
+    private String approvalAttachFile3;
+    @Column(name = "approval_attach_info3")
+    private String approvalAttachInfo3;
 
-    @Column(name = "sign_etc1")
-    private String signEtc1;
+    @Column(name = "approval_attach_path4")
+    private LocalDateTime approvalAttachPath4;
+    @Column(name = "approval_attach_file4")
+    private String approvalAttachFile4;
+    @Column(name = "approval_attach_info4")
+    private String approvalAttachInfo4;
 
-    @Column(name = "sign_id2")
-    private String signId2;
-
-    @Column(name = "sign_date2")
-    private LocalDateTime signDate2;
-
-    @Lob
-    @Column(name = "sign_remark2")
-    private String signRemark2;
-
-    @Column(name = "sign_etc2")
-    private String signEtc2;
-
-    @Column(name = "sign_id3")
-    private String signId3;
-
-    @Column(name = "sign_date3")
-    private LocalDateTime signDate3;
-
-    @Lob
-    @Column(name = "sign_remark3")
-    private String signRemark3;
-
-    @Column(name = "sign_etc3")
-    private String signEtc3;
-
-    @Column(name = "sign_id4")
-    private String signId4;
-
-    @Column(name = "sign_date4")
-    private LocalDateTime signDate4;
-
-    @Lob
-    @Column(name = "sign_remark4")
-    private String signRemark4;
-
-    @Column(name = "sign_etc4")
-    private String signEtc4;
-
-    @Column(name = "sign_id5")
-    private String signId5;
-
-    @Column(name = "sign_date5")
-    private LocalDateTime signDate5;
-
-    @Lob
-    @Column(name = "sign_remark5")
-    private String signRemark5;
-
-    @Column(name = "sign_etc5")
-    private String signEtc5;
-
-    @Column(name = "reference_id")
-    private String referenceId;
-
-    @Column(name = "next_id")
-    private String nextId;
+    @Column(name = "approval_attach_path5")
+    private String approvalAttachPath5;
+    @Column(name = "approval_attach_file5")
+    private LocalDateTime approvalAttachFile5;
+    @Column(name = "approval_attach_info5")
+    private String approvalAttachInfo5;
 
     @Column(name = "reg_id")
     private String regId;
-
     @Column(name = "reg_date")
     private LocalDateTime regDate;
 
     @Column(name = "update_id")
     private String updateId;
-
     @Column(name = "update_date")
     private LocalDateTime updateDate;
 }

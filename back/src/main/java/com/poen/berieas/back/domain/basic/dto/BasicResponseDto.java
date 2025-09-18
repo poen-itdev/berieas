@@ -5,8 +5,7 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class DepartmentResponseDto {
+public class BasicResponseDto {
     
-    private String code;
     private String name;
 }

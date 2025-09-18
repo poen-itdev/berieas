@@ -8,6 +8,6 @@ import com.poen.berieas.back.domain.email.entity.PasswordResetRequest;
 
 public interface PasswordResetRequestRepository extends JpaRepository<PasswordResetRequest, Long>{
     
-    Optional<PasswordResetRequest> findTopByCodeAndUsedOrderByCreatedAtDesc(String code, boolean used);
-
+    Optional<PasswordResetRequest> findTopByEmailAndCodeAndUsedOrderByCreatedAtDesc(String email, String code, boolean used);
+    Optional<PasswordResetRequest> findTopByEmailAndUsedOrderByCreatedAtDesc(String email, boolean used);
 }
