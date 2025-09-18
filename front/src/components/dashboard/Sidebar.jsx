@@ -5,29 +5,16 @@ import {
   Button,
   List,
   ListItemButton,
-  ListItemIcon,
   ListItemText,
   Drawer,
 } from '@mui/material';
-import {
-  Description,
-  CheckCircle,
-  Pending,
-  Schedule,
-  Assignment,
-  Business,
-  Book,
-  Add,
-  ArrowForward,
-} from '@mui/icons-material';
+import { Add } from '@mui/icons-material';
 
 const Sidebar = ({ onMenuClick }) => {
   const menuItems = [
-    { text: '기안함', icon: <Description />, path: '/draft' },
-    { text: '결재함', icon: <CheckCircle />, path: '/approval' },
-    { text: '수신함', icon: <Pending />, path: '/received' },
-    { text: '참조함', icon: <Assignment />, path: '/reference' },
-    // { text: '문서대장', icon: <Book />, path: '/document-register' },
+    { text: '대시보드', path: '/dashboard' },
+    // { text: '진행목록', icon: <CheckCircle />, path: '/approval' },
+    // { text: '양식관리', icon: <Pending />, path: '/received' },
     // { text: '회원관리', icon: <Person />, path: '/member' },
   ];
 
@@ -85,13 +72,11 @@ const Sidebar = ({ onMenuClick }) => {
               mb: 0.5,
               '&:hover': {
                 bgcolor: '#e3f2fd',
+                color: '#3275FC',
               },
             }}
             onClick={() => handleMenuClick(item.path)}
           >
-            <ListItemIcon sx={{ minWidth: 40, color: '#666' }}>
-              {item.icon}
-            </ListItemIcon>
             <ListItemText
               primary={item.text}
               primaryTypographyProps={{
@@ -99,7 +84,6 @@ const Sidebar = ({ onMenuClick }) => {
                 fontWeight: 500,
               }}
             />
-            <ArrowForward sx={{ fontSize: 16, color: '#999' }} />
           </ListItemButton>
         ))}
       </List>
