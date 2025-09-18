@@ -58,6 +58,16 @@ public class BasicService {
         basicRepository.delete(department);
     }
 
+    // 부서 수정
+    @Transactional
+    public void updateDepartment(int idx, BasicRequestDto dto) {
+
+        Basic department = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException("해당 부서가 없습니다."));
+
+        department.setName(dto.getName());
+        basicRepository.save(department);
+    }
+
     // 직급 리스트 
     public List<BasicResponseDto> getPositions() {
 
@@ -92,5 +102,15 @@ public class BasicService {
         Basic postition = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException("해당 부서가 없습니다."));
 
         basicRepository.delete(postition);
+    }
+
+    // 직급 수정
+    @Transactional
+    public void updatePosition(int idx, BasicRequestDto dto) {
+
+        Basic position = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException("해당 직급이 없습니다."));
+
+        position.setName(dto.getName());
+        basicRepository.save(position);
     }
 }

@@ -317,7 +317,6 @@ public class MemberService implements UserDetailsService{
         } else {
             member.setUseYn("N");
         }
-
         memberRepository.save(member);
     }
 }
