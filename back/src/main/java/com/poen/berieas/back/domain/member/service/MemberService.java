@@ -196,22 +196,14 @@ public class MemberService implements UserDetailsService{
 
     // 이메일 인증 코드 검증
     @Transactional
-    public boolean verifyCode(VerifyCodeRequestDto dto, String memberId) {
+    public boolean verifyCode(VerifyCodeRequestDto dto) {
 
-        Member member = memberRepository.findByMemberId(memberId)
-        .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다."));
-
-        PasswordResetRequest request = passwordResetRequestRepository.findTopByCodeAndUsedOrderByCreatedAtDesc(dto.getCode(), false)
+        PasswordResetRequest request = passwordResetRequestRepository.findTopByEmailAndCodeAndUsedOrderByCreatedAtDesc(dto.getEmail(), dto.getCode(), false)
             .orElseThrow(() -> new IllegalArgumentException("인증 코드가 없습니다."));
 
         // 유효기간 확인
         if (request.getExpireTime().isBefore(LocalDateTime.now())) {
             throw new IllegalArgumentException("인증 코드가 만료되었습니다.");
-        }
-
-        // 코드 비교
-        if (!request.getCode().equals(dto.getCode())) {
-            return false;
         }
 
         // 성공하면 사용 처리
@@ -222,11 +214,15 @@ public class MemberService implements UserDetailsService{
 
     // 비밀번호 재설정
     @Transactional
-    public void resetPassword(String memberId, MemberRequestDto dto) {
+    public void resetPassword(MemberRequestDto dto) {
 
-        Member member = memberRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+        // 인증된 기록 확인
+        PasswordResetRequest request = passwordResetRequestRepository
+            .findTopByEmailAndUsedOrderByCreatedAtDesc(dto.getMemberEmail(), true)
+            .orElseThrow(() -> new IllegalArgumentException("이메일 인증이 완료되지 않았습니다."));
 
+        Member member = memberRepository.findByMemberEmail(dto.getMemberEmail())
+            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
         // 새 비밀번호 해싱 후 저장
         member.setMemberPw(passwordEncoder.encode(dto.getMemberPw()));
         memberRepository.save(member);

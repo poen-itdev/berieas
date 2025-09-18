@@ -8,7 +8,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -95,14 +94,7 @@ public class MemberController {
     @PostMapping(value = "/member/verify-code", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> verifyCodeApi(@RequestBody VerifyCodeRequestDto dto) {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) {
-            return ResponseEntity.status(401).body("인증되지 않은 사용자입니다.");
-        }
-
-        String memberId = auth.getName(); // 로그인한 사용자 ID
-
-        boolean ok = memberService.verifyCode(dto, memberId);
+        boolean ok = memberService.verifyCode(dto);
         if(ok) return ResponseEntity.ok("인증 성공");
         
         return ResponseEntity.status(400).body("인증 코드 불일치");
@@ -111,12 +103,9 @@ public class MemberController {
     // 새 비밀번호 재설정
     @PostMapping(value = "/member/reset-password", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> resetPasswordApi(
-            @Validated(MemberRequestDto.passwordGroup.class) @RequestBody MemberRequestDto dto,
-            Authentication authentication) {
+            @Validated(MemberRequestDto.passwordGroup.class) @RequestBody MemberRequestDto dto) {
 
-        String memberId = authentication.getName();
-
-        memberService.resetPassword(memberId, dto);
+        memberService.resetPassword(dto);
         return ResponseEntity.ok("비밀번호 재설정 완료");
     }
 
@@ -162,4 +151,6 @@ public class MemberController {
         memberService.deactivateMember(memberId);
         return ResponseEntity.ok("변경되었습니다.");
     }
+
+    
 }
