@@ -3,11 +3,18 @@ import {
   AppBar,
   Toolbar,
   Typography,
-  IconButton,
+  Box,
+  Button,
   Menu,
   MenuItem,
+  Divider,
 } from '@mui/material';
-import { AccountCircle } from '@mui/icons-material';
+import {
+  AccountCircle,
+  Language,
+  KeyboardArrowDown,
+  Logout,
+} from '@mui/icons-material';
 
 const Header = ({ onLogout }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
@@ -30,18 +37,20 @@ const Header = ({ onLogout }) => {
   return (
     <AppBar
       position="static"
-      sx={{ bgcolor: '#f9f9f9', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}
+      sx={{
+        bgcolor: '#333333',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        color: '#fff',
+      }}
     >
       <Toolbar>
         <Typography
           variant="h6"
-          sx={{ flexGrow: 1, color: '#333', fontWeight: 600 }}
+          sx={{ flexGrow: 1, color: '#fff', fontWeight: 600 }}
         >
           전자결재
         </Typography>
-        <IconButton size="large" onClick={handleMenu} sx={{ color: '#666' }}>
-          <AccountCircle />
-        </IconButton>
+
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}

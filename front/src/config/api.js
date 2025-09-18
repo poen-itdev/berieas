@@ -11,6 +11,9 @@ const API_CONFIG = {
     MEMBER_DELETE: '/member/delete',
     MEMBER_CHANGE_PASSWORD: '/member/changepassword',
     JWT_REFRESH: '/jwt/refresh',
+    MEMBER_SEND_CODE: '/member/send-code',
+    MEMBER_VERIFY_CODE: '/member/verify-code',
+    MEMBER_RESET_PASSWORD: '/member/reset-password',
   },
 };
 
@@ -31,6 +34,9 @@ export const API_URLS = {
     API_CONFIG.ENDPOINTS.MEMBER_CHANGE_PASSWORD
   ),
   JWT_REFRESH: getApiUrl(API_CONFIG.ENDPOINTS.JWT_REFRESH),
+  MEMBER_SEND_CODE: getApiUrl(API_CONFIG.ENDPOINTS.MEMBER_SEND_CODE),
+  MEMBER_VERIFY_CODE: getApiUrl(API_CONFIG.ENDPOINTS.MEMBER_VERIFY_CODE),
+  MEMBER_RESET_PASSWORD: getApiUrl(API_CONFIG.ENDPOINTS.MEMBER_RESET_PASSWORD),
 };
 
 export default API_CONFIG;

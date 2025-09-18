@@ -105,7 +105,7 @@ const LoginPage = () => {
               align="center"
               sx={{ mb: 2, fontWeight: 900, color: '#3275FC' }}
             >
-              BERIEAS
+              BERI-EAS
             </Typography>
 
             <Box component="form" onSubmit={handleSubmit} sx={{ mt: 1 }}>
@@ -175,7 +175,7 @@ const LoginPage = () => {
                   }}
                   onClick={() => navigate('/find-account')}
                 >
-                  아이디/비밀번호 찾기
+                  Password Reset
                 </Typography>
               </Box>
             </Box>
