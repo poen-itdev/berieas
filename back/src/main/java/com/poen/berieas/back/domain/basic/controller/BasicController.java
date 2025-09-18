@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,7 +33,7 @@ public class BasicController {
     }
 
     // 부서 추가
-    @PostMapping(value = "add-department", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/addDepartment", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addDepartmentApi(@RequestBody BasicRequestDto dto) {
 
         basicService.addDepartment(dto);
@@ -40,11 +41,19 @@ public class BasicController {
     }
 
     // 부서 삭제
-    @DeleteMapping(value = "/delete-department/{idx}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/deleteDepartment/{idx}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteDepartmentApi(@PathVariable int idx) {
 
         basicService.deleteDepartment(idx);
         return ResponseEntity.ok("해당 부서가 삭제되었습니다.");
+    }
+
+    // 부서 수정
+    @PutMapping(value = "/updateDepartment/{idx}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> updateDepartmentApi(@PathVariable int idx, @RequestBody BasicRequestDto dto) {
+
+        basicService.updateDepartment(idx, dto);
+        return ResponseEntity.ok("해당 부서가 수정되었습니다.");
     }
 
     // 직급 리스트
@@ -56,7 +65,7 @@ public class BasicController {
     }
 
     // 직급 추가
-    @PostMapping(value = "add-position", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/addPosition", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> addPositionApi(@RequestBody BasicRequestDto dto) {
 
         basicService.addPosition(dto);
@@ -64,10 +73,18 @@ public class BasicController {
     }
 
     // 직급 삭제 
-    @DeleteMapping(value = "/delete-position/{idx}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/deletePosition/{idx}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deletePosition(@PathVariable int idx) {
 
         basicService.deletePosition(idx);
         return ResponseEntity.ok("해당 직급이 삭제되었습니다.");
+    }
+
+    // 직급 수정
+    @PutMapping(value = "/updatePosition/{idx}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> updatePositionApi(@PathVariable int idx, @RequestBody BasicRequestDto dto) {
+
+        basicService.updatePosition(idx, dto);
+        return ResponseEntity.ok("해당 직급이 수정되었습니다.");
     }
 }
