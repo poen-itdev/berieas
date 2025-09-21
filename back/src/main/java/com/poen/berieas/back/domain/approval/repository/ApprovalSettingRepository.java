@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.poen.berieas.back.domain.approval.entity.ApprovalSetting;
 
-public interface ApprovalSettingRepository extends JpaRepository<ApprovalSetting, String> {
+public interface ApprovalSettingRepository extends JpaRepository<ApprovalSetting, Integer> {
     
-    Optional<ApprovalSetting> findByFormNo(String formNo);
+    Optional<ApprovalSetting> findByFormNo(int formNo);
 }

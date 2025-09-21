@@ -1,0 +1,44 @@
+package com.poen.berieas.back.domain.approval.controller;
+
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.poen.berieas.back.domain.approval.service.ApprovalService;
+
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequiredArgsConstructor
+public class ApprovalController {
+    
+    private final ApprovalService approvalService;
+
+    // 대시보드(전체)
+    @GetMapping(value = "/approval/total", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Integer> totalApprovalCountApi() {
+
+        int total = approvalService.totalApprovalCount();
+
+        return ResponseEntity.ok(total);
+    }
+
+    // 대시보드(진행중)
+    @GetMapping(value = "/approval/inProgress", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Integer> inProgressCountApi() {
+
+        int inProgress = approvalService.inProgressCount();
+
+        return ResponseEntity.ok(inProgress);
+    }
+
+    // 대시보드(완료)
+    @GetMapping(value = "/approval/completed", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Integer> completedCountApi() {
+
+        int completed = approvalService.completedCount();
+
+        return ResponseEntity.ok(completed);
+    }
+}

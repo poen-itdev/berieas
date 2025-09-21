@@ -32,11 +32,10 @@ public class ApprovalSettingController {
 
     // 양식 삭제
     @DeleteMapping(value = "/delete/form/{formNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> deleteForm(@PathVariable String formNo) {
+    public ResponseEntity<String> deleteForm(@PathVariable int formNo) {
 
         approvalSettingService.deleteForm(formNo);
         return ResponseEntity.ok("해당 양식이 삭제되었습니다.");
     }
 
-    
 }
