@@ -34,7 +34,7 @@ public class ApprovalSettingService {
 
     // 양식 삭제
     @Transactional
-    public void deleteForm(String formNo) {
+    public void deleteForm(int formNo) {
 
         ApprovalSetting form = approvalSettingRepository.findByFormNo(formNo)
             .orElseThrow(() ->  new IllegalArgumentException("해당 양식을 찾을 수 없습니다."));

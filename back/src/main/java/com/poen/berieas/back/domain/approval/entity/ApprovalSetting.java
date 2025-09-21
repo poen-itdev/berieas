@@ -27,7 +27,7 @@ public class ApprovalSetting {
     
     @Id
     @Column(name = "form_no")
-    private String formNo;
+    private int formNo;
 
     @Column(name = "form_type")
     private String formType;
