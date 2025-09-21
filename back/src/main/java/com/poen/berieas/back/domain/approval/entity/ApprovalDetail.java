@@ -29,10 +29,10 @@ public class ApprovalDetail {
     private int approvalNo;
 
     @Column(name = "form_no")
-    private LocalDateTime formNo;
+    private int formNo;
 
     @Column(name = "approval_type")
-    private LocalDateTime approvalType;
+    private String approvalType;
 
     @Column(name = "approval_title")
     private String approvalTitle;
