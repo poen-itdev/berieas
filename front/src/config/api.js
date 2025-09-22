@@ -7,6 +7,7 @@ const API_CONFIG = {
     MEMBER_EXIST: '/member/exist',
     MEMBER_JOIN: '/member/join',
     MEMBER_INFO: '/member/info',
+    MEMBER_MEMBERS: '/member/members',
     MEMBER_UPDATE: '/member/update',
     MEMBER_DELETE: '/member/delete',
     MEMBER_CHANGE_PASSWORD: '/member/changepassword',
@@ -14,6 +15,12 @@ const API_CONFIG = {
     MEMBER_SEND_CODE: '/member/send-code',
     MEMBER_VERIFY_CODE: '/member/verify-code',
     MEMBER_RESET_PASSWORD: '/member/reset-password',
+    DEPARTMENTS: '/departments',
+    ADD_DEPARTMENT: '/addDepartment',
+    DELETE_DEPARTMENT: '/deleteDepartment',
+    POSITIONS: '/positions',
+    ADD_POSITION: '/addPosition',
+    DELETE_POSITION: '/deletePosition',
   },
 };
 
@@ -37,6 +44,13 @@ export const API_URLS = {
   MEMBER_SEND_CODE: getApiUrl(API_CONFIG.ENDPOINTS.MEMBER_SEND_CODE),
   MEMBER_VERIFY_CODE: getApiUrl(API_CONFIG.ENDPOINTS.MEMBER_VERIFY_CODE),
   MEMBER_RESET_PASSWORD: getApiUrl(API_CONFIG.ENDPOINTS.MEMBER_RESET_PASSWORD),
+  MEMBER_MEMBERS: getApiUrl(API_CONFIG.ENDPOINTS.MEMBER_MEMBERS),
+  DEPARTMENTS: getApiUrl(API_CONFIG.ENDPOINTS.DEPARTMENTS),
+  ADD_DEPARTMENT: getApiUrl(API_CONFIG.ENDPOINTS.ADD_DEPARTMENT),
+  DELETE_DEPARTMENT: getApiUrl(API_CONFIG.ENDPOINTS.DELETE_DEPARTMENT),
+  POSITIONS: getApiUrl(API_CONFIG.ENDPOINTS.POSITIONS),
+  ADD_POSITION: getApiUrl(API_CONFIG.ENDPOINTS.ADD_POSITION),
+  DELETE_POSITION: getApiUrl(API_CONFIG.ENDPOINTS.DELETE_POSITION),
 };
 
 export default API_CONFIG;

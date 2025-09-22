@@ -1,55 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Container } from '@mui/material';
-import Sidebar from '../components/dashboard/Sidebar';
-import Header from '../components/dashboard/Header';
-import StatusCard from '../components/dashboard/StatusCard';
-import ApprovalDocumentList from '../components/dashboard/ApprovalDocumentList';
+import Sidebar from '../components/layout/Sidebar';
+import Header from '../components/layout/Header';
+import DashboardContent from '../components/dashboard/DashboardContent';
+import MemberManagementContent from '../components/dashboard/MemberManagementContent';
+import OrganizationManagementContent from '../components/dashboard/OrganizationManagementContent';
 import '../styles/custom.css';
-
-const BACKEND_API_BASE_URL =
-  import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:8080';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState(null);
-
-  // 임시 데이터 (나중에 백엔드에서 가져올 예정)
-  const [statusData] = useState({
-    approvalRequest: 5,
-    inProgress: 12,
-    completed: 28,
-  });
-
-  const [approvalDocuments] = useState([
-    {
-      id: 1,
-      title: '전사 카카오워크 도입의 건',
-      status: '결재 대기',
-      form: '기안지',
-      type: '협조',
-      drafter: '홍길동 | 인사',
-      date: '2024-01-15',
-    },
-    {
-      id: 2,
-      title: '하반기 이벤트 마케팅 비용 사용의 건',
-      status: '수신 대기',
-      form: '지출결의',
-      type: '부서협조',
-      drafter: '김철수 | 마케팅',
-      date: '2024-01-14',
-    },
-    {
-      id: 3,
-      title: '기획팀 워크샵 비용 사용의 건',
-      status: '결재 대기',
-      form: '기안지',
-      type: '결재',
-      drafter: '라이언 | 기획',
-      date: '2024-01-13',
-    },
-  ]);
+  const [currentView, setCurrentView] = useState('dashboard'); // 현재 보고 있는 뷰
 
   useEffect(() => {
     // 로그인 상태 확인
@@ -63,29 +25,8 @@ const DashboardPage = () => {
   }, [navigate]);
 
   const fetchUserInfo = async () => {
-    try {
-      const response = await fetch(`${BACKEND_API_BASE_URL}/member/info`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-        credentials: 'include',
-      });
-
-      if (!response.ok) {
-        throw new Error('사용자 정보를 가져올 수 없습니다.');
-      }
-
-      const data = await response.json();
-      setUserInfo(data);
-    } catch (error) {
-      console.error('사용자 정보 조회 실패:', error);
-      // 임시 사용자 정보 설정
-      setUserInfo({
-        memberId: 'admin',
-        memberName: '관리자',
-        memberEmail: 'admin@berieas.com',
-      });
-    }
+    // DashboardContent에서 처리하므로 여기서는 간단하게
+    setUserInfo({ memberName: '사용자' });
   };
 
   const handleLogout = () => {
@@ -96,12 +37,33 @@ const DashboardPage = () => {
 
   const handleMenuClick = (path) => {
     console.log('메뉴 클릭:', path);
-    // 나중에 라우팅 처리
+    switch (path) {
+      case '/dashboard':
+        setCurrentView('dashboard');
+        break;
+      case '/member-management':
+        setCurrentView('member-management');
+        break;
+      case '/organization-management':
+        setCurrentView('organization-management');
+        break;
+      default:
+        setCurrentView('dashboard');
+    }
   };
 
-  const handleDocumentClick = (document) => {
-    console.log('문서 클릭:', document);
-    // 나중에 문서 상세 페이지로 이동
+  // 현재 뷰에 따라 컨텐츠 렌더링
+  const renderContent = () => {
+    switch (currentView) {
+      case 'dashboard':
+        return <DashboardContent />;
+      case 'member-management':
+        return <MemberManagementContent />;
+      case 'organization-management':
+        return <OrganizationManagementContent />;
+      default:
+        return <DashboardContent />;
+    }
   };
 
   if (!userInfo) {
@@ -120,37 +82,21 @@ const DashboardPage = () => {
   }
 
   return (
-    <Box sx={{ display: 'flex', height: '100vh' }}>
-      {/* 사이드바 */}
-      <Sidebar onMenuClick={handleMenuClick} />
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      {/* 상단 헤더 - 전체 너비 100% */}
+      <Header onLogout={handleLogout} />
 
-      {/* 메인 콘텐츠 */}
-      <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-        {/* 상단 헤더 */}
-        <Header onLogout={handleLogout} />
-
-        {/* 메인 콘텐츠 영역 */}
-        <Box sx={{ flexGrow: 1, p: 3, bgcolor: '#fff', overflow: 'auto' }}>
-          <Container maxWidth="xl">
-            {/* 환영 메시지 */}
-            <Box sx={{ mb: 4 }}>
-              <Typography
-                variant="h4"
-                sx={{ fontWeight: 700, color: '#333', mb: 1 }}
-              >
-                안녕하세요, {userInfo.memberName}님
-              </Typography>
-            </Box>
-
-            {/* 나의 현황 */}
-            <StatusCard statusData={statusData} />
-
-            {/* 결재할 문서 */}
-            <ApprovalDocumentList
-              documents={approvalDocuments}
-              onDocumentClick={handleDocumentClick}
-            />
-          </Container>
+      {/* 하단 영역 - 사이드바 + 메인 콘텐츠 */}
+      <Box sx={{ display: 'flex', flexGrow: 1 }}>
+        <Sidebar onMenuClick={handleMenuClick} />
+        <Box
+          sx={{
+            flexGrow: 1,
+            bgcolor: '#fff',
+            overflow: 'auto',
+          }}
+        >
+          {renderContent()}
         </Box>
       </Box>
     </Box>

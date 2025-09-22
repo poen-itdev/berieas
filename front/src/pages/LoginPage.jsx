@@ -49,20 +49,13 @@ const LoginPage = () => {
       if (!response.ok) throw new Error('로그인 실패');
 
       const data = await response.json();
-
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
 
-      // 사용자별 비밀번호 변경 여부 확인
-      const hasChangedPassword = localStorage.getItem(
-        `hasChangedPassword_${memberId}`
-      );
+      navigate('/dashboard');
 
-      if (!hasChangedPassword) {
-        navigate('/reset-password');
-      } else {
-        navigate('/dashboard');
-      }
+      //   const isFirst = data.isFirstLogin === true || data.isFirstLogin === 'Y';
+      //   navigate(isFirst ? '/reset-password' : '/dashboard');
     } catch (error) {
       setError('아이디 또는 비밀번호가 틀렸습니다.');
     } finally {
