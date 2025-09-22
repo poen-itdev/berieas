@@ -71,6 +71,12 @@ public class ApprovalController {
     }
 
     // 진행목록(기안중)
+    @GetMapping(value = "/approval/temporarySavedApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ProgressListResponseDto>> getTemporarySavedApprovalsApi() {
+
+        List<ProgressListResponseDto> approvals = approvalService.getTemporarySavedApprovals();
+        return ResponseEntity.ok(approvals);
+    }
 
     // 진행목록(반려)
     @GetMapping(value = "/approval/returnedApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)

@@ -27,34 +27,29 @@ public interface ApprovalRepository extends JpaRepository<Approval, Integer>{
 
     // 대시보드(내가 결재할 문서)
     @Query("select a from Approval a " +
-            "where (a.signId1 = :memberId and a.signDate1 is null) or " +
-            "(a.signId2 = :memberId and a.signDate1 is not null and a.signDate2 is null) or " +
-            "(a.signId3 = :memberId and a.signDate2 is not null and a.signDate3 is null) or " +
-            "(a.signId4 = :memberId and a.signDate3 is not null and a.signDate4 is null) or " +
-            "(a.signId5 = :memberId and a.signDate4 is not null and a.signDate5 is null)")
-    List<Approval> findPendingApprovalsForUser(@Param("memberId") String memberId);
+            "where a.nextId = :memberId and a.approvalStatus = '진행중' " +
+            "order by a.regDate desc")
+    List<Approval> findPendingApprovals(@Param("memberId") String memberId);
 
     // 진행목록(전체)
     @Query("select a from Approval a " +
             "where a.approvalId = :memberId " +
             "or a.referenceId = :memberId " +
-            "or (a.signId1 = :memberId and a.signDate1 is null) " +
-            "or (a.signId2 = :memberId and a.signDate1 is not null and a.signDate2 is null) " +
-            "or (a.signId3 = :memberId and a.signDate2 is not null and a.signDate3 is null) " +
-            "or (a.signId4 = :memberId and a.signDate3 is not null and a.signDate4 is null) " +
-            "or (a.signId5 = :memberId and a.signDate4 is not null and a.signDate5 is null) " +
+            "or a.nextId = :memberId " +
             "order by a.regDate desc")
     List<Approval> findAllRelatedApprovals(@Param("memberId") String memberId);
 
     // 진행목록(기안중)
+    @Query("select a from Approval a where a.approvalId = :memberId and a.regDate is null")
+    List<Approval> findTemporarySavedApprovals(@Param("memberId") String memberId);
 
     // 진행목록(반려)
-    @Query("select a from Approval a where a.approvalId = :approvalId and a.approvalStatus = '반려'")
-    List<Approval> findReturendApprovals(@Param("approvalId") String approvalId);
+    @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStatus = '반려'")
+    List<Approval> findReturendApprovals(@Param("memberId") String memberId);
 
     // 진행목록(완료)
-    @Query("select a from Approval a where a.approvalId = :approvalId and a.approvalStatus = '완료'")
-    List<Approval> findCompletedApprovals(@Param("approvalId") String approvalId);
+    @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStatus = '완료'")
+    List<Approval> findCompletedApprovals(@Param("memberId") String memberId);
 
 
 }
