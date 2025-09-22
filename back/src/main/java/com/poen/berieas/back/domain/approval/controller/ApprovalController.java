@@ -1,10 +1,13 @@
 package com.poen.berieas.back.domain.approval.controller;
 
+import java.util.List;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.poen.berieas.back.domain.approval.dto.MyApprovalResponseDto;
 import com.poen.berieas.back.domain.approval.service.ApprovalService;
 
 import lombok.RequiredArgsConstructor;
@@ -40,5 +43,21 @@ public class ApprovalController {
         int completed = approvalService.completedCount();
 
         return ResponseEntity.ok(completed);
+    }
+    
+    // 대시보드(내가 상신한 문서)
+    @GetMapping(value = "/approval/mySubmitted", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<MyApprovalResponseDto>> getMySubmittedApi() {
+        
+        List<MyApprovalResponseDto> mySubmittedDocs = approvalService.getMySubmitted();
+        return ResponseEntity.ok(mySubmittedDocs);
+    }
+
+    // 대시보드(내가 결재할 문서)
+    @GetMapping(value = "/approval/mypending", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<MyApprovalResponseDto>> getPendingApprovalsApi() {
+
+        List<MyApprovalResponseDto> pendingApprovals = approvalService.getPendingApprovals();
+        return ResponseEntity.ok(pendingApprovals);
     }
 }
