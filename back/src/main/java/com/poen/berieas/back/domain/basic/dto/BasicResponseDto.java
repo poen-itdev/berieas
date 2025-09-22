@@ -6,6 +6,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class BasicResponseDto {
-    
+        
+    private Integer idx;
     private String name;
 }

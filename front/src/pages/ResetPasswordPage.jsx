@@ -94,20 +94,7 @@ const ResetPasswordPage = () => {
 
       setShowSuccessDialog(true);
 
-      // JWT에서 사용자 ID 추출
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const memberId = payload.sub || payload.memberId;
-          // 사용자별 비밀번호 변경 완료 플래그 설정
-          localStorage.setItem(`hasChangedPassword_${memberId}`, 'true');
-        } catch (e) {
-          console.error('JWT 파싱 오류:', e);
-        }
-      }
-
-      // 토큰 제거
+      // 토큰 제거 (재로그인 강제)
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
     } catch (error) {
