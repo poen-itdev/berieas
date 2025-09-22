@@ -75,7 +75,7 @@ public class ApprovalService {
             }).collect(Collectors.toList());
     }
 
-    // 현재 결재자 
+    // 현재 결재자
     private String getCurrentSigner(Approval approval) {
 
         if (approval.getSignDate1() == null) return approval.getSignId1();
@@ -91,7 +91,7 @@ public class ApprovalService {
 
         String memeberId = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        List<Approval> approvals = approvalRepository.findPendingApprovalsForUser(memeberId);
+        List<Approval> approvals = approvalRepository.findPendingApprovals(memeberId);
         return approvals.stream()
             .map(approval -> {
                 ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
@@ -130,6 +130,27 @@ public class ApprovalService {
     }
 
     // 진행목록(기안중)
+    public List<ProgressListResponseDto> getTemporarySavedApprovals() {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        List<Approval> approvals = approvalRepository.findTemporarySavedApprovals(memberId);
+        return approvals.stream()
+            .map(approval -> {
+                ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
+                String currentSigner = getCurrentSigner(approval);
+
+                return new ProgressListResponseDto(
+                    null, 
+                    detail != null ? detail.getApprovalTitle() : null,
+                    detail != null ? detail.getApprovalType() : null,
+                    approval.getApprovalDepartment(),
+                    approval.getApprovalId(),
+                    currentSigner,
+                    "기안중"
+                );
+            }).collect(Collectors.toList());
+    }
 
     // 진행목록(반려)
     public List<ProgressListResponseDto> getReturnedApprovals() {
