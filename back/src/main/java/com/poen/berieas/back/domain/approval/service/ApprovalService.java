@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.poen.berieas.back.domain.approval.dto.MyApprovalResponseDto;
+import com.poen.berieas.back.domain.approval.dto.ProgressListResponseDto;
 import com.poen.berieas.back.domain.approval.entity.Approval;
 import com.poen.berieas.back.domain.approval.entity.ApprovalDetail;
 import com.poen.berieas.back.domain.approval.repository.ApprovalDetailRepository;
@@ -50,7 +51,7 @@ public class ApprovalService {
         return completed;
     }
 
-    // 대시보드(내가 상신한 문서)
+    // 대시보드(내가 상신한 문서) + 진행목록(진행중)
     public List<MyApprovalResponseDto> getMySubmitted() {
 
         // 로그인한 유저의 memberId 
@@ -104,4 +105,77 @@ public class ApprovalService {
                 );
         }).collect(Collectors.toList());
     }
+
+    // 진행목록(전체)  전체는 내가 기안 올린 문서 + 결재할 문서 
+    public List<ProgressListResponseDto> getAllApprovals() {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        List<Approval> approvals = approvalRepository.findAllRelatedApprovals(memberId);
+        return approvals.stream()
+            .map(approval -> {
+                ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
+                String currentSigner = getCurrentSigner(approval);
+
+                return new ProgressListResponseDto(
+                    approval.getRegDate(),
+                    detail != null ? detail.getApprovalTitle() : null,
+                    detail != null ? detail.getApprovalType() : null,
+                    approval.getApprovalDepartment(),
+                    approval.getApprovalId(),
+                    currentSigner,
+                    approval.getApprovalStatus()
+                );
+        }).collect(Collectors.toList());
+    }
+
+    // 진행목록(기안중)
+
+    // 진행목록(반려)
+    public List<ProgressListResponseDto> getReturnedApprovals() {
+     
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        List<Approval> approvals = approvalRepository.findReturendApprovals(memberId);
+        return approvals.stream()
+            .map(approval -> {
+                ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
+                String currentSigner = getCurrentSigner(approval);
+
+                return new ProgressListResponseDto(
+                    approval.getRegDate(),
+                    detail != null ? detail.getApprovalTitle() : null,
+                    detail != null ? detail.getApprovalType() : null,
+                    approval.getApprovalDepartment(),
+                    approval.getApprovalId(),
+                    currentSigner,
+                    approval.getApprovalStatus()
+                );
+        }).collect(Collectors.toList());
+    }
+
+    // 진행목록(완료)
+    public List<ProgressListResponseDto> getCompletedApprovals() {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        List<Approval> approvals = approvalRepository.findReturendApprovals(memberId);
+        return approvals.stream()
+            .map(approval -> {
+                ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
+                String currentSigner = getCurrentSigner(approval);
+
+                return new ProgressListResponseDto(
+                    approval.getRegDate(),
+                    detail != null ? detail.getApprovalTitle() : null,
+                    detail != null ? detail.getApprovalType() : null,
+                    approval.getApprovalDepartment(),
+                    approval.getApprovalId(),
+                    currentSigner,
+                    approval.getApprovalStatus()
+                );
+        }).collect(Collectors.toList());
+    }
+
+    
 }

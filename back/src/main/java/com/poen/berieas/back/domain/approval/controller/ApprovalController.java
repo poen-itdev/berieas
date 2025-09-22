@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.poen.berieas.back.domain.approval.dto.MyApprovalResponseDto;
+import com.poen.berieas.back.domain.approval.dto.ProgressListResponseDto;
 import com.poen.berieas.back.domain.approval.service.ApprovalService;
 
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,7 @@ public class ApprovalController {
         return ResponseEntity.ok(completed);
     }
     
-    // 대시보드(내가 상신한 문서)
+    // 대시보드(내가 상신한 문서) + 진행목록(진행중)
     @GetMapping(value = "/approval/mySubmitted", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MyApprovalResponseDto>> getMySubmittedApi() {
         
@@ -59,5 +60,31 @@ public class ApprovalController {
 
         List<MyApprovalResponseDto> pendingApprovals = approvalService.getPendingApprovals();
         return ResponseEntity.ok(pendingApprovals);
+    }
+
+    // 진행목록(전체)
+    @GetMapping(value = "/approval/allAprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ProgressListResponseDto>> getAllApprovalsApi() {
+
+        List<ProgressListResponseDto> approvals = approvalService.getAllApprovals();
+        return ResponseEntity.ok(approvals);
+    }
+
+    // 진행목록(기안중)
+
+    // 진행목록(반려)
+    @GetMapping(value = "/approval/returnedApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ProgressListResponseDto>> getReturnedApprovalsApi() {
+
+        List<ProgressListResponseDto> approvals = approvalService.getReturnedApprovals();
+        return ResponseEntity.ok(approvals);
+    }
+
+    // 진행목록(결재)
+    @GetMapping(value = "/approval/completedApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<ProgressListResponseDto>> getCompletedApprovalsApi() {
+
+        List<ProgressListResponseDto> approvals = approvalService.getCompletedApprovals();
+        return ResponseEntity.ok(approvals);
     }
 }
