@@ -211,6 +211,7 @@ const OrganizationManagementContent = () => {
       sx={{
         p: 3,
         width: '100%',
+        minWidth: 0,
         maxWidth: 'none',
         display: 'flex',
         flexDirection: 'column',
@@ -220,14 +221,14 @@ const OrganizationManagementContent = () => {
       <Box sx={{ mb: 4 }}>
         <Typography
           variant="h4"
-          fontSize="28px"
+          fontSize="24px"
           sx={{ mb: 1, fontWeight: 700, textAlign: 'left' }}
         >
           조직관리
         </Typography>
         <Typography
           variant="body1"
-          fontSize="18px"
+          fontSize="16px"
           sx={{ color: 'text.secondary', textAlign: 'left' }}
         >
           조직(부서)와 직급 정보를 등록/수정 가능
@@ -235,15 +236,16 @@ const OrganizationManagementContent = () => {
       </Box>
 
       {/* 콘텐츠 영역 */}
-      <Box sx={{ width: '100%' }}>
-        <Grid container spacing={6} sx={{ width: '100%', maxWidth: 'none' }}>
-          {/* 부서명 관리 */}
+      <Box
+        sx={{ width: '100%', display: 'flex', justifyContent: 'center', mt: 3 }}
+      >
+        <Grid container spacing={10}>
           <Grid item xs={12} md={6} lg={6}>
             <Paper
               sx={{
                 p: 4,
                 height: '600px',
-                width: '100%',
+                width: '480px',
                 display: 'flex',
                 flexDirection: 'column',
               }}
@@ -325,7 +327,7 @@ const OrganizationManagementContent = () => {
               sx={{
                 p: 4,
                 height: '600px',
-                width: '100%',
+                width: '480px',
                 display: 'flex',
                 flexDirection: 'column',
               }}

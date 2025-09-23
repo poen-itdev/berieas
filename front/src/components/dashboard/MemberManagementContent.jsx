@@ -107,13 +107,7 @@ const MemberManagementContent = () => {
       if (response.ok) {
         const data = await response.json();
         setMemberList(data);
-
-        // 회원 목록에서 부서 목록 추출
-        const uniqueDepartments = [
-          '전체',
-          ...new Set(data.map((member) => member.memberDepartment)),
-        ];
-        setDepartments(uniqueDepartments);
+        // 부서 목록은 fetchDepartments에서 별도로 관리
       }
     } catch (error) {
       console.error('회원 목록 조회 실패:', error);
@@ -418,7 +412,7 @@ const MemberManagementContent = () => {
       </Box>
 
       {/* 콘텐츠 영역 - flex로 같은 높이 */}
-      <Box sx={{ display: 'flex', flexGrow: 1, gap: 2 }}>
+      <Box sx={{ display: 'flex', flexGrow: 1, gap: 2, overflow: 'hidden' }}>
         {/* 좌측 부서 목록 */}
         <Paper
           sx={{ width: 200, p: 2, display: 'flex', flexDirection: 'column' }}
@@ -502,25 +496,31 @@ const MemberManagementContent = () => {
             <Table>
               <TableHead>
                 <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                  <TableCell>이름</TableCell>
-                  <TableCell>아이디</TableCell>
-                  <TableCell>이메일</TableCell>
-                  <TableCell>부서</TableCell>
-                  <TableCell>직급</TableCell>
-                  <TableCell>상태</TableCell>
-                  <TableCell>관리</TableCell>
+                  <TableCell align="center">이름</TableCell>
+                  <TableCell align="center">아이디</TableCell>
+                  <TableCell align="center">이메일</TableCell>
+                  <TableCell align="center">부서</TableCell>
+                  <TableCell align="center">직급</TableCell>
+                  <TableCell align="center">상태</TableCell>
+                  <TableCell align="center">관리</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {filteredMembers.map((member) => (
                   <TableRow key={member.memberId} hover>
-                    <TableCell>{member.memberName}</TableCell>
-                    <TableCell>{member.memberId}</TableCell>
-                    <TableCell>{member.memberEmail}</TableCell>
-                    <TableCell>{member.memberDepartment}</TableCell>
-                    <TableCell>{member.memberPosition}</TableCell>
-                    <TableCell>{getStatusChip(member.useYn)}</TableCell>
-                    <TableCell>
+                    <TableCell align="center">{member.memberName}</TableCell>
+                    <TableCell align="center">{member.memberId}</TableCell>
+                    <TableCell align="center">{member.memberEmail}</TableCell>
+                    <TableCell align="center">
+                      {member.memberDepartment}
+                    </TableCell>
+                    <TableCell align="center">
+                      {member.memberPosition}
+                    </TableCell>
+                    <TableCell align="center">
+                      {getStatusChip(member.useYn)}
+                    </TableCell>
+                    <TableCell align="center">
                       <Button
                         size="small"
                         variant="outlined"
