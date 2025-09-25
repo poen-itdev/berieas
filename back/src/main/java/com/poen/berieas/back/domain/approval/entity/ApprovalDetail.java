@@ -2,6 +2,8 @@ package com.poen.berieas.back.domain.approval.entity;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import jakarta.persistence.Column;
@@ -14,11 +16,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @EntityListeners(AuditingEntityListener.class)
 @Table(name = "approval_detail")
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -52,7 +56,7 @@ public class ApprovalDetail {
     @Column(name = "approval_attach_file2")
     private String approvalAttachFile2;
     @Column(name = "approval_attach_info2")
-    private LocalDateTime approvalAttachInfo2;
+    private String approvalAttachInfo2;
 
     @Lob
     @Column(name = "approval_attach_path3")
@@ -63,7 +67,7 @@ public class ApprovalDetail {
     private String approvalAttachInfo3;
 
     @Column(name = "approval_attach_path4")
-    private LocalDateTime approvalAttachPath4;
+    private String approvalAttachPath4;
     @Column(name = "approval_attach_file4")
     private String approvalAttachFile4;
     @Column(name = "approval_attach_info4")
@@ -72,17 +76,21 @@ public class ApprovalDetail {
     @Column(name = "approval_attach_path5")
     private String approvalAttachPath5;
     @Column(name = "approval_attach_file5")
-    private LocalDateTime approvalAttachFile5;
+    private String approvalAttachFile5;
     @Column(name = "approval_attach_info5")
     private String approvalAttachInfo5;
 
     @Column(name = "reg_id")
     private String regId;
+
+    @CreatedDate
     @Column(name = "reg_date")
     private LocalDateTime regDate;
 
     @Column(name = "update_id")
     private String updateId;
+    
+    @LastModifiedDate
     @Column(name = "update_date")
     private LocalDateTime updateDate;
 }

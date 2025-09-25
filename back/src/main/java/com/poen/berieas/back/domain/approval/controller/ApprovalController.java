@@ -5,8 +5,13 @@ import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.poen.berieas.back.domain.approval.dto.CommentRequestDto;
 import com.poen.berieas.back.domain.approval.dto.MyApprovalResponseDto;
 import com.poen.berieas.back.domain.approval.dto.ProgressListResponseDto;
 import com.poen.berieas.back.domain.approval.service.ApprovalService;
@@ -93,4 +98,46 @@ public class ApprovalController {
         List<ProgressListResponseDto> approvals = approvalService.getCompletedApprovals();
         return ResponseEntity.ok(approvals);
     }
+
+    // 결재자 첨언
+    @PostMapping(value = "/approval/comments/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> commentsApi(@PathVariable int approvalNo, CommentRequestDto dto) {
+
+        approvalService.comments(approvalNo, dto);
+        return ResponseEntity.ok("첨언 등록 완료");
+    }
+
+    // 본인 첨언
+    @PostMapping(value = "/approval/updateComments/{approvalNo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> updateCommentsApi(
+            @PathVariable int approvalNo,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files
+    ) {
+        
+        try {
+            
+            approvalService.updateComments(approvalNo, files);
+            return ResponseEntity.ok("첨언 등록 완료");
+
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("첨언 실패: " + e.getMessage());
+        }
+    }
+
+    // 승인
+    @PostMapping(value = "/approval/doApproval/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> doApprovalApi(@PathVariable int approvalNo) {
+
+        approvalService.doApproval(approvalNo);
+        return ResponseEntity.ok("승인 완료");
+    }
+
+    // 반려
+    @PostMapping(value = "/approval/doReject/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> doRejectApi(@PathVariable int approvalNo) {
+
+        approvalService.doReject(approvalNo);
+        return ResponseEntity.ok("반려 완료");
+    }
+    
 }

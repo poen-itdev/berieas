@@ -8,7 +8,8 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class MyApprovalResponseDto {
-    
+
+    private int approvalNo;
     private String approvalStatus;
     private String aprovalType;
     private String approvalTitle;

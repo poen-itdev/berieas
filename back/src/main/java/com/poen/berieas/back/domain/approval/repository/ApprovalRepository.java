@@ -1,6 +1,7 @@
 package com.poen.berieas.back.domain.approval.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -40,7 +41,7 @@ public interface ApprovalRepository extends JpaRepository<Approval, Integer>{
     List<Approval> findAllRelatedApprovals(@Param("memberId") String memberId);
 
     // 진행목록(기안중)
-    @Query("select a from Approval a where a.approvalId = :memberId and a.regDate is null")
+    @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStartDate is null")
     List<Approval> findTemporarySavedApprovals(@Param("memberId") String memberId);
 
     // 진행목록(반려)
@@ -51,5 +52,5 @@ public interface ApprovalRepository extends JpaRepository<Approval, Integer>{
     @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStatus = '완료'")
     List<Approval> findCompletedApprovals(@Param("memberId") String memberId);
 
-
+    Optional<Approval> findByApprovalNo(int approvalNo);
 }
