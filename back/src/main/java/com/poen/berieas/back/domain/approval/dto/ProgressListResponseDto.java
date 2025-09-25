@@ -14,7 +14,7 @@ public class ProgressListResponseDto {
     private String approvalTitle;
     private String approvalType;
     private String approvalPostion;
-    private String approvalId;
+    private String approvalName;
     private String approvalSigner;
     private String approvalStatus;
 }

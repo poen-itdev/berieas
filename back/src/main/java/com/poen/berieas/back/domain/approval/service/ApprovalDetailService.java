@@ -158,7 +158,7 @@ public class ApprovalDetailService {
         approval.setApprovalName(member.getMemberName()); // 기안자
         approval.setApprovalDepartment(member.getMemberDepartment());
         approval.setApprovalPosition(member.getMemberPosition());
-        approval.setApprovalStatus("진행중");
+        approval.setApprovalStatus("기안중");
         approval.setSignId1(dto.getSignId1()); // 결재자1
         approval.setSignId2(dto.getSignId2()); // 결재자2
         approval.setSignId3(dto.getSignId3()); // 결재자3

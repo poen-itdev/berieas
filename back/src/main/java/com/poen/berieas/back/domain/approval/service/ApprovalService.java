@@ -354,32 +354,34 @@ public class ApprovalService {
     public void doApproval(int approvalNo) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
         Approval approval = approvalRepository.findByApprovalNo(approvalNo)
             .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
         
-        if (!memberId.equals(approval.getNextId())) {
+        if (!member.getMemberName().equals(approval.getNextId())) {
 
             throw new IllegalArgumentException("현재 결재권자가 아니면 승인할 수 없습니다.");
         }
 
-        if (memberId.equals(approval.getSignId1()) && approval.getSignDate1() == null) {
+        if (member.getMemberName().equals(approval.getSignId1()) && approval.getSignDate1() == null) {
             
             approval.setSignDate1(LocalDateTime.now());
             approval.setNextId(approval.getSignId2());
-        } else if (memberId.equals(approval.getSignId2()) && approval.getSignDate2() == null) {
+        } else if (member.getMemberName().equals(approval.getSignId2()) && approval.getSignDate2() == null) {
 
             approval.setSignDate2(LocalDateTime.now());
             approval.setNextId(approval.getSignId3());
-        } else if (memberId.equals(approval.getSignId3()) && approval.getSignDate3() == null) {
+        } else if (member.getMemberName().equals(approval.getSignId3()) && approval.getSignDate3() == null) {
 
             approval.setSignDate3(LocalDateTime.now());
             approval.setNextId(approval.getSignId4());
-        } else if (memberId.equals(approval.getSignId4()) && approval.getSignDate4() == null) {
+        } else if (member.getMemberName().equals(approval.getSignId4()) && approval.getSignDate4() == null) {
 
             approval.setSignDate4(LocalDateTime.now());
             approval.setNextId(approval.getSignId5());
-        } else if (memberId.equals(approval.getSignId5()) && approval.getSignDate5() == null) {
+        } else if (member.getMemberName().equals(approval.getSignId5()) && approval.getSignDate5() == null) {
 
             approval.setSignDate5(LocalDateTime.now());
             approval.setNextId(null);
@@ -399,27 +401,29 @@ public class ApprovalService {
     public void doReject(int approvalNo) {
         
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member member = memberRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
         Approval approval = approvalRepository.findByApprovalNo(approvalNo)
                 .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
 
-        if (!memberId.equals(approval.getNextId())) {
+        if (!member.getMemberName().equals(approval.getNextId())) {
             throw new IllegalArgumentException("현재 결재권자가 아니면 반려할 수 없습니다.");
         }
 
-        if (memberId.equals(approval.getSignId1()) && approval.getSignDate1() == null) {
+        if (member.getMemberName().equals(approval.getSignId1()) && approval.getSignDate1() == null) {
 
             approval.setSignDate1(LocalDateTime.now());
-        } else if (memberId.equals(approval.getSignId2()) && approval.getSignDate2() == null) {
+        } else if (member.getMemberName().equals(approval.getSignId2()) && approval.getSignDate2() == null) {
 
             approval.setSignDate2(LocalDateTime.now());
-        } else if (memberId.equals(approval.getSignId3()) && approval.getSignDate3() == null) {
+        } else if (member.getMemberName().equals(approval.getSignId3()) && approval.getSignDate3() == null) {
 
             approval.setSignDate3(LocalDateTime.now());
-        } else if (memberId.equals(approval.getSignId4()) && approval.getSignDate4() == null) {
+        } else if (member.getMemberName().equals(approval.getSignId4()) && approval.getSignDate4() == null) {
 
             approval.setSignDate4(LocalDateTime.now());
-        } else if (memberId.equals(approval.getSignId5()) && approval.getSignDate5() == null) {
+        } else if (member.getMemberName().equals(approval.getSignId5()) && approval.getSignDate5() == null) {
 
             approval.setSignDate5(LocalDateTime.now());
         }
