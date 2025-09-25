@@ -5,9 +5,8 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class ApprovalSettingResponseDto {
+public class FormRequestDto {
     
-    private int formNo;
     private String formType;
     private String formTitle;
     private String formDocument;

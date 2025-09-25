@@ -9,6 +9,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public class ProgressListResponseDto {
     
+    private int approvalNo;
     private LocalDateTime regDate;
     private String approvalTitle;
     private String approvalType;
