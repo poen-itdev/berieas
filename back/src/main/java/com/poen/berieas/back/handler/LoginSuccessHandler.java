@@ -51,7 +51,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler{
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        String json = String.format("{\"accessToken\":\"%s\", \"refreshToken\":\"%s\", \"isFirstLogin\":%b}", accessToken, refreshToken, isFirstLogin);
+        String json = String.format("{\"accessToken\":\"%s\", \"refreshToken\":\"%s\", \"isFirstLogin\":\"%s\"}", accessToken, refreshToken, isFirstLogin);
         response.getWriter().write(json);
         response.getWriter().flush();
     }
