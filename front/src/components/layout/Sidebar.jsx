@@ -24,7 +24,7 @@ const Sidebar = ({ onMenuClick }) => {
 
   const menuItems = [
     { text: '대시보드', path: '/dashboard' },
-    // { text: '진행목록', icon: <CheckCircle />, path: '/approval' },
+    { text: '진행목록', path: '/progress-list' },
     // { text: '양식관리', icon: <Pending />, path: '/received' },
   ];
 
@@ -52,6 +52,8 @@ const Sidebar = ({ onMenuClick }) => {
           top: 64,
           height: 'calc(100vh - 64px)',
           position: 'fixed',
+          zIndex: 1200,
+          overflow: 'auto',
         },
       }}
     >
@@ -65,7 +67,8 @@ const Sidebar = ({ onMenuClick }) => {
             width: '100%',
             bgcolor: '#3275FC',
             '&:hover': { bgcolor: '#2563eb' },
-            py: 1.5,
+            py: 2,
+            borderRadius: 0,
           }}
           onClick={() => handleMenuClick('/draft/create')}
         >
@@ -74,7 +77,7 @@ const Sidebar = ({ onMenuClick }) => {
       </Box>
 
       {/* 메뉴 목록 */}
-      <List sx={{ px: 1 }}>
+      <List sx={{ px: 0 }}>
         {menuItems.map((item, index) => (
           <ListItemButton
             key={index}
