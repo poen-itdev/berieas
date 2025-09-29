@@ -8,10 +8,12 @@ import {
   Select,
   MenuItem,
   FormControl,
+  IconButton,
 } from '@mui/material';
+import { Logout as LogoutIcon } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 
-const Header = ({ onLogout }) => {
+const Header = ({ onLogout, isMobile = false }) => {
   const [language, setLanguage] = useState('ko');
   const [headerUserInfo, setHeaderUserInfo] = useState(null);
 
@@ -66,13 +68,19 @@ const Header = ({ onLogout }) => {
         color: '#fff',
       }}
     >
-      <Toolbar>
+      <Toolbar
+        sx={{
+          minHeight: isMobile ? '56px' : '64px',
+          px: isMobile ? 1 : 2,
+        }}
+      >
         <Typography
           variant="h6"
           sx={{
             color: '#fff',
             fontWeight: 600,
             cursor: 'pointer',
+            fontSize: isMobile ? '1.1rem' : '1.25rem',
           }}
           onClick={() => window.location.reload()}
         >
@@ -80,8 +88,8 @@ const Header = ({ onLogout }) => {
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
-          {/* 사용자 정보 */}
-          {headerUserInfo && (
+          {/* 데스크톱: 사용자 정보 표시 */}
+          {!isMobile && headerUserInfo && (
             <Typography sx={{ color: '#fff', fontSize: '0.9rem' }}>
               {headerUserInfo.memberName} | {headerUserInfo.memberDepartment}
             </Typography>
@@ -106,7 +114,7 @@ const Header = ({ onLogout }) => {
                 '.MuiSvgIcon-root': {
                   color: '#fff',
                 },
-                minWidth: 80,
+                minWidth: isMobile ? 60 : 80,
                 height: 32,
               }}
             >
@@ -115,24 +123,38 @@ const Header = ({ onLogout }) => {
             </Select>
           </FormControl>
 
-          {/* 로그아웃 링크 */}
-          <Link
-            component="button"
-            onClick={handleLogout}
-            sx={{
-              color: '#fff',
-              textDecoration: 'none',
-              fontSize: '14px',
-              cursor: 'pointer',
-              border: 'none',
-              background: 'none',
-              '&:hover': {
-                textDecoration: 'underline',
-              },
-            }}
-          >
-            로그아웃
-          </Link>
+          {/* 로그아웃 */}
+          {isMobile ? (
+            <IconButton
+              onClick={handleLogout}
+              sx={{
+                color: '#fff',
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 255, 0.1)',
+                },
+              }}
+            >
+              <LogoutIcon />
+            </IconButton>
+          ) : (
+            <Link
+              component="button"
+              onClick={handleLogout}
+              sx={{
+                color: '#fff',
+                textDecoration: 'none',
+                fontSize: '14px',
+                cursor: 'pointer',
+                border: 'none',
+                background: 'none',
+                '&:hover': {
+                  textDecoration: 'underline',
+                },
+              }}
+            >
+              로그아웃
+            </Link>
+          )}
         </Box>
       </Toolbar>
     </AppBar>
