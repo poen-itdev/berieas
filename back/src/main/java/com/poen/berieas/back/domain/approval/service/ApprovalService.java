@@ -112,8 +112,10 @@ public class ApprovalService {
     public List<MyApprovalResponseDto> getPendingApprovals() {
 
         String memeberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        
+        Member member = memberRepository.findByMemberId(memeberId).orElseThrow(() -> new IllegalArgumentException("해당 유저가 없다."));
 
-        List<Approval> approvals = approvalRepository.findPendingApprovals(memeberId);
+        List<Approval> approvals = approvalRepository.findPendingApprovals(member.getMemberName());
         return approvals.stream()
             .map(approval -> {
                 ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
@@ -123,7 +125,7 @@ public class ApprovalService {
                     approval.getApprovalStatus(),
                     detail != null ? detail.getApprovalType() : null,
                     detail != null ? detail.getApprovalTitle() : null,
-                    approval.getApprovalId(),
+                    approval.getApprovalName(),
                     approval.getRegDate()
                 );
         }).collect(Collectors.toList());
