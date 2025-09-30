@@ -111,9 +111,9 @@ public class ApprovalService {
     // 대시보드(내가 결재할 문서)
     public List<MyApprovalResponseDto> getPendingApprovals() {
 
-        String memeberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         
-        Member member = memberRepository.findByMemberId(memeberId).orElseThrow(() -> new IllegalArgumentException("해당 유저가 없다."));
+        Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new IllegalArgumentException("해당 유저가 없다."));
 
         List<Approval> approvals = approvalRepository.findPendingApprovals(member.getMemberName());
         return approvals.stream()
@@ -240,7 +240,7 @@ public class ApprovalService {
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        Page<Approval> approvals = approvalRepository.findReturendApprovals(memberId, pageable);
+        Page<Approval> approvals = approvalRepository.findCompletedApprovals(memberId, pageable);
         return approvals.map(approval -> {
             ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
             String currentSigner = getCurrentSigner(approval);
