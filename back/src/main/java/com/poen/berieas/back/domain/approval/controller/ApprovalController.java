@@ -2,6 +2,10 @@ package com.poen.berieas.back.domain.approval.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -51,7 +55,7 @@ public class ApprovalController {
         return ResponseEntity.ok(completed);
     }
     
-    // 대시보드(내가 상신한 문서) + 진행목록(진행중)
+    // 대시보드(내가 상신한 문서)
     @GetMapping(value = "/approval/mySubmitted", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<MyApprovalResponseDto>> getMySubmittedApi() {
         
@@ -69,33 +73,51 @@ public class ApprovalController {
 
     // 진행목록(전체)
     @GetMapping(value = "/approval/allAprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ProgressListResponseDto>> getAllApprovalsApi() {
+    public ResponseEntity<Page<ProgressListResponseDto>> getAllApprovalsApi(
+        @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
 
-        List<ProgressListResponseDto> approvals = approvalService.getAllApprovals();
+        Page<ProgressListResponseDto> approvals = approvalService.getAllApprovals(pageable);
         return ResponseEntity.ok(approvals);
+    }
+
+    // 진행목록(진행중)
+    @GetMapping(value = "/approval/inProgressApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Page<MyApprovalResponseDto>> getInprogressApprovalsApi(
+        @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        
+        Page<MyApprovalResponseDto> mySubmittedDocs = approvalService.getInProgressApprovals(pageable);
+        return ResponseEntity.ok(mySubmittedDocs);
     }
 
     // 진행목록(기안중)
     @GetMapping(value = "/approval/temporarySavedApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ProgressListResponseDto>> getTemporarySavedApprovalsApi() {
+    public ResponseEntity<Page<ProgressListResponseDto>> getTemporarySavedApprovalsApi(
+        @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
 
-        List<ProgressListResponseDto> approvals = approvalService.getTemporarySavedApprovals();
+        Page<ProgressListResponseDto> approvals = approvalService.getTemporarySavedApprovals(pageable);
         return ResponseEntity.ok(approvals);
     }
 
     // 진행목록(반려)
     @GetMapping(value = "/approval/returnedApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ProgressListResponseDto>> getReturnedApprovalsApi() {
+    public ResponseEntity<Page<ProgressListResponseDto>> getReturnedApprovalsApi(
+        @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
 
-        List<ProgressListResponseDto> approvals = approvalService.getReturnedApprovals();
+        Page<ProgressListResponseDto> approvals = approvalService.getReturnedApprovals(pageable);
         return ResponseEntity.ok(approvals);
     }
 
     // 진행목록(결재)
     @GetMapping(value = "/approval/completedApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<ProgressListResponseDto>> getCompletedApprovalsApi() {
+    public ResponseEntity<Page<ProgressListResponseDto>> getCompletedApprovalsApi(
+        @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
 
-        List<ProgressListResponseDto> approvals = approvalService.getCompletedApprovals();
+        Page<ProgressListResponseDto> approvals = approvalService.getCompletedApprovals(pageable);
         return ResponseEntity.ok(approvals);
     }
 

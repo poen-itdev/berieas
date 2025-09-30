@@ -3,6 +3,8 @@ package com.poen.berieas.back.domain.approval.repository;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,7 +26,7 @@ public interface ApprovalRepository extends JpaRepository<Approval, Integer>{
     int completedCount(@Param("approvalId") String approvalId);
 
     // 대시보드(내가 상신한 문서)
-    List<Approval> findByApprovalId(String approvalId);
+    List<Approval> findTop5ByApprovalIdOrderByRegDateDesc(@Param("approvalId") String approvalId);
 
     // 대시보드(내가 결재할 문서)
     @Query("select a from Approval a " +
@@ -38,19 +40,23 @@ public interface ApprovalRepository extends JpaRepository<Approval, Integer>{
             "or a.referenceId = :memberId " +
             "or a.nextId = :memberId " +
             "order by a.regDate desc")
-    List<Approval> findAllRelatedApprovals(@Param("memberId") String memberId);
+    Page<Approval> findAllRelatedApprovals(@Param("memberId") String memberId, Pageable pageable);
+
+    // 진행목록(진행중)
+    @Query("select a from Approval a where a.approvalId = :approvalId")
+    Page<Approval> findInprogressApprovals(@Param("approvalId") String approvalId, Pageable pageable);
 
     // 진행목록(기안중)
     @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStartDate is null")
-    List<Approval> findTemporarySavedApprovals(@Param("memberId") String memberId);
+    Page<Approval> findTemporarySavedApprovals(@Param("memberId") String memberId, Pageable pageable);
 
     // 진행목록(반려)
     @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStatus = '반려'")
-    List<Approval> findReturendApprovals(@Param("memberId") String memberId);
+    Page<Approval> findReturendApprovals(@Param("memberId") String memberId, Pageable pageable);
 
     // 진행목록(완료)
     @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStatus = '완료'")
-    List<Approval> findCompletedApprovals(@Param("memberId") String memberId);
+    Page<Approval> findCompletedApprovals(@Param("memberId") String memberId, Pageable pageable);
 
     Optional<Approval> findByApprovalNo(int approvalNo);
 }

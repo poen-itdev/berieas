@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,13 +73,13 @@ public class ApprovalService {
         return completed;
     }
 
-    // 대시보드(내가 상신한 문서) + 진행목록(진행중)
+    // 대시보드(내가 상신한 문서)
     public List<MyApprovalResponseDto> getMySubmitted() {
 
         // 로그인한 유저의 memberId 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        List<Approval> approvals = approvalRepository.findByApprovalId(memberId);
+        List<Approval> approvals = approvalRepository.findTop5ByApprovalIdOrderByRegDateDesc(memberId);
         return approvals.stream()
             .map(approval -> {
                 
@@ -111,7 +113,6 @@ public class ApprovalService {
 
         String memeberId = SecurityContextHolder.getContext().getAuthentication().getName();
 
-
         List<Approval> approvals = approvalRepository.findPendingApprovals(memeberId);
         return approvals.stream()
             .map(approval -> {
@@ -129,107 +130,130 @@ public class ApprovalService {
     }
 
     // 진행목록(전체)  전체는 내가 기안 올린 문서 + 결재할 문서 
-    public List<ProgressListResponseDto> getAllApprovals() {
+    public Page<ProgressListResponseDto> getAllApprovals(Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        List<Approval> approvals = approvalRepository.findAllRelatedApprovals(memberId);
-        return approvals.stream()
-            .map(approval -> {
-                ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
-                String currentSigner = getCurrentSigner(approval);
+        Page<Approval> approvals = approvalRepository.findAllRelatedApprovals(memberId, pageable);
 
-                return new ProgressListResponseDto(
-                    approval.getApprovalNo(),
-                    approval.getRegDate(),
-                    detail != null ? detail.getApprovalTitle() : null,
-                    detail != null ? detail.getApprovalType() : null,
-                    approval.getApprovalDepartment(),
-                    member.getMemberName(),
-                    currentSigner,
-                    approval.getApprovalStatus()
-                );
-        }).collect(Collectors.toList());
+        return approvals.map(approval -> {
+
+            ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
+            String currentSigner = getCurrentSigner(approval);
+
+            return new ProgressListResponseDto(
+                approval.getApprovalNo(),
+                approval.getRegDate(),
+                detail != null ? detail.getApprovalTitle() : null,
+                detail != null ? detail.getApprovalType() : null,
+                approval.getApprovalDepartment(),
+                member.getMemberName(),
+                currentSigner,
+                approval.getApprovalStatus()
+            );
+        });
+    }
+
+    // 진행목록(진행중)
+    public Page<MyApprovalResponseDto> getInProgressApprovals(Pageable pageable) {
+
+        // 로그인한 유저의 memberId 
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Page<Approval> approvals = approvalRepository.findInprogressApprovals(memberId, pageable);
+
+        return approvals.map(approval -> {
+                
+            ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()). orElse(null);
+            String currentSigner = getCurrentSigner(approval);
+            
+            return new MyApprovalResponseDto(
+                approval.getApprovalNo(),
+                approval.getApprovalStatus(),
+                detail != null ? detail.getApprovalType() : null,
+                detail != null ? detail.getApprovalTitle() : null,
+                currentSigner,
+                approval.getRegDate()
+            );
+        });
     }
 
     // 진행목록(기안중)
-    public List<ProgressListResponseDto> getTemporarySavedApprovals() {
+    public Page<ProgressListResponseDto> getTemporarySavedApprovals(Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        List<Approval> approvals = approvalRepository.findTemporarySavedApprovals(memberId);
-        return approvals.stream()
-            .map(approval -> {
-                ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
-                String currentSigner = getCurrentSigner(approval);
+        Page<Approval> approvals = approvalRepository.findTemporarySavedApprovals(memberId, pageable);
 
-                return new ProgressListResponseDto(
-                    approval.getApprovalNo(),
-                    approval.getRegDate(), 
-                    detail != null ? detail.getApprovalTitle() : null,
-                    detail != null ? detail.getApprovalType() : null,
-                    approval.getApprovalDepartment(),
-                    member.getMemberName(),
-                    currentSigner,
-                    "기안중"
-                );
-            }).collect(Collectors.toList());
+        return approvals.map(approval -> {
+            ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
+            String currentSigner = getCurrentSigner(approval);
+
+            return new ProgressListResponseDto(
+                approval.getApprovalNo(),
+                approval.getRegDate(), 
+                detail != null ? detail.getApprovalTitle() : null,
+                detail != null ? detail.getApprovalType() : null,
+                approval.getApprovalDepartment(),
+                member.getMemberName(),
+                currentSigner,
+                "기안중"
+            );
+        });
     }
 
     // 진행목록(반려)
-    public List<ProgressListResponseDto> getReturnedApprovals() {
+    public Page<ProgressListResponseDto> getReturnedApprovals(Pageable pageable) {
      
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        List<Approval> approvals = approvalRepository.findReturendApprovals(memberId);
-        return approvals.stream()
-            .map(approval -> {
-                ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
-                String currentSigner = getCurrentSigner(approval);
+        Page<Approval> approvals = approvalRepository.findReturendApprovals(memberId, pageable);
+        return approvals.map(approval -> {
+            ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
+            String currentSigner = getCurrentSigner(approval);
 
-                return new ProgressListResponseDto(
-                    approval.getApprovalNo(),
-                    approval.getRegDate(),
-                    detail != null ? detail.getApprovalTitle() : null,
-                    detail != null ? detail.getApprovalType() : null,
-                    approval.getApprovalDepartment(),
-                    member.getMemberName(),
-                    currentSigner,
-                    approval.getApprovalStatus()
-                );
-        }).collect(Collectors.toList());
+            return new ProgressListResponseDto(
+                approval.getApprovalNo(),
+                approval.getRegDate(),
+                detail != null ? detail.getApprovalTitle() : null,
+                detail != null ? detail.getApprovalType() : null,
+                approval.getApprovalDepartment(),
+                member.getMemberName(),
+                currentSigner,
+                approval.getApprovalStatus()
+            );
+        });
     }
 
     // 진행목록(완료)
-    public List<ProgressListResponseDto> getCompletedApprovals() {
+    public Page<ProgressListResponseDto> getCompletedApprovals(Pageable pageable) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        List<Approval> approvals = approvalRepository.findReturendApprovals(memberId);
-        return approvals.stream()
-            .map(approval -> {
-                ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
-                String currentSigner = getCurrentSigner(approval);
+        Page<Approval> approvals = approvalRepository.findReturendApprovals(memberId, pageable);
+        return approvals.map(approval -> {
+            ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
+            String currentSigner = getCurrentSigner(approval);
 
-                return new ProgressListResponseDto(
-                    approval.getApprovalNo(),
-                    approval.getRegDate(),
-                    detail != null ? detail.getApprovalTitle() : null,
-                    detail != null ? detail.getApprovalType() : null,
-                    approval.getApprovalDepartment(),
-                    member.getMemberName(),
-                    currentSigner,
-                    approval.getApprovalStatus()
-                );
-        }).collect(Collectors.toList());
+            return new ProgressListResponseDto(
+                approval.getApprovalNo(),
+                approval.getRegDate(),
+                detail != null ? detail.getApprovalTitle() : null,
+                detail != null ? detail.getApprovalType() : null,
+                approval.getApprovalDepartment(),
+                member.getMemberName(),
+                currentSigner,
+                approval.getApprovalStatus()
+            );
+        });
     }
 
     // 결재자 첨언
