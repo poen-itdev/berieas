@@ -58,7 +58,7 @@ export const apiRequest = async (url, options = {}) => {
   };
 
   try {
-    const response = await fetch(url, defaultOptions);
+    let response = await fetch(url, defaultOptions);
 
     // 401 에러 시 토큰 refresh 시도
     if (response.status === 401) {
@@ -74,10 +74,26 @@ export const apiRequest = async (url, options = {}) => {
         },
       };
 
-      return await fetch(url, retryOptions);
+      response = await fetch(url, retryOptions);
     }
 
-    return response;
+    // 응답이 성공적이면 JSON 데이터를 파싱해서 반환
+    if (response.ok) {
+      const data = await response.json();
+      return {
+        ok: true,
+        data: data,
+        status: response.status,
+        statusText: response.statusText,
+      };
+    } else {
+      return {
+        ok: false,
+        data: null,
+        status: response.status,
+        statusText: response.statusText,
+      };
+    }
   } catch (error) {
     console.error('API request failed:', error);
     throw error;
