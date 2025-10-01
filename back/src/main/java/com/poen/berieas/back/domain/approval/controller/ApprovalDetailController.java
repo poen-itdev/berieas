@@ -73,12 +73,17 @@ public class ApprovalDetailController {
     }
 
     // 기안서 가져오기
-    @GetMapping(value = "/approvalDetail/getDraft/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<ApprovalResponseDto> getDraftApi(@PathVariable int approvalNo) {
+    @GetMapping(value = "/approvalDetail/getDraft/{approvalNo}")
+    public ResponseEntity<?> getDraftApi(@PathVariable int approvalNo) {
         
-        ApprovalResponseDto dto = approvalDetailService.getDraft(approvalNo);
-        return ResponseEntity.ok(dto);
-    }
+        try {
+            ApprovalResponseDto dto = approvalDetailService.getDraft(approvalNo);
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("기안서 조회 실패: " + e.getMessage());
+        }
+    } // 여기도 수정된듯;
 
     // 파일 다운로드
     @GetMapping("/approvalDetail/file/download/{approvalNo}/{file}")
@@ -112,6 +117,32 @@ public class ApprovalDetailController {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (IOException e) {
             return ResponseEntity.internalServerError().body("파일 삭제 실패: " + e.getMessage());
+        }
+    }
+
+    // 기안서 삭제 경진
+    @DeleteMapping("/approvalDetail/delete/{approvalNo}")
+    public ResponseEntity<String> deleteApproval(@PathVariable int approvalNo) {
+        try {
+            approvalDetailService.deleteApproval(approvalNo);
+            return ResponseEntity.ok("기안서 삭제 완료");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("기안서 삭제 실패: " + e.getMessage());
+        }
+    }
+
+    // 기안취소 (진행중 -> 기안중으로 되돌리기)
+    @PostMapping("/approvalDetail/cancel/{approvalNo}")
+    public ResponseEntity<String> cancelApproval(@PathVariable int approvalNo) {
+        try {
+            approvalDetailService.cancelApproval(approvalNo);
+            return ResponseEntity.ok("기안이 취소되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("기안취소 실패: " + e.getMessage());
         }
     }
 

@@ -57,19 +57,23 @@ public class ApprovalDetailService {
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버가 존재하지 않습니다."));
 
-        Approval approval = approvalRepository.findByApprovalIdAndApprovalStatus(memberId, "기안중")
-            .orElseGet(() -> {
-                // 없으면 새로 생성
-                Approval newApproval = new Approval();
-                newApproval.setApprovalId(memberId);
-                newApproval.setApprovalName(member.getMemberName());
-                newApproval.setApprovalDepartment(member.getMemberDepartment());
-                newApproval.setApprovalPosition(member.getMemberPosition());
-                newApproval.setRegId(memberId);
-                return newApproval;
-            });
+        Approval approval;
+        
+        // approvalNo가 있으면 기존 문서 수정, 없으면 새로 생성
+        if (dto.getApprovalNo() != null && dto.getApprovalNo() > 0) {
+            approval = approvalRepository.findByApprovalNo(dto.getApprovalNo())
+                .orElseThrow(() -> new IllegalArgumentException("기안서가 존재하지 않습니다."));
+        } else {
+            // 새로 생성
+            approval = new Approval();
+            approval.setApprovalId(memberId);
+            approval.setApprovalName(member.getMemberName());
+            approval.setApprovalDepartment(member.getMemberDepartment());
+            approval.setApprovalPosition(member.getMemberPosition());
+            approval.setRegId(memberId);
+        }
 
-        // 2. 상태 및 필드 업데이트
+        // 상태 및 필드 업데이트
         approval.setApprovalStartDate(LocalDateTime.now());
         approval.setApprovalStatus("진행중");
         approval.setSignId1(dto.getSignId1());
@@ -83,7 +87,7 @@ public class ApprovalDetailService {
 
         approvalRepository.save(approval);
 
-        // 3. ApprovalDetail 가져오기 (없으면 생성)
+        // ApprovalDetail 가져오기 (없으면 생성)
         ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo())
             .orElseGet(() -> {
                 ApprovalDetail newDetail = new ApprovalDetail();
@@ -160,18 +164,23 @@ public class ApprovalDetailService {
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버가 존재하지 않습니다."));
 
-        Approval approval = approvalRepository.findByApprovalIdAndApprovalStatus(memberId, "기안중")
-            .orElseGet(() -> {
-                Approval newApproval = new Approval();
-                newApproval.setApprovalStartDate(null);
-                newApproval.setApprovalId(memberId);
-                newApproval.setApprovalName(member.getMemberName());
-                newApproval.setApprovalDepartment(member.getMemberDepartment());
-                newApproval.setApprovalPosition(member.getMemberPosition());
-                newApproval.setApprovalStatus("기안중");
-                newApproval.setRegId(memberId);
-                return newApproval;
-            });
+        Approval approval;
+        
+        // approvalNo가 있으면 기존 문서 수정, 없으면 새로 생성
+        if (dto.getApprovalNo() != null && dto.getApprovalNo() > 0) {
+            approval = approvalRepository.findByApprovalNo(dto.getApprovalNo())
+                .orElseThrow(() -> new IllegalArgumentException("기안서가 존재하지 않습니다."));
+        } else {
+            // 새로 생성
+            approval = new Approval();
+            approval.setApprovalStartDate(null);
+            approval.setApprovalId(memberId);
+            approval.setApprovalName(member.getMemberName());
+            approval.setApprovalDepartment(member.getMemberDepartment());
+            approval.setApprovalPosition(member.getMemberPosition());
+            approval.setApprovalStatus("기안중");
+            approval.setRegId(memberId);
+        }
 
         approval.setSignId1(dto.getSignId1());
         approval.setSignId2(dto.getSignId2());
@@ -357,5 +366,83 @@ public class ApprovalDetailService {
         }
 
         approvalDetailRepository.save(detail); // DB 반영
+    }
+
+    // 기안서 삭제 경진
+    @Transactional
+    public void deleteApproval(int approvalNo) {
+        // ApprovalDetail 삭제
+        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approvalNo)
+            .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
+        
+        // 첨부파일들도 함께 삭제
+        try {
+            if (detail.getApprovalAttachFile1() != null) {
+                deleteFile(approvalNo, "approvalAttachFile1");
+            }
+            if (detail.getApprovalAttachFile2() != null) {
+                deleteFile(approvalNo, "approvalAttachFile2");
+            }
+            if (detail.getApprovalAttachFile3() != null) {
+                deleteFile(approvalNo, "approvalAttachFile3");
+            }
+            if (detail.getApprovalAttachFile4() != null) {
+                deleteFile(approvalNo, "approvalAttachFile4");
+            }
+            if (detail.getApprovalAttachFile5() != null) {
+                deleteFile(approvalNo, "approvalAttachFile5");
+            }
+        } catch (IOException e) {
+            // 파일 삭제 실패는 무시하고 계속 진행
+        }
+        
+        approvalDetailRepository.delete(detail);
+        
+        // Approval 삭제
+        Approval approval = approvalRepository.findByApprovalNo(approvalNo)
+            .orElseThrow(() -> new IllegalArgumentException("기안서가 존재하지 않습니다."));
+        
+        approvalRepository.delete(approval);
+    }
+
+    // 기안취소 (진행중 -> 기안중으로 되돌리기)
+    @Transactional
+    public void cancelApproval(int approvalNo) {
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        
+        // Approval 조회
+        Approval approval = approvalRepository.findByApprovalNo(approvalNo)
+            .orElseThrow(() -> new IllegalArgumentException("기안서가 존재하지 않습니다."));
+        
+        // 권한 확인: 기안자만 취소 가능
+        if (!approval.getApprovalId().equals(memberId)) {
+            throw new IllegalArgumentException("기안자만 취소할 수 있습니다.");
+        }
+        
+        // 상태 확인: 진행중 상태만 취소 가능
+        if (!"진행중".equals(approval.getApprovalStatus())) {
+            throw new IllegalArgumentException("진행중 상태의 기안서만 취소할 수 있습니다.");
+        }
+        
+        // 취소 가능 조건 확인: signId2부터는 아무도 결재하지 않아야 함
+        if (approval.getSignDate2() != null || 
+            approval.getSignDate3() != null || 
+            approval.getSignDate4() != null || 
+            approval.getSignDate5() != null) {
+            throw new IllegalArgumentException("두 번째 결재자 이후로 결재가 진행되어 취소할 수 없습니다.");
+        }
+        
+        // 상태를 기안중으로 변경
+        approval.setApprovalStatus("기안중");
+        approval.setApprovalEndDate(null);
+        approval.setNextId(null);
+        
+        // 첫 번째 결재자의 결재 정보 초기화
+        approval.setSignDate1(null);
+        approval.setSignRemark1(null);
+        approval.setSignEtc1(null);
+        
+        approval.setUpdateId(memberId);
+        approvalRepository.save(approval);
     }
 }

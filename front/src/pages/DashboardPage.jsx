@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Box, Typography, Container, IconButton, Drawer } from '@mui/material';
 import { Menu as MenuIcon } from '@mui/icons-material';
 import Sidebar from '../components/layout/Sidebar';
@@ -8,14 +8,21 @@ import DashboardContent from '../components/dashboard/DashboardContent';
 import MemberManagementContent from '../components/dashboard/MemberManagementContent';
 import OrganizationManagementContent from '../components/dashboard/OrganizationManagementContent';
 import ProgressListContent from '../components/dashboard/ProgressListContent';
+import ApprovalWriteContent from '../components/dashboard/ApprovalWriteContent';
+import ApprovalDetailContent from '../components/dashboard/ApprovalDetailContent';
+import FormManagementContent from '../components/dashboard/FormManagementContent';
+import { apiRequest } from '../utils/apiHelper';
+import { API_URLS } from '../config/api';
 import '../styles/custom.css';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [userInfo, setUserInfo] = useState(null);
   const [currentView, setCurrentView] = useState('dashboard'); // 현재 보고 있는 뷰
   const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [saveFunction, setSaveFunction] = useState(null);
 
   useEffect(() => {
     const accessToken = localStorage.getItem('accessToken');
@@ -26,6 +33,39 @@ const DashboardPage = () => {
 
     fetchUserInfo();
   }, [navigate]);
+
+  // URL 경로에 따라 currentView 설정
+  useEffect(() => {
+    const path = location.pathname;
+    switch (path) {
+      case '/dashboard':
+        setCurrentView('dashboard');
+        break;
+      case '/approvalwrite':
+        setCurrentView('approval-write');
+        break;
+      case '/approval-detail':
+        setCurrentView('approval-detail');
+        break;
+      case '/progress-list':
+        setCurrentView('progress-list');
+        break;
+      case '/member-management':
+        setCurrentView('member-management');
+        break;
+      case '/organization-management':
+        setCurrentView('organization-management');
+        break;
+      case '/form-management':
+        setCurrentView('form-management');
+        break;
+      case '/draft/create':
+        setCurrentView('approval-write');
+        break;
+      default:
+        setCurrentView('dashboard');
+    }
+  }, [location.pathname]);
 
   // 반응형 감지
   useEffect(() => {
@@ -40,7 +80,33 @@ const DashboardPage = () => {
   }, []);
 
   const fetchUserInfo = async () => {
-    setUserInfo({ memberName: '사용자' });
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+
+      if (!accessToken) {
+        setUserInfo({ memberName: '사용자' });
+        return;
+      }
+
+      const response = await apiRequest(API_URLS.MEMBER_INFO, {
+        method: 'GET',
+      });
+
+      if (response.ok) {
+        const userData = response.data;
+        setUserInfo(userData);
+      } else {
+        console.error(
+          '사용자 정보 가져오기 실패:',
+          response.status,
+          response.data
+        );
+        setUserInfo({ memberName: '사용자' });
+      }
+    } catch (error) {
+      console.error('사용자 정보 가져오기 실패:', error);
+      setUserInfo({ memberName: '사용자' });
+    }
   };
 
   const handleLogout = () => {
@@ -50,28 +116,39 @@ const DashboardPage = () => {
   };
 
   const handleMenuClick = (path) => {
-    console.log('메뉴 클릭:', path);
-    switch (path) {
-      case '/dashboard':
-        setCurrentView('dashboard');
-        break;
-      case '/member-management':
-        setCurrentView('member-management');
-        break;
-      case '/progress-list':
-        setCurrentView('progress-list');
-        break;
-      case '/organization-management':
-        setCurrentView('organization-management');
-        break;
-      default:
-        setCurrentView('dashboard');
+    try {
+      if (location.pathname === path) {
+        navigate(path, { replace: true });
+      } else {
+        navigate(path);
+      }
+    } catch (error) {
+      console.error('navigate 실행 중 에러:', error);
     }
-    // 모바일에서 메뉴 클릭 시 햄버거 메뉴 닫기
+
     if (isMobile) {
       setMobileMenuOpen(false);
     }
   };
+
+  // ApprovalWriteContent에서 저장 함수 등록
+  const handleSaveFunctionRegister = useCallback((saveFn) => {
+    setSaveFunction(() => saveFn);
+  }, []);
+
+  // 외부에서 저장 함수 호출 (Sidebar에서 사용)
+  const handleSaveBeforeNew = useCallback(async () => {
+    if (saveFunction) {
+      try {
+        await saveFunction();
+        return true;
+      } catch (error) {
+        console.error('저장 실패:', error);
+        return false;
+      }
+    }
+    return false;
+  }, [saveFunction]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -88,6 +165,17 @@ const DashboardPage = () => {
         return <MemberManagementContent />;
       case 'organization-management':
         return <OrganizationManagementContent />;
+      case 'form-management':
+        return <FormManagementContent />;
+      case 'approval-write':
+        return (
+          <ApprovalWriteContent
+            userInfo={userInfo}
+            onSaveBeforeNew={handleSaveFunctionRegister}
+          />
+        );
+      case 'approval-detail':
+        return <ApprovalDetailContent userInfo={userInfo} />;
       default:
         return <DashboardContent userInfo={userInfo} isMobile={isMobile} />;
     }
@@ -110,15 +198,15 @@ const DashboardPage = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      {/* 상단 헤더 - 전체 너비 100% */}
       <Header onLogout={handleLogout} isMobile={isMobile} />
-
-      {/* 하단 영역 - 사이드바 + 메인 콘텐츠 */}
       <Box sx={{ display: 'flex', flexGrow: 1, position: 'relative' }}>
-        {/* 데스크톱 사이드바 */}
-        {!isMobile && <Sidebar onMenuClick={handleMenuClick} />}
+        {!isMobile && (
+          <Sidebar
+            onMenuClick={handleMenuClick}
+            onSaveBeforeNew={handleSaveBeforeNew}
+          />
+        )}
 
-        {/* 모바일 햄버거 메뉴 */}
         {isMobile && (
           <IconButton
             onClick={toggleMobileMenu}
@@ -135,7 +223,6 @@ const DashboardPage = () => {
           </IconButton>
         )}
 
-        {/* 모바일 사이드바 Drawer */}
         {isMobile && (
           <Drawer
             anchor="left"
@@ -148,11 +235,12 @@ const DashboardPage = () => {
               },
             }}
           >
-            <Sidebar onMenuClick={handleMenuClick} />
+            <Sidebar
+              onMenuClick={handleMenuClick}
+              onSaveBeforeNew={handleSaveBeforeNew}
+            />
           </Drawer>
         )}
-
-        {/* 메인 콘텐츠 */}
         <Box
           sx={{
             bgcolor: '#fff',

@@ -72,7 +72,7 @@ const MemberManagementContent = () => {
       });
 
       if (response.ok) {
-        const userInfo = await response.json();
+        const userInfo = response.data;
       }
     } catch (error) {
       console.error('사용자 정보 조회 실패:', error);
@@ -97,17 +97,11 @@ const MemberManagementContent = () => {
           apiUrl = API_URLS.MEMBER_MEMBERS;
       }
 
-      const response = await fetch(apiUrl, {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        },
-      });
+      const response = await apiRequest(apiUrl, { method: 'GET' });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = Array.isArray(response.data) ? response.data : [];
         setMemberList(data);
-        // 부서 목록은 fetchDepartments에서 별도로 관리
       }
     } catch (error) {
       console.error('회원 목록 조회 실패:', error);
@@ -122,7 +116,7 @@ const MemberManagementContent = () => {
       });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = Array.isArray(response.data) ? response.data : [];
         const departmentNames = data.map((dept) => dept.name);
         setDepartments(['전체', ...departmentNames]);
       }
@@ -137,7 +131,7 @@ const MemberManagementContent = () => {
       const response = await apiRequest(API_URLS.POSITIONS, { method: 'GET' });
 
       if (response.ok) {
-        const data = await response.json();
+        const data = Array.isArray(response.data) ? response.data : [];
         const positionNames = data.map((pos) => pos.name);
         setPositions(positionNames);
       }
@@ -322,7 +316,6 @@ const MemberManagementContent = () => {
       let response;
 
       if (isEditMode) {
-        // 수정 모드 - PUT 요청
         response = await fetch(
           `${API_URLS.MEMBER_UPDATE}/${newMember.memberId}`,
           {
@@ -365,7 +358,6 @@ const MemberManagementContent = () => {
         alert(
           isEditMode ? '직원 정보가 수정되었습니다.' : '직원이 등록되었습니다.'
         );
-        // 성공 시 모달 닫고 목록 새로고침
         handleCloseModal();
         fetchMembers();
       } else {

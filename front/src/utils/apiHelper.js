@@ -42,16 +42,21 @@ const refreshToken = async () => {
 
 // API 요청 래퍼 함수
 export const apiRequest = async (url, options = {}) => {
+  // FormData인지 확인
+  const isFormData = options.body instanceof FormData;
+
   const defaultOptions = {
     headers: {
-      'Content-Type': 'application/json',
+      // FormData가 아닐 때만 Content-Type 설정
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
     },
     credentials: 'include',
     ...options,
     // options의 headers가 있으면 기본 headers와 병합
     headers: {
-      'Content-Type': 'application/json',
+      // FormData가 아닐 때만 Content-Type 설정
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
       ...options.headers,
     },
@@ -77,9 +82,17 @@ export const apiRequest = async (url, options = {}) => {
       response = await fetch(url, retryOptions);
     }
 
-    // 응답이 성공적이면 JSON 데이터를 파싱해서 반환
+    // 응답이 성공적이면 데이터를 파싱해서 반환
     if (response.ok) {
-      const data = await response.json();
+      const contentType = response.headers.get('content-type');
+      let data;
+
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        data = await response.text();
+      }
+
       return {
         ok: true,
         data: data,
@@ -87,9 +100,23 @@ export const apiRequest = async (url, options = {}) => {
         statusText: response.statusText,
       };
     } else {
+      // 에러 응답도 파싱해서 반환
+      const contentType = response.headers.get('content-type');
+      let errorData;
+
+      try {
+        if (contentType && contentType.includes('application/json')) {
+          errorData = await response.json();
+        } else {
+          errorData = await response.text();
+        }
+      } catch (parseError) {
+        errorData = null;
+      }
+
       return {
         ok: false,
-        data: null,
+        data: errorData,
         status: response.status,
         statusText: response.statusText,
       };

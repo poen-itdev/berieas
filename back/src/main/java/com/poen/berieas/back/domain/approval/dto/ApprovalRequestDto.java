@@ -3,10 +3,11 @@ package com.poen.berieas.back.domain.approval.dto;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter 
+@Getter
 @Setter
 public class ApprovalRequestDto {
-    
+
+    private Integer approvalNo; // 기존 기안서 수정 시 사용
     private int formNo;
     private String formTitle;
     private String approvalTitle;
