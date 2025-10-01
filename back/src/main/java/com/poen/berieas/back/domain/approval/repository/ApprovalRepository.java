@@ -59,4 +59,7 @@ public interface ApprovalRepository extends JpaRepository<Approval, Integer>{
     Page<Approval> findCompletedApprovals(@Param("memberId") String memberId, Pageable pageable);
 
     Optional<Approval> findByApprovalNo(int approvalNo);
+
+    Optional<Approval> findByApprovalIdAndApprovalStatus(String approvalId, String approvalStatus);
+    
 }
