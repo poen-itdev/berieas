@@ -14,7 +14,6 @@ public class ApprovalResponseDto {
     private String approvalTitle;
     private LocalDateTime startDate;
     private String approvalName;
-    private String approvalPosition;
     private String signId1;
     private String signId2;
     private String signId3;
