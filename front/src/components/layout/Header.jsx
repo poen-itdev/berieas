@@ -88,7 +88,6 @@ const Header = ({ onLogout, isMobile = false }) => {
         </Typography>
 
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
-          {/* 데스크톱: 사용자 정보 표시 */}
           {!isMobile && headerUserInfo && (
             <Typography sx={{ color: '#fff', fontSize: '0.9rem' }}>
               {headerUserInfo.memberName} | {headerUserInfo.memberDepartment}

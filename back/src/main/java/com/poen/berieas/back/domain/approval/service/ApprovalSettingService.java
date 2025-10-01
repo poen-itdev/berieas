@@ -37,11 +37,21 @@ public class ApprovalSettingService {
     // 양식 등록
     @Transactional
     public void addForm(FormRequestDto dto) {
+        
+        String memberId;
+        try {
+            memberId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        } catch (Exception e) {
+            memberId = "system";
+        }
 
         ApprovalSetting approvalSetting = new ApprovalSetting();
         approvalSetting.setFormType(dto.getFormType());
         approvalSetting.setFormTitle(dto.getFormTitle());
         approvalSetting.setFormDocument(dto.getFormDocument());
+        approvalSetting.setRegId(memberId);
+        approvalSetting.setUpdateId(memberId);
 
         approvalSettingRepository.save(approvalSetting);
     }

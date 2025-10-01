@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -22,6 +23,7 @@ import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 
 const ProgressListContent = ({ isMobile = false }) => {
+  const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -29,21 +31,13 @@ const ProgressListContent = ({ isMobile = false }) => {
   const [page, setPage] = useState(1);
   const [progressData, setProgressData] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [tabCounts, setTabCounts] = useState({
-    total: 0,
-    inProgress: 0,
-    completed: 0,
-    drafting: 0,
-    rejected: 0,
-    approved: 0,
-  });
 
   const tabData = [
-    { label: '전체', count: tabCounts.total },
-    { label: '기안중', count: tabCounts.drafting },
-    { label: '진행중', count: tabCounts.inProgress },
-    { label: '반려', count: tabCounts.rejected },
-    { label: '완료', count: tabCounts.completed },
+    { label: '전체' },
+    { label: '기안중' },
+    { label: '진행중' },
+    { label: '반려' },
+    { label: '완료' },
   ];
 
   // API 호출 함수들
@@ -60,7 +54,7 @@ const ProgressListContent = ({ isMobile = false }) => {
         case 1: // 기안중
           apiUrl = API_URLS.APPROVAL_DRAFTING;
           break;
-        case 2: // 진행중
+        case 2: // 진행중 (내가 관련된 모든 진행중 문서)
           apiUrl = API_URLS.APPROVAL_ALL;
           break;
         case 3: // 반려
@@ -79,14 +73,24 @@ const ProgressListContent = ({ isMobile = false }) => {
 
       if (response.ok) {
         let data = response.data;
+        console.log('API 응답 데이터:', data);
 
-        // 각 탭별로 필요한 데이터만 필터링
+        // 페이지네이션 응답 처리
+        if (data && data.content && Array.isArray(data.content)) {
+          data = data.content;
+          console.log('페이지네이션 데이터:', data);
+        } else if (!Array.isArray(data)) {
+          console.error('API 응답이 예상된 형태가 아닙니다:', data);
+          setProgressData([]);
+          return;
+        }
+
+        // 진행중 탭에서는 진행중 상태만 필터링
         if (tabIndex === 2) {
-          // 진행중 탭: 진행중 상태만 표시
           data = data.filter((item) => item.approvalStatus === '진행중');
         }
 
-        setProgressData(Array.isArray(data) ? data : []);
+        setProgressData(data);
       } else {
         console.error('API 응답 실패:', response.status, response.statusText);
         setProgressData([]);
@@ -99,86 +103,27 @@ const ProgressListContent = ({ isMobile = false }) => {
     }
   };
 
-  const fetchTabCounts = async () => {
-    try {
-      const [totalRes, inProgressRes, completedRes, draftingRes, rejectedRes] =
-        await Promise.all([
-          apiRequest(API_URLS.APPROVAL_TOTAL, { method: 'GET' }),
-          apiRequest(API_URLS.APPROVAL_IN_PROGRESS, { method: 'GET' }),
-          apiRequest(API_URLS.APPROVAL_COMPLETED, { method: 'GET' }),
-          apiRequest(API_URLS.APPROVAL_DRAFTING, { method: 'GET' }),
-          apiRequest(API_URLS.APPROVAL_RETURENED, { method: 'GET' }),
-        ]);
-
-      let total = 0,
-        inProgress = 0,
-        completed = 0,
-        drafting = 0,
-        rejected = 0;
-
-      if (totalRes.ok) {
-        const totalData = totalRes.data;
-        total =
-          typeof totalData === 'number' ? totalData : totalData?.count || 0;
-      }
-
-      if (inProgressRes.ok) {
-        const inProgressData = inProgressRes.data;
-        inProgress =
-          typeof inProgressData === 'number'
-            ? inProgressData
-            : inProgressData?.count || 0;
-      }
-
-      if (completedRes.ok) {
-        const completedData = completedRes.data;
-        completed =
-          typeof completedData === 'number'
-            ? completedData
-            : completedData?.count || 0;
-      }
-
-      // 기안중과 반려는 배열 길이로 카운트
-      if (draftingRes.ok) {
-        const draftingData = draftingRes.data;
-        drafting = Array.isArray(draftingData) ? draftingData.length : 0;
-      }
-
-      if (rejectedRes.ok) {
-        const rejectedData = rejectedRes.data;
-        rejected = Array.isArray(rejectedData) ? rejectedData.length : 0;
-      }
-
-      setTabCounts({
-        total: total,
-        inProgress: inProgress,
-        completed: completed,
-        drafting: drafting,
-        rejected: rejected,
-        approved: completed,
-      });
-    } catch (error) {
-      console.error('탭 카운트 가져오기 실패:', error);
-      setTabCounts({
-        total: 0,
-        inProgress: 0,
-        completed: 0,
-        drafting: 0,
-        rejected: 0,
-        approved: 0,
-      });
-    }
-  };
-
   useEffect(() => {
     fetchProgressData();
-    fetchTabCounts();
   }, []);
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
     // 새로운 탭 인덱스를 직접 전달
     fetchProgressData(newValue);
+  };
+
+  // 행 클릭 핸들러
+  const handleRowClick = (row) => {
+    console.log('행 클릭:', row);
+
+    // 기안중 상태인 경우 기안작성 페이지로 이동
+    if (row.approvalStatus === '기안중') {
+      navigate(`/approvalwrite?approvalNo=${row.approvalNo}`);
+    } else {
+      // 다른 상태인 경우 상세보기 페이지로 이동
+      navigate(`/approval-detail?approvalNo=${row.approvalNo}`);
+    }
   };
 
   const handleSearch = async () => {
@@ -244,12 +189,16 @@ const ProgressListContent = ({ isMobile = false }) => {
     return (
       <Chip
         label={status}
-        color={statusColor}
         size="small"
         sx={{
           fontWeight: 500,
           fontSize: '12px',
           height: '24px',
+          backgroundColor: statusColor,
+          color: 'white',
+          '& .MuiChip-label': {
+            color: 'white',
+          },
         }}
       />
     );
@@ -310,27 +259,7 @@ const ProgressListContent = ({ isMobile = false }) => {
                   },
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <span>{tab.label}</span>
-                  <Box
-                    sx={{
-                      bgcolor:
-                        selectedTab === index
-                          ? 'rgba(255,255,255,0.2)'
-                          : '#E3F2FD',
-                      color: selectedTab === index ? 'white' : '#1976D2',
-                      px: 1,
-                      py: 0.5,
-                      borderRadius: '12px',
-                      fontSize: '12px',
-                      fontWeight: 600,
-                      minWidth: '20px',
-                      textAlign: 'center',
-                    }}
-                  >
-                    {tab.count}
-                  </Box>
-                </Box>
+                <span>{tab.label}</span>
               </Box>
             ))}
           </Box>
@@ -484,7 +413,9 @@ const ProgressListContent = ({ isMobile = false }) => {
                   progressData.map((row, index) => (
                     <TableRow
                       key={row.id || `row-${index}`}
+                      onClick={() => handleRowClick(row)}
                       sx={{
+                        cursor: 'pointer',
                         '&:hover': {
                           bgcolor: '#F8F9FA',
                         },

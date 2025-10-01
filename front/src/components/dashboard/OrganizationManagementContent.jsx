@@ -42,12 +42,16 @@ const OrganizationManagementContent = () => {
           throw new Error('API 요청 실패');
         }
 
-        const departmentsData = await departmentsRes.json();
-        const positionsData = await positionsRes.json();
+        const departmentsData = Array.isArray(departmentsRes.data)
+          ? departmentsRes.data
+          : [];
+        const positionsData = Array.isArray(positionsRes.data)
+          ? positionsRes.data
+          : [];
 
         // 배열이 아닌 경우 빈 배열로 설정
-        setDepartments(Array.isArray(departmentsData) ? departmentsData : []);
-        setPositions(Array.isArray(positionsData) ? positionsData : []);
+        setDepartments(departmentsData);
+        setPositions(positionsData);
       } catch (error) {
         console.error('데이터 로드 실패:', error);
         console.log('백엔드 API 오류로 인해 빈 배열을 사용합니다.');

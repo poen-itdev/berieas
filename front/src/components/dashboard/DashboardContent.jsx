@@ -15,6 +15,7 @@ import {
   TableBody,
 } from '@mui/material';
 import { API_URLS } from '../../config/api';
+import { apiRequest } from '../../utils/apiHelper';
 import PageHeader from '../common/PageHeader';
 
 const BACKEND_API_BASE_URL =
@@ -100,34 +101,26 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
       setStatusData({ total, inProgress, completed });
     } catch (error) {
       console.error('대시보드 요약 조회 실패:', error);
-      console.log('백엔드 API 오류로 인해 임시 데이터를 사용합니다.');
       setStatusData({ total: 15, inProgress: 8, completed: 7 });
     }
   };
 
   const fetchMySubmittedDocs = async () => {
     try {
-      const headers = {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        'Content-Type': 'application/json',
-      };
-
-      const response = await fetch(API_URLS.APPROVAL_MY_SUBMITTED, {
+      const response = await apiRequest(API_URLS.APPROVAL_MY_SUBMITTED, {
         method: 'GET',
-        headers,
-        credentials: 'include',
       });
 
       if (response.ok) {
-        const data = await response.json();
-        console.log('내가 기안한 문서 데이터:', data);
-        setMySubmittedDocs(data);
+        console.log('내가 기안한 문서 데이터:', response.data);
+        setMySubmittedDocs(Array.isArray(response.data) ? response.data : []);
       } else {
         console.error(
           '내가 기안한 문서 조회 실패:',
           response.status,
           response.statusText
         );
+        setMySubmittedDocs([]);
       }
     } catch (error) {
       console.error('내가 기안한 문서 조회 실패:', error);
@@ -137,27 +130,20 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
 
   const fetchMyPendingDocs = async () => {
     try {
-      const headers = {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-        'Content-Type': 'application/json',
-      };
-
-      const response = await fetch(API_URLS.APPROVAL_MY_PENDING, {
+      const response = await apiRequest(API_URLS.APPROVAL_MY_PENDING, {
         method: 'GET',
-        headers,
-        credentials: 'include',
       });
 
       if (response.ok) {
-        const data = await response.json();
-        console.log('내가 결재할 문서 데이터:', data);
-        setMyPendingDocs(data);
+        console.log('내가 결재할 문서 데이터:', response.data);
+        setMyPendingDocs(Array.isArray(response.data) ? response.data : []);
       } else {
         console.error(
           '내가 결재할 문서 조회 실패:',
           response.status,
           response.statusText
         );
+        setMyPendingDocs([]);
       }
     } catch (error) {
       console.error('내가 결재할 문서 조회 실패:', error);
@@ -177,7 +163,10 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
         {/* 모바일에서만 사용자 인사말 표시 */}
         {isMobile && userInfo && (
           <Box sx={{ mb: 3, textAlign: 'center' }}>
-            <Typography variant="h6" sx={{ color: '#333', fontWeight: 500 }}>
+            <Typography
+              variant="h6"
+              sx={{ color: '#333', fontWeight: 500, textAlign: 'left' }}
+            >
               안녕하세요. {userInfo.memberName}님
             </Typography>
           </Box>

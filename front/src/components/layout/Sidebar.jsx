@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -9,6 +9,11 @@ import {
   Drawer,
   Collapse,
   ListItemIcon,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Typography,
 } from '@mui/material';
 import {
   Add,
@@ -18,14 +23,18 @@ import {
   Business,
 } from '@mui/icons-material';
 
-const Sidebar = ({ onMenuClick }) => {
+const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [memberMenuOpen, setMemberMenuOpen] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
 
   const menuItems = [
     { text: '대시보드', path: '/dashboard' },
     { text: '진행목록', path: '/progress-list' },
-    // { text: '양식관리', icon: <Pending />, path: '/received' },
+    { text: '양식관리', path: '/form-management' },
   ];
 
   const memberSubMenuItems = [
@@ -33,10 +42,65 @@ const Sidebar = ({ onMenuClick }) => {
     { text: '조직관리', path: '/organization-management', icon: <Business /> },
   ];
 
-  const handleMenuClick = (path) => {
+  const handleMenuClick = (path, skipDialog = false) => {
+    const currentApprovalNo = searchParams.get('approvalNo');
+    const currentPath = location.pathname;
+
+    // 기안중 상태의 기안서를 보고 있을 때 다른 메뉴 클릭 시 팝업 표시 (skipDialog가 false일 때만)
+    if (
+      !skipDialog &&
+      currentApprovalNo &&
+      currentPath === '/approvalwrite' &&
+      path !== '/draft/create'
+    ) {
+      setShowSaveDialog(true);
+      setPendingNavigation(path);
+      return;
+    }
+
     if (onMenuClick) {
       onMenuClick(path);
     }
+  };
+
+  // 기안작성 버튼 클릭 처리
+  const handleCreateNewDraft = () => {
+    const currentApprovalNo = searchParams.get('approvalNo');
+    const currentPath = location.pathname;
+
+    // /approvalwrite 경로에서만 임시저장된 기안서 확인
+    if (currentApprovalNo && currentPath === '/approvalwrite') {
+      setShowSaveDialog(true);
+    } else {
+      handleMenuClick('/draft/create');
+    }
+  };
+
+  // 다이얼로그에서 선택 처리
+  const handleSaveChoice = async (choice) => {
+    const targetPath = pendingNavigation || '/draft/create';
+
+    switch (choice) {
+      case 'save':
+        if (onSaveBeforeNew) {
+          const saveSuccess = await onSaveBeforeNew();
+          if (saveSuccess) {
+            handleMenuClick(targetPath, true);
+          } else {
+            alert('저장에 실패했습니다. 다시 시도해주세요.');
+          }
+        } else {
+          handleMenuClick(targetPath, true);
+        }
+        break;
+      case 'discard':
+        handleMenuClick(targetPath, true);
+        break;
+      case 'cancel':
+        break;
+    }
+    setShowSaveDialog(false);
+    setPendingNavigation(null);
   };
 
   return (
@@ -70,7 +134,7 @@ const Sidebar = ({ onMenuClick }) => {
             py: 2,
             borderRadius: 0,
           }}
-          onClick={() => handleMenuClick('/draft/create')}
+          onClick={handleCreateNewDraft}
         >
           기안작성
         </Button>
@@ -156,6 +220,58 @@ const Sidebar = ({ onMenuClick }) => {
           </List>
         </Collapse>
       </List>
+
+      {/* 임시저장된 기안서 확인 다이얼로그 */}
+      <Dialog
+        open={showSaveDialog}
+        onClose={() => setShowSaveDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            임시저장된 기안서가 있습니다
+          </Typography>
+        </DialogTitle>
+        <DialogContent sx={{ pb: 2 }}>
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            현재 임시저장된 기안서가 있습니다. 다른 페이지로 이동하기 전에
+            어떻게 하시겠습니까?
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#666' }}>
+            • <strong>저장하고 이동:</strong> 현재 내용을 임시저장하고 선택한
+            페이지로 이동합니다.
+            <br />• <strong>내용 버리고 이동:</strong> 현재 내용을 삭제하고
+            선택한 페이지로 이동합니다.
+            <br />• <strong>취소:</strong> 이동을 취소합니다.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3, pt: 1 }}>
+          <Button
+            onClick={() => handleSaveChoice('save')}
+            variant="contained"
+            color="primary"
+            sx={{ minWidth: 120 }}
+          >
+            저장하고 이동
+          </Button>
+          <Button
+            onClick={() => handleSaveChoice('discard')}
+            variant="outlined"
+            color="warning"
+            sx={{ minWidth: 120 }}
+          >
+            내용 버리고 이동
+          </Button>
+          <Button
+            onClick={() => handleSaveChoice('cancel')}
+            variant="outlined"
+            sx={{ minWidth: 80 }}
+          >
+            취소
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Drawer>
   );
 };

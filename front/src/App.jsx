@@ -17,6 +17,13 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/approvalwrite" element={<DashboardPage />} />
+        <Route path="/approval-detail" element={<DashboardPage />} />
+        <Route path="/progress-list" element={<DashboardPage />} />
+        <Route path="/member-management" element={<DashboardPage />} />
+        <Route path="/organization-management" element={<DashboardPage />} />
+        <Route path="/form-management" element={<DashboardPage />} />
+        <Route path="/draft/create" element={<DashboardPage />} />
         <Route path="/find-account" element={<FindAccountPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
       </Routes>
