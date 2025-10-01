@@ -251,6 +251,7 @@ public class ApprovalDetailService {
             approvalDetail.getApprovalTitle(),
             approval.getApprovalStartDate(),
             approval.getApprovalName(),
+            approval.getApprovalPosition(),
             approval.getSignId1(),
             approval.getSignId2(),
             approval.getSignId3(),
