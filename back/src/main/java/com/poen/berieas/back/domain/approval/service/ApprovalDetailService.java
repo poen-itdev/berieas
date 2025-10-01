@@ -57,37 +57,46 @@ public class ApprovalDetailService {
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버가 존재하지 않습니다."));
 
-        // Approval
-        Approval approval = new Approval();
+        Approval approval = approvalRepository.findByApprovalIdAndApprovalStatus(memberId, "기안중")
+            .orElseGet(() -> {
+                // 없으면 새로 생성
+                Approval newApproval = new Approval();
+                newApproval.setApprovalId(memberId);
+                newApproval.setApprovalName(member.getMemberName());
+                newApproval.setApprovalDepartment(member.getMemberDepartment());
+                newApproval.setApprovalPosition(member.getMemberPosition());
+                newApproval.setRegId(memberId);
+                return newApproval;
+            });
+
+        // 2. 상태 및 필드 업데이트
         approval.setApprovalStartDate(LocalDateTime.now());
-        approval.setApprovalId(memberId);
-        approval.setApprovalName(member.getMemberName()); // 기안자
-        approval.setApprovalDepartment(member.getMemberDepartment());
-        approval.setApprovalPosition(member.getMemberPosition());
         approval.setApprovalStatus("진행중");
-        approval.setSignId1(dto.getSignId1()); // 결재자1
-        approval.setSignId2(dto.getSignId2()); // 결재자2
-        approval.setSignId3(dto.getSignId3()); // 결재자3
-        approval.setSignId4(dto.getSignId4()); // 결재자4
-        approval.setSignId5(dto.getSignId5()); // 결재자5
-        approval.setReferenceId(dto.getReferenceId()); // 참조자
-        approval.setNextId(dto.getSignId1()); 
-        approval.setRegId(memberId);
+        approval.setSignId1(dto.getSignId1());
+        approval.setSignId2(dto.getSignId2());
+        approval.setSignId3(dto.getSignId3());
+        approval.setSignId4(dto.getSignId4());
+        approval.setSignId5(dto.getSignId5());
+        approval.setReferenceId(dto.getReferenceId());
+        approval.setNextId(dto.getSignId1());
         approval.setUpdateId(memberId);
 
-        approvalRepository.save(approval); // PK 생성
+        approvalRepository.save(approval);
 
-        // ApprovalDetail
-        ApprovalDetail detail = new ApprovalDetail();
-        detail.setApprovalNo(approval.getApprovalNo());
-        detail.setFormNo(dto.getFormNo()); // 양식번호
-        detail.setApprovalType(form.getFormType()); 
-        detail.setApprovalTitle(dto.getApprovalTitle()); // 양식제목
-        detail.setApprovalDocument(dto.getApprovalDocument()); // 내용
-        detail.setRegId(memberId);
-        // detail.setRegDate(LocalDateTime.now());
+        // 3. ApprovalDetail 가져오기 (없으면 생성)
+        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo())
+            .orElseGet(() -> {
+                ApprovalDetail newDetail = new ApprovalDetail();
+                newDetail.setApprovalNo(approval.getApprovalNo());
+                newDetail.setFormNo(dto.getFormNo());
+                newDetail.setApprovalType(form.getFormType());
+                newDetail.setRegId(memberId);
+                return newDetail;
+            });
+
+        detail.setApprovalTitle(dto.getApprovalTitle());
+        detail.setApprovalDocument(dto.getApprovalDocument());
         detail.setUpdateId(memberId);
-        // detail.setUpdateDate(LocalDateTime.now());
 
         // 파일 처리 (최대 5개)
         if (files != null) {
@@ -151,37 +160,45 @@ public class ApprovalDetailService {
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버가 존재하지 않습니다."));
 
-        // Approval
-        Approval approval = new Approval();
-        approval.setApprovalStartDate(null);
-        approval.setApprovalId(memberId);
-        approval.setApprovalName(member.getMemberName()); // 기안자
-        approval.setApprovalDepartment(member.getMemberDepartment());
-        approval.setApprovalPosition(member.getMemberPosition());
-        approval.setApprovalStatus("기안중");
-        approval.setSignId1(dto.getSignId1()); // 결재자1
-        approval.setSignId2(dto.getSignId2()); // 결재자2
-        approval.setSignId3(dto.getSignId3()); // 결재자3
-        approval.setSignId4(dto.getSignId4()); // 결재자4
-        approval.setSignId5(dto.getSignId5()); // 결재자5
-        approval.setReferenceId(dto.getReferenceId()); // 참조자
-        approval.setNextId(dto.getSignId1()); 
-        approval.setRegId(memberId);
+        Approval approval = approvalRepository.findByApprovalIdAndApprovalStatus(memberId, "기안중")
+            .orElseGet(() -> {
+                Approval newApproval = new Approval();
+                newApproval.setApprovalStartDate(null);
+                newApproval.setApprovalId(memberId);
+                newApproval.setApprovalName(member.getMemberName());
+                newApproval.setApprovalDepartment(member.getMemberDepartment());
+                newApproval.setApprovalPosition(member.getMemberPosition());
+                newApproval.setApprovalStatus("기안중");
+                newApproval.setRegId(memberId);
+                return newApproval;
+            });
+
+        approval.setSignId1(dto.getSignId1());
+        approval.setSignId2(dto.getSignId2());
+        approval.setSignId3(dto.getSignId3());
+        approval.setSignId4(dto.getSignId4());
+        approval.setSignId5(dto.getSignId5());
+        approval.setReferenceId(dto.getReferenceId());
+        approval.setNextId(dto.getSignId1());
         approval.setUpdateId(memberId);
 
-        approvalRepository.save(approval); // PK 생성
+        approvalRepository.save(approval);
 
         // ApprovalDetail
-        ApprovalDetail detail = new ApprovalDetail();
-        detail.setApprovalNo(approval.getApprovalNo());
-        detail.setFormNo(dto.getFormNo()); // 양식번호
-        detail.setApprovalType(form.getFormType()); 
-        detail.setApprovalTitle(dto.getApprovalTitle()); // 양식제목
-        detail.setApprovalDocument(dto.getApprovalDocument()); // 내용
-        detail.setRegId(memberId);
-        // detail.setRegDate(LocalDateTime.now());
+        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo())
+            .orElseGet(() -> {
+                ApprovalDetail newDetail = new ApprovalDetail();
+                newDetail.setApprovalNo(approval.getApprovalNo());
+                newDetail.setFormNo(dto.getFormNo());
+                newDetail.setApprovalType(form.getFormType());
+                newDetail.setRegId(memberId);
+                return newDetail;
+            });
+
+        detail.setApprovalTitle(dto.getApprovalTitle());
+        detail.setApprovalDocument(dto.getApprovalDocument());
         detail.setUpdateId(memberId);
-        // detail.setUpdateDate(LocalDateTime.now());
+
 
         // 파일 처리 (최대 5개)
         if (files != null) {
