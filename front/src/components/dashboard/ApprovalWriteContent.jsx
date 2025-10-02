@@ -1004,7 +1004,10 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
               mb: 3,
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            <Typography
+              component="div"
+              sx={{ fontWeight: 600, fontSize: '1.25rem' }}
+            >
               양식 선택
             </Typography>
             <Typography variant="body2" sx={{ color: '#666', mt: 1 }}>

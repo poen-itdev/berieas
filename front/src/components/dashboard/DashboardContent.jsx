@@ -18,9 +18,6 @@ import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 import PageHeader from '../common/PageHeader';
 
-const BACKEND_API_BASE_URL =
-  import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:8080';
-
 const DashboardContent = ({ userInfo, isMobile = false }) => {
   const navigate = useNavigate();
   const [selectedTab, setSelectedTab] = useState(0);
@@ -100,7 +97,6 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
 
       setStatusData({ total, inProgress, completed });
     } catch (error) {
-      console.error('대시보드 요약 조회 실패:', error);
       setStatusData({ total: 15, inProgress: 8, completed: 7 });
     }
   };
@@ -112,18 +108,11 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
       });
 
       if (response.ok) {
-        console.log('내가 기안한 문서 데이터:', response.data);
         setMySubmittedDocs(Array.isArray(response.data) ? response.data : []);
       } else {
-        console.error(
-          '내가 기안한 문서 조회 실패:',
-          response.status,
-          response.statusText
-        );
         setMySubmittedDocs([]);
       }
     } catch (error) {
-      console.error('내가 기안한 문서 조회 실패:', error);
       setMySubmittedDocs([]);
     }
   };
@@ -135,25 +124,16 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
       });
 
       if (response.ok) {
-        console.log('내가 결재할 문서 데이터:', response.data);
         setMyPendingDocs(Array.isArray(response.data) ? response.data : []);
       } else {
-        console.error(
-          '내가 결재할 문서 조회 실패:',
-          response.status,
-          response.statusText
-        );
         setMyPendingDocs([]);
       }
     } catch (error) {
-      console.error('내가 결재할 문서 조회 실패:', error);
       setMyPendingDocs([]);
     }
   };
 
   const handleDocumentClick = (document) => {
-    console.log('문서 클릭:', document);
-
     // 기안중 상태인 경우 기안작성 페이지로 이동
     if (document.approvalStatus === '기안중') {
       navigate(`/approvalwrite?approvalNo=${document.approvalNo}`);

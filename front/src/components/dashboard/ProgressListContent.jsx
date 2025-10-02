@@ -73,14 +73,11 @@ const ProgressListContent = ({ isMobile = false }) => {
 
       if (response.ok) {
         let data = response.data;
-        console.log('API 응답 데이터:', data);
 
         // 페이지네이션 응답 처리
         if (data && data.content && Array.isArray(data.content)) {
           data = data.content;
-          console.log('페이지네이션 데이터:', data);
         } else if (!Array.isArray(data)) {
-          console.error('API 응답이 예상된 형태가 아닙니다:', data);
           setProgressData([]);
           return;
         }
@@ -92,11 +89,9 @@ const ProgressListContent = ({ isMobile = false }) => {
 
         setProgressData(data);
       } else {
-        console.error('API 응답 실패:', response.status, response.statusText);
         setProgressData([]);
       }
     } catch (error) {
-      console.error('진행목록 데이터 가져오기 실패:', error);
       setProgressData([]);
     } finally {
       setLoading(false);
@@ -115,8 +110,6 @@ const ProgressListContent = ({ isMobile = false }) => {
 
   // 행 클릭 핸들러
   const handleRowClick = (row) => {
-    console.log('행 클릭:', row);
-
     // 기안중 상태인 경우 기안작성 페이지로 이동
     if (row.approvalStatus === '기안중') {
       navigate(`/approvalwrite?approvalNo=${row.approvalNo}`);
@@ -164,7 +157,7 @@ const ProgressListContent = ({ isMobile = false }) => {
         setProgressData(Array.isArray(data) ? data : []);
       }
     } catch (error) {
-      console.error('검색 실패:', error);
+      // 검색 실패 시 빈 배열로 설정
     } finally {
       setLoading(false);
     }

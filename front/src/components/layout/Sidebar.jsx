@@ -6,7 +6,6 @@ import {
   List,
   ListItemButton,
   ListItemText,
-  Drawer,
   Collapse,
   ListItemIcon,
   Dialog,
@@ -104,21 +103,12 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
   };
 
   return (
-    <Drawer
-      variant="permanent"
+    <Box
       sx={{
         width: 280,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: 280,
-          boxSizing: 'border-box',
-          bgcolor: '#fff',
-          top: 64,
-          height: 'calc(100vh - 64px)',
-          position: 'fixed',
-          zIndex: 1200,
-          overflow: 'auto',
-        },
+        height: '100%',
+        overflow: 'auto',
+        bgcolor: '#fff',
       }}
     >
       {/* 기안작성 버튼 */}
@@ -229,7 +219,10 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
         fullWidth
       >
         <DialogTitle sx={{ pb: 1 }}>
-          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+          <Typography
+            component="div"
+            sx={{ fontWeight: 600, fontSize: '1.25rem' }}
+          >
             임시저장된 기안서가 있습니다
           </Typography>
         </DialogTitle>
@@ -272,7 +265,7 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
           </Button>
         </DialogActions>
       </Dialog>
-    </Drawer>
+    </Box>
   );
 };
 
