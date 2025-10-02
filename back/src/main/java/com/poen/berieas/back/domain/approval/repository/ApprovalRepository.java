@@ -36,11 +36,11 @@ public interface ApprovalRepository extends JpaRepository<Approval, Integer>{
 
     // 진행목록(전체)
     @Query("select a from Approval a " +
-            "where a.approvalId = :memberId " +
-            "or a.referenceId = :memberId " +
-            "or a.nextId = :memberId " +
+            "where a.approvalName = :memberName " +
+            "or a.referenceId = :memberName " +
+            "or a.nextId = :memberName " +
             "order by a.regDate desc")
-    Page<Approval> findAllRelatedApprovals(@Param("memberId") String memberId, Pageable pageable);
+    Page<Approval> findAllRelatedApprovals(@Param("memberName") String memberName, Pageable pageable);
 
     // 진행목록(진행중)
     @Query("select a from Approval a where a.approvalId = :approvalId")
