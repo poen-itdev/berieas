@@ -151,7 +151,7 @@ public class ApprovalService {
                 detail != null ? detail.getApprovalTitle() : null,
                 detail != null ? detail.getApprovalType() : null,
                 approval.getApprovalDepartment(),
-                member.getMemberName(),
+                approval.getApprovalName(),
                 currentSigner,
                 approval.getApprovalStatus()
             );
@@ -201,7 +201,7 @@ public class ApprovalService {
                 detail != null ? detail.getApprovalTitle() : null,
                 detail != null ? detail.getApprovalType() : null,
                 approval.getApprovalDepartment(),
-                member.getMemberName(),
+                approval.getApprovalName(),
                 currentSigner,
                 "기안중"
             );
@@ -226,7 +226,7 @@ public class ApprovalService {
                 detail != null ? detail.getApprovalTitle() : null,
                 detail != null ? detail.getApprovalType() : null,
                 approval.getApprovalDepartment(),
-                member.getMemberName(),
+                approval.getApprovalName(),
                 currentSigner,
                 approval.getApprovalStatus()
             );
@@ -240,7 +240,7 @@ public class ApprovalService {
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        Page<Approval> approvals = approvalRepository.findCompletedApprovals(memberId, pageable);
+        Page<Approval> approvals = approvalRepository.findCompletedApprovals(memberId, member.getMemberName(), pageable);
         return approvals.map(approval -> {
             ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
             String currentSigner = getCurrentSigner(approval);
@@ -251,7 +251,7 @@ public class ApprovalService {
                 detail != null ? detail.getApprovalTitle() : null,
                 detail != null ? detail.getApprovalType() : null,
                 approval.getApprovalDepartment(),
-                member.getMemberName(),
+                approval.getApprovalName(),
                 currentSigner,
                 approval.getApprovalStatus()
             );

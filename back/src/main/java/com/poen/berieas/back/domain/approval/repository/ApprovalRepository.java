@@ -37,8 +37,13 @@ public interface ApprovalRepository extends JpaRepository<Approval, Integer>{
     // 진행목록(전체)
     @Query("select a from Approval a " +
             "where a.approvalName = :memberName " +
-            "or a.referenceId = :memberName " +
+            "or a.referenceId like %:memberName% " +
             "or a.nextId = :memberName " +
+            "or a.signId1 = :memberName " +
+            "or a.signId2 = :memberName " +
+            "or a.signId3 = :memberName " +
+            "or a.signId4 = :memberName " +
+            "or a.signId5 = :memberName " +
             "order by a.regDate desc")
     Page<Approval> findAllRelatedApprovals(@Param("memberName") String memberName, Pageable pageable);
 
@@ -56,7 +61,7 @@ public interface ApprovalRepository extends JpaRepository<Approval, Integer>{
 
     // 진행목록(완료)
     @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStatus = '완료'")
-    Page<Approval> findCompletedApprovals(@Param("memberId") String memberId, Pageable pageable);
+    Page<Approval> findCompletedApprovals(@Param("memberId") String memberId, @Param("memberName") String memberName, Pageable pageable);
 
     Optional<Approval> findByApprovalNo(int approvalNo);
 
