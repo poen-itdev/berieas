@@ -138,7 +138,7 @@ public class ApprovalService {
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        Page<Approval> approvals = approvalRepository.findAllRelatedApprovals(memberId, pageable);
+        Page<Approval> approvals = approvalRepository.findAllRelatedApprovals(member.getMemberName(), pageable);
 
         return approvals.map(approval -> {
 
@@ -393,7 +393,7 @@ public class ApprovalService {
         // 결재 1
         if (member.getMemberName().equals(approval.getSignId1()) && approval.getSignDate1() == null) {
             approval.setSignDate1(LocalDateTime.now());
-            if (approval.getSignId2() != null) {
+            if (approval.getSignId2() != null && !approval.getSignId2().isBlank()) {
                 approval.setNextId(approval.getSignId2());
             } else {
                 approval.setNextId(null);
@@ -403,7 +403,7 @@ public class ApprovalService {
         // 결재 2
         else if (member.getMemberName().equals(approval.getSignId2()) && approval.getSignDate2() == null) {
             approval.setSignDate2(LocalDateTime.now());
-            if (approval.getSignId3() != null) {
+            if (approval.getSignId3() != null && !approval.getSignId3().isBlank()) {
                 approval.setNextId(approval.getSignId3());
             } else {
                 approval.setNextId(null);
@@ -413,7 +413,7 @@ public class ApprovalService {
         // 결재 3
         else if (member.getMemberName().equals(approval.getSignId3()) && approval.getSignDate3() == null) {
             approval.setSignDate3(LocalDateTime.now());
-            if (approval.getSignId4() != null) {
+            if (approval.getSignId4() != null && !approval.getSignId4().isBlank()) {
                 approval.setNextId(approval.getSignId4());
             } else {
                 approval.setNextId(null);
@@ -423,7 +423,7 @@ public class ApprovalService {
         // 결재 4
         else if (member.getMemberName().equals(approval.getSignId4()) && approval.getSignDate4() == null) {
             approval.setSignDate4(LocalDateTime.now());
-            if (approval.getSignId5() != null) {
+            if (approval.getSignId5() != null && !approval.getSignId5().isBlank()) {
                 approval.setNextId(approval.getSignId5());
             } else {
                 approval.setNextId(null);
