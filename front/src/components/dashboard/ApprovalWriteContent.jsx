@@ -836,9 +836,6 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                   >
                     파일 선택
                   </Typography>
-                  <Typography variant="caption" sx={{ color: '#666' }}>
-                    또는 여기로 파일을 끌어오세요
-                  </Typography>
                 </Box>
                 {attachedFiles.length > 0 && (
                   <Box

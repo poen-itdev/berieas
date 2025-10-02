@@ -185,7 +185,16 @@ const MemberManagementContent = () => {
           label="활성"
           size="small"
           variant="outlined"
-          sx={{ color: 'green', borderColor: 'green' }}
+          sx={{
+            color: 'green',
+            borderColor: 'green',
+            fontSize: { xs: '10px', sm: '12px' },
+            height: { xs: '20px', sm: '24px' },
+            '& .MuiChip-label': {
+              fontSize: { xs: '10px', sm: '12px' },
+              padding: { xs: '0 6px', sm: '0 8px' },
+            },
+          }}
         />
       );
     } else {
@@ -194,7 +203,16 @@ const MemberManagementContent = () => {
           label="비활성"
           size="small"
           variant="outlined"
-          sx={{ color: 'red', borderColor: 'red' }}
+          sx={{
+            color: 'red',
+            borderColor: 'red',
+            fontSize: { xs: '10px', sm: '12px' },
+            height: { xs: '20px', sm: '24px' },
+            '& .MuiChip-label': {
+              fontSize: { xs: '10px', sm: '12px' },
+              padding: { xs: '0 6px', sm: '0 8px' },
+            },
+          }}
         />
       );
     }
@@ -383,23 +401,66 @@ const MemberManagementContent = () => {
           description="조직현황 확인 및 직원 검색/등록 가능"
         />
 
-        {/* 콘텐츠 영역 - flex로 같은 높이 */}
-        <Box sx={{ display: 'flex', flexGrow: 1, gap: 2, overflow: 'hidden' }}>
+        {/* 콘텐츠 영역 - 반응형 레이아웃 */}
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', lg: 'row' },
+            flexGrow: 1,
+            gap: 2,
+            overflow: 'hidden',
+          }}
+        >
           {/* 좌측 부서 목록 */}
           <Paper
-            sx={{ width: 200, p: 2, display: 'flex', flexDirection: 'column' }}
+            sx={{
+              width: { xs: '100%', lg: 200 },
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              order: { xs: 1, lg: 1 },
+            }}
           >
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
               부서
             </Typography>
-            <List dense sx={{ flexGrow: 1 }}>
+            <List
+              dense
+              sx={{
+                flexGrow: 1,
+                maxHeight: { xs: '200px', lg: 'none' },
+                overflowY: { xs: 'auto', lg: 'visible' },
+                overflowX: 'hidden',
+                '&::-webkit-scrollbar': {
+                  width: '6px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: '#f1f1f1',
+                  borderRadius: '3px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#c1c1c1',
+                  borderRadius: '3px',
+                },
+                '&::-webkit-scrollbar-thumb:hover': {
+                  background: '#a8a8a8',
+                },
+              }}
+            >
               {departments.map((department) => (
-                <ListItem key={department} disablePadding>
+                <ListItem
+                  key={department}
+                  disablePadding
+                  sx={{
+                    minHeight: '40px',
+                  }}
+                >
                   <ListItemButton
                     selected={selectedDepartment === department}
                     onClick={() => handleDepartmentSelect(department)}
                     sx={{
                       borderRadius: 1,
+                      minHeight: '40px',
                       '&.Mui-selected': {
                         bgcolor: '#e3f2fd',
                         color: '#3275FC',
@@ -414,7 +475,14 @@ const MemberManagementContent = () => {
           </Paper>
 
           {/* 우측 메인 영역 */}
-          <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+          <Box
+            sx={{
+              flexGrow: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              order: { xs: 2, lg: 2 },
+            }}
+          >
             <Box sx={{ mb: 3 }}>
               <Tabs value={selectedTab} onChange={handleTabChange}>
                 <Tab label="전체" />
@@ -424,7 +492,15 @@ const MemberManagementContent = () => {
             </Box>
 
             {/* 검색 및 직원 등록 */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'stretch', sm: 'center' },
+                gap: { xs: 1, sm: 2 },
+                mb: 3,
+              }}
+            >
               <TextField
                 placeholder="이름, 아이디, 이메일로 검색"
                 value={searchTerm}
@@ -433,99 +509,222 @@ const MemberManagementContent = () => {
                 InputProps={{
                   startAdornment: <Search sx={{ mr: 1, color: '#666' }} />,
                 }}
-                sx={{ flexGrow: 1 }}
+                sx={{
+                  flexGrow: 1,
+                  '& .MuiInputBase-root': {
+                    height: { xs: '40px', sm: '56px' },
+                    fontSize: { xs: '14px', sm: '16px' },
+                  },
+                }}
               />
-              <Button
-                variant="contained"
-                onClick={handleSearch}
+              <Box
                 sx={{
-                  bgcolor: '#3275FC',
-                  minWidth: 120,
-                  height: 56,
-                  fontSize: '16px',
+                  display: 'flex',
+                  gap: { xs: 1, sm: 2 },
+                  width: { xs: '100%', sm: 'auto' },
                 }}
               >
-                검색
-              </Button>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={handleOpenModal}
-                sx={{
-                  bgcolor: '#FBE77B',
-                  color: '#333',
-                  minWidth: 120,
-                  height: 56,
-                  fontSize: '16px',
-                }}
-              >
-                직원 등록
-              </Button>
+                <Button
+                  variant="contained"
+                  onClick={handleSearch}
+                  sx={{
+                    bgcolor: '#3275FC',
+                    minWidth: { xs: '80px', sm: 120 },
+                    height: { xs: '40px', sm: 56 },
+                    fontSize: { xs: '14px', sm: '16px' },
+                    flex: { xs: 1, sm: 'none' },
+                  }}
+                >
+                  검색
+                </Button>
+                <Button
+                  variant="contained"
+                  startIcon={<Add />}
+                  onClick={handleOpenModal}
+                  sx={{
+                    bgcolor: '#FBE77B',
+                    color: '#333',
+                    minWidth: { xs: '80px', sm: 120 },
+                    height: { xs: '40px', sm: 56 },
+                    fontSize: { xs: '14px', sm: '16px' },
+                    flex: { xs: 1, sm: 'none' },
+                  }}
+                >
+                  직원 등록
+                </Button>
+              </Box>
             </Box>
 
             {/* 직원 리스트 테이블 */}
-            <TableContainer component={Paper}>
+            <TableContainer
+              component={Paper}
+              sx={{
+                borderRadius: 2,
+                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                overflow: 'auto',
+                width: '100%',
+                maxWidth: '100%',
+                '& .MuiTableCell-root': {
+                  fontSize: { xs: '12px', sm: '14px' },
+                  textAlign: 'center',
+                  padding: { xs: '8px 4px', sm: '12px 8px' },
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                },
+                '& .MuiTableCell-head': {
+                  fontWeight: 600,
+                  fontSize: { xs: '12px', sm: '14px' },
+                  padding: { xs: '8px 4px', sm: '12px 8px' },
+                },
+                '&::-webkit-scrollbar': {
+                  height: '8px',
+                  width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: '#f1f1f1',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#c1c1c1',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb:hover': {
+                  background: '#a8a8a8',
+                },
+              }}
+            >
               <Table>
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                    <TableCell align="center">이름</TableCell>
-                    <TableCell align="center">아이디</TableCell>
-                    <TableCell align="center">이메일</TableCell>
-                    <TableCell align="center">부서</TableCell>
-                    <TableCell align="center">직급</TableCell>
-                    <TableCell align="center">상태</TableCell>
-                    <TableCell align="center">관리</TableCell>
+                    <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                      이름
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        display: { xs: 'none', sm: 'table-cell' },
+                        minWidth: '80px',
+                      }}
+                    >
+                      아이디
+                    </TableCell>
+                    <TableCell
+                      sx={{
+                        display: { xs: 'none', md: 'table-cell' },
+                        minWidth: '120px',
+                      }}
+                    >
+                      이메일
+                    </TableCell>
+                    <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                      부서
+                    </TableCell>
+                    <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                      직급
+                    </TableCell>
+                    <TableCell sx={{ minWidth: { xs: '50px', sm: '70px' } }}>
+                      상태
+                    </TableCell>
+                    <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                      관리
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {filteredMembers.map((member) => (
                     <TableRow key={member.memberId} hover>
-                      <TableCell align="center">{member.memberName}</TableCell>
-                      <TableCell align="center">{member.memberId}</TableCell>
-                      <TableCell align="center">{member.memberEmail}</TableCell>
-                      <TableCell align="center">
-                        {member.memberDepartment}
+                      <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                        <Typography
+                          sx={{ fontSize: { xs: '12px', sm: '14px' } }}
+                        >
+                          {member.memberName}
+                        </Typography>
                       </TableCell>
-                      <TableCell align="center">
-                        {member.memberPosition}
+                      <TableCell
+                        sx={{
+                          display: { xs: 'none', sm: 'table-cell' },
+                          minWidth: '80px',
+                        }}
+                      >
+                        <Typography
+                          sx={{ fontSize: { xs: '11px', sm: '12px' } }}
+                        >
+                          {member.memberId}
+                        </Typography>
                       </TableCell>
-                      <TableCell align="center">
+                      <TableCell
+                        sx={{
+                          display: { xs: 'none', md: 'table-cell' },
+                          minWidth: '120px',
+                        }}
+                      >
+                        <Typography
+                          sx={{ fontSize: { xs: '11px', sm: '12px' } }}
+                        >
+                          {member.memberEmail}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                        <Typography
+                          sx={{ fontSize: { xs: '11px', sm: '12px' } }}
+                        >
+                          {member.memberDepartment}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                        <Typography
+                          sx={{ fontSize: { xs: '11px', sm: '12px' } }}
+                        >
+                          {member.memberPosition}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ minWidth: { xs: '50px', sm: '70px' } }}>
                         {getStatusChip(member.useYn)}
                       </TableCell>
-                      <TableCell align="center">
-                        <Button
-                          size="small"
-                          variant="outlined"
+                      <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                        <Box
                           sx={{
-                            mr: 1,
-                            borderRadius: '4px',
-                            minWidth: '60px',
-                            height: '32px',
-                            fontSize: '12px',
+                            display: 'flex',
+                            flexDirection: { xs: 'column', sm: 'row' },
+                            gap: 0.5,
+                            justifyContent: 'center',
                           }}
-                          onClick={() => handleEditMember(member)}
                         >
-                          수정
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          color={member.useYn === 'Y' ? 'warning' : 'success'}
-                          sx={{
-                            borderRadius: '4px',
-                            minWidth: '70px',
-                            height: '32px',
-                            fontSize: '12px',
-                          }}
-                          onClick={() =>
-                            handleToggleMemberStatus(
-                              member.memberId,
-                              member.useYn
-                            )
-                          }
-                        >
-                          {member.useYn === 'Y' ? '비활성화' : '활성화'}
-                        </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            sx={{
+                              borderRadius: '4px',
+                              minWidth: { xs: '50px', sm: '60px' },
+                              height: { xs: '28px', sm: '32px' },
+                              fontSize: { xs: '11px', sm: '12px' },
+                              whiteSpace: 'nowrap',
+                            }}
+                            onClick={() => handleEditMember(member)}
+                          >
+                            수정
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color={member.useYn === 'Y' ? 'warning' : 'success'}
+                            sx={{
+                              borderRadius: '4px',
+                              minWidth: { xs: '60px', sm: '80px' },
+                              height: { xs: '28px', sm: '32px' },
+                              fontSize: { xs: '10px', sm: '12px' },
+                              whiteSpace: 'nowrap',
+                            }}
+                            onClick={() =>
+                              handleToggleMemberStatus(
+                                member.memberId,
+                                member.useYn
+                              )
+                            }
+                          >
+                            {member.useYn === 'Y' ? '비활성화' : '활성화'}
+                          </Button>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}

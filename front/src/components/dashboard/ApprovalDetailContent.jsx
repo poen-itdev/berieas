@@ -244,7 +244,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
       }
 
       approvalLine.push({
-        title: '결재자', // 모든 결재자를 "결재자"로 통일
+        title: '결재자',
         name: signId,
         date: signDate || null,
         status: status,
@@ -467,7 +467,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
               첨언 (선택사항)
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              * 각 결재자당 1개의 첨언만 작성할 수 있습니다.
+              * 1개의 첨언만 작성할 수 있습니다.
             </Typography>
 
             {/* 등록된 첨언 목록 */}
