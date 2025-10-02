@@ -153,12 +153,20 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
 
   const handleDocumentClick = (document) => {
     console.log('문서 클릭:', document);
+
+    // 기안중 상태인 경우 기안작성 페이지로 이동
+    if (document.approvalStatus === '기안중') {
+      navigate(`/approvalwrite?approvalNo=${document.approvalNo}`);
+    } else {
+      // 다른 상태인 경우 상세보기 페이지로 이동
+      navigate(`/approval-detail?approvalNo=${document.approvalNo}`);
+    }
   };
 
   const handleTabChange = (_e, value) => setSelectedTab(value);
 
   return (
-    <Box sx={{ p: 3, mt: 3 }}>
+    <Box sx={{ p: { xs: 1.5, sm: 3 }, mt: { xs: 1.5, sm: 3 } }}>
       <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
         {/* 모바일에서만 사용자 인사말 표시 */}
         {isMobile && userInfo && (
@@ -167,16 +175,24 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
               variant="h6"
               sx={{ color: '#333', fontWeight: 500, textAlign: 'left' }}
             >
-              안녕하세요. {userInfo.memberName}님
+              안녕하세요. {userInfo.memberName}님,
+              <br />
+              <span style={{ fontSize: '14px', color: '#666' }}>
+                BERI-EAS 결재 현황을 확인해보세요.
+              </span>
             </Typography>
           </Box>
         )}
 
         {/* 제목 */}
-        <PageHeader title="결재 현황" fontSize="30px" />
+        <PageHeader title="결재 현황" fontSize={{ xs: '20px', sm: '30px' }} />
 
         {/* 상단 통계 카드 3개 */}
-        <Grid container spacing={3} sx={{ mb: 5 }}>
+        <Grid
+          container
+          spacing={{ xs: 2, sm: 3 }}
+          sx={{ mb: { xs: 3, sm: 5 } }}
+        >
           {[
             { value: statusData.total, label: '전체' },
             { value: statusData.inProgress, label: '진행중' },
@@ -185,21 +201,21 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
             <Grid key={idx} size={{ xs: 12, md: 4 }}>
               <Paper
                 sx={{
-                  p: 3,
-                  height: 150,
+                  p: { xs: 2, sm: 3 },
+                  height: { xs: 100, sm: 150 },
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'flex-start',
                   justifyContent: 'flex-start',
-                  pt: 2,
-                  position: 'relative', // absolute 포지셔닝을 위한 기준점
+                  pt: { xs: 1.5, sm: 2 },
+                  position: 'relative',
                   border: '1px solid #3275FC',
                   bgcolor: '#eef4ff',
                 }}
               >
                 <Typography
                   sx={{
-                    fontSize: 14,
+                    fontSize: { xs: 12, sm: 14 },
                     color: '#3275FC',
                   }}
                 >
@@ -207,7 +223,7 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
                 </Typography>
                 <Typography
                   sx={{
-                    fontSize: 32,
+                    fontSize: { xs: 24, sm: 32 },
                     fontWeight: 800,
                     position: 'absolute',
                     top: '50%',
@@ -227,50 +243,102 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
           <Tabs
             value={selectedTab}
             onChange={handleTabChange}
-            sx={{ minHeight: 40 }}
+            sx={{
+              minHeight: { xs: 36, sm: 40 },
+              '& .MuiTab-root': {
+                fontSize: { xs: '12px', sm: '14px' },
+                minHeight: { xs: 36, sm: 40 },
+                padding: { xs: '6px 12px', sm: '12px 16px' },
+              },
+            }}
           >
-            <Tab label="내가 상신한 문서" sx={{ minHeight: 40 }} />
-            <Tab label="내가 결재할 문서" sx={{ minHeight: 40 }} />
+            <Tab label="내가 상신한 문서" />
+            <Tab label="내가 결재할 문서" />
           </Tabs>
         </Box>
 
-        <Paper>
-          <Table>
+        <Paper sx={{ overflow: 'auto' }}>
+          <Table
+            sx={{
+              minWidth: { xs: '100%', sm: 650 },
+              '& .MuiTableCell-root': {
+                fontSize: { xs: '11px', sm: '14px' },
+                padding: { xs: '8px 4px', sm: '16px' },
+              },
+            }}
+          >
             <TableHead>
               <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                <TableCell align="center">결재상태</TableCell>
-                <TableCell align="center">기안양식</TableCell>
-                <TableCell align="center">기안제목</TableCell>
-                <TableCell align="center">
-                  {selectedTab === 0 ? '현재 결재자' : '현재 기안자'}
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  상태
                 </TableCell>
-                <TableCell align="center">기안일자</TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  양식
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  제목
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  {selectedTab === 0 ? '결재자' : '기안자'}
+                </TableCell>
+                <TableCell align="center" sx={{ fontWeight: 600 }}>
+                  일자
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {(selectedTab === 0 ? mySubmittedDocs : myPendingDocs).map(
-                (doc, index) => (
-                  <TableRow
-                    key={index}
-                    hover
-                    onClick={() => handleDocumentClick(doc)}
+              {(selectedTab === 0 ? mySubmittedDocs : myPendingDocs).length ===
+              0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    align="center"
+                    sx={{ py: 4, color: '#666' }}
                   >
-                    <TableCell align="center">
-                      {doc.approvalStatus || '진행중'}
-                    </TableCell>
-                    <TableCell align="center">
-                      {doc.aprovalType || '기안서'}
-                    </TableCell>
-                    <TableCell align="center">{doc.approvalTitle}</TableCell>
-                    <TableCell align="center">
-                      {doc.signId || doc.approvalId}
-                    </TableCell>
-                    <TableCell align="center">
-                      {doc.regDate
-                        ? new Date(doc.regDate).toLocaleDateString()
-                        : '-'}
-                    </TableCell>
-                  </TableRow>
+                    <Typography sx={{ fontSize: { xs: '12px', sm: '14px' } }}>
+                      문서가 없습니다.
+                    </Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                (selectedTab === 0 ? mySubmittedDocs : myPendingDocs).map(
+                  (doc, index) => (
+                    <TableRow
+                      key={index}
+                      hover
+                      onClick={() => handleDocumentClick(doc)}
+                      sx={{
+                        cursor: 'pointer',
+                        '&:hover': { backgroundColor: '#f8f9fa' },
+                      }}
+                    >
+                      <TableCell align="center">
+                        {doc.approvalStatus || '진행중'}
+                      </TableCell>
+                      <TableCell align="center">
+                        {doc.aprovalType || '기안서'}
+                      </TableCell>
+                      <TableCell
+                        align="center"
+                        sx={{
+                          maxWidth: { xs: '120px', sm: '300px' },
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {doc.approvalTitle}
+                      </TableCell>
+                      <TableCell align="center">
+                        {doc.signId || doc.approvalId}
+                      </TableCell>
+                      <TableCell align="center">
+                        {doc.regDate
+                          ? new Date(doc.regDate).toLocaleDateString()
+                          : '-'}
+                      </TableCell>
+                    </TableRow>
+                  )
                 )
               )}
             </TableBody>
