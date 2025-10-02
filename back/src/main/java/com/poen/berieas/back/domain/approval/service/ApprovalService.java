@@ -440,6 +440,7 @@ public class ApprovalService {
             throw new IllegalArgumentException("이미 결재한 사용자이거나 승인할 수 없는 단계입니다.");
         }
 
+        System.out.println(approval.getApprovalStatus());
         approval.setUpdateId(memberId);
         approval.setUpdateDate(LocalDateTime.now());
         approvalRepository.save(approval);

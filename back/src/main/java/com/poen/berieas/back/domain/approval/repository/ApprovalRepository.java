@@ -43,7 +43,7 @@ public interface ApprovalRepository extends JpaRepository<Approval, Integer>{
     Page<Approval> findAllRelatedApprovals(@Param("memberName") String memberName, Pageable pageable);
 
     // 진행목록(진행중)
-    @Query("select a from Approval a where a.approvalId = :approvalId")
+    @Query("select a from Approval a where a.approvalId = :approvalId and a.approvalStatus = '진행중'")
     Page<Approval> findInprogressApprovals(@Param("approvalId") String approvalId, Pageable pageable);
 
     // 진행목록(기안중)
