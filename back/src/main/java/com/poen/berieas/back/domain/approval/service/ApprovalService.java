@@ -385,35 +385,58 @@ public class ApprovalService {
 
         Approval approval = approvalRepository.findByApprovalNo(approvalNo)
             .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
-        
-        if (!member.getMemberName().equals(approval.getNextId())) {
 
+        if (!member.getMemberName().equals(approval.getNextId())) {
             throw new IllegalArgumentException("현재 결재권자가 아니면 승인할 수 없습니다.");
         }
 
+        // 결재 1
         if (member.getMemberName().equals(approval.getSignId1()) && approval.getSignDate1() == null) {
-            
             approval.setSignDate1(LocalDateTime.now());
-            approval.setNextId(approval.getSignId2());
-        } else if (member.getMemberName().equals(approval.getSignId2()) && approval.getSignDate2() == null) {
-
+            if (approval.getSignId2() != null) {
+                approval.setNextId(approval.getSignId2());
+            } else {
+                approval.setNextId(null);
+                approval.setApprovalStatus("완료");
+            }
+        }
+        // 결재 2
+        else if (member.getMemberName().equals(approval.getSignId2()) && approval.getSignDate2() == null) {
             approval.setSignDate2(LocalDateTime.now());
-            approval.setNextId(approval.getSignId3());
-        } else if (member.getMemberName().equals(approval.getSignId3()) && approval.getSignDate3() == null) {
-
+            if (approval.getSignId3() != null) {
+                approval.setNextId(approval.getSignId3());
+            } else {
+                approval.setNextId(null);
+                approval.setApprovalStatus("완료");
+            }
+        }
+        // 결재 3
+        else if (member.getMemberName().equals(approval.getSignId3()) && approval.getSignDate3() == null) {
             approval.setSignDate3(LocalDateTime.now());
-            approval.setNextId(approval.getSignId4());
-        } else if (member.getMemberName().equals(approval.getSignId4()) && approval.getSignDate4() == null) {
-
+            if (approval.getSignId4() != null) {
+                approval.setNextId(approval.getSignId4());
+            } else {
+                approval.setNextId(null);
+                approval.setApprovalStatus("완료");
+            }
+        }
+        // 결재 4
+        else if (member.getMemberName().equals(approval.getSignId4()) && approval.getSignDate4() == null) {
             approval.setSignDate4(LocalDateTime.now());
-            approval.setNextId(approval.getSignId5());
-        } else if (member.getMemberName().equals(approval.getSignId5()) && approval.getSignDate5() == null) {
-
+            if (approval.getSignId5() != null) {
+                approval.setNextId(approval.getSignId5());
+            } else {
+                approval.setNextId(null);
+                approval.setApprovalStatus("완료");
+            }
+        }
+        // 결재 5 (무조건 완료 처리)
+        else if (member.getMemberName().equals(approval.getSignId5()) && approval.getSignDate5() == null) {
             approval.setSignDate5(LocalDateTime.now());
             approval.setNextId(null);
             approval.setApprovalStatus("완료");
-        } else {
-
+        }
+        else {
             throw new IllegalArgumentException("이미 결재한 사용자이거나 승인할 수 없는 단계입니다.");
         }
 
@@ -421,6 +444,7 @@ public class ApprovalService {
         approval.setUpdateDate(LocalDateTime.now());
         approvalRepository.save(approval);
     }
+
 
     // 반려
     @Transactional
