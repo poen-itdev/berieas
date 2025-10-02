@@ -368,9 +368,10 @@ public class ApprovalDetailService {
         approvalDetailRepository.save(detail); // DB 반영
     }
 
-    // 기안서 삭제 경진
+    // 기안서 삭제 
     @Transactional
     public void deleteApproval(int approvalNo) {
+        
         // ApprovalDetail 삭제
         ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approvalNo)
             .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));

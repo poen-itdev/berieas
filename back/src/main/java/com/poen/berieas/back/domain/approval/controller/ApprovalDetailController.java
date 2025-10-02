@@ -73,7 +73,7 @@ public class ApprovalDetailController {
     }
 
     // 기안서 가져오기
-    @GetMapping(value = "/approvalDetail/getDraft/{approvalNo}")
+    @GetMapping(value = "/approvalDetail/getDraft/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getDraftApi(@PathVariable int approvalNo) {
         
         try {
@@ -83,7 +83,7 @@ public class ApprovalDetailController {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("기안서 조회 실패: " + e.getMessage());
         }
-    } // 여기도 수정된듯;
+    }
 
     // 파일 다운로드
     @GetMapping("/approvalDetail/file/download/{approvalNo}/{file}")
@@ -121,7 +121,7 @@ public class ApprovalDetailController {
     }
 
     // 기안서 삭제 경진
-    @DeleteMapping("/approvalDetail/delete/{approvalNo}")
+    @DeleteMapping(value = "/approvalDetail/delete/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> deleteApproval(@PathVariable int approvalNo) {
         try {
             approvalDetailService.deleteApproval(approvalNo);

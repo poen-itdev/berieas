@@ -1,5 +1,6 @@
 package com.poen.berieas.back.domain.approval.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,7 +52,9 @@ public class ApprovalSettingService {
         approvalSetting.setFormTitle(dto.getFormTitle());
         approvalSetting.setFormDocument(dto.getFormDocument());
         approvalSetting.setRegId(memberId);
+        approvalSetting.setRegDate(LocalDateTime.now());
         approvalSetting.setUpdateId(memberId);
+        approvalSetting.setUpdateDate(LocalDateTime.now());
 
         approvalSettingRepository.save(approvalSetting);
     }
