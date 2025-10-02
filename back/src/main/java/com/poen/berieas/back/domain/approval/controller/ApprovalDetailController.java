@@ -73,7 +73,7 @@ public class ApprovalDetailController {
     }
 
     // 기안서 가져오기
-    @GetMapping(value = "/approvalDetail/getDraft/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/approvalDetail/getDraft/{approvalNo}")
     public ResponseEntity<?> getDraftApi(@PathVariable int approvalNo) {
         
         try {
@@ -120,8 +120,8 @@ public class ApprovalDetailController {
         }
     }
 
-    // 기안서 삭제 경진
-    @DeleteMapping(value = "/approvalDetail/delete/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    // 기안서 삭제
+    @DeleteMapping(value = "/approvalDetail/delete/{approvalNo}")
     public ResponseEntity<String> deleteApproval(@PathVariable int approvalNo) {
         try {
             approvalDetailService.deleteApproval(approvalNo);

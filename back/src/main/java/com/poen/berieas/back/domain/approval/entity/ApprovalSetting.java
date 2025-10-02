@@ -67,10 +67,10 @@ public class ApprovalSetting {
     @Column(name = "reg_date")
     private LocalDateTime regDate;
 
-    @LastModifiedDate
     @Column(name = "update_id")
     private String updateId;
 
+    @LastModifiedDate
     @Column(name = "update_date")
     private LocalDateTime updateDate;
     

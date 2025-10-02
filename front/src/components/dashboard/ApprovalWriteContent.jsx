@@ -25,7 +25,6 @@ import { AttachFile, Description } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 import PageHeader from '../common/PageHeader';
-import RichEditor from './RichEditor';
 
 const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
   const [searchParams] = useSearchParams();
@@ -961,12 +960,25 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
               >
                 내용
               </Typography>
-              <Box sx={{ height: 'calc(100% - 56px)' }}>
-                <RichEditor
+              <Box sx={{ p: 2, height: 'calc(100% - 56px)' }}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={20}
                   value={formData.approvalDocument}
-                  onChange={(html) =>
-                    setFormData({ ...formData, approvalDocument: html })
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      approvalDocument: e.target.value,
+                    })
                   }
+                  placeholder="내용을 입력하세요"
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      height: '100%',
+                      alignItems: 'flex-start',
+                    },
+                  }}
                 />
               </Box>
             </Paper>
@@ -1073,17 +1085,18 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
               p: 3,
               backgroundColor: '#f8f9fa',
               borderTop: '1px solid #e0e0e0',
+              justifyContent: 'center',
             }}
           >
             <Button
               onClick={handleFormDialogClose}
               variant="outlined"
               sx={{
-                minWidth: '80px',
-                height: '40px',
+                minWidth: '109px',
+                height: '30px',
                 fontWeight: 600,
-                borderColor: '#1976d2',
-                color: '#1976d2',
+                borderColor: '#80858A',
+                color: '#80858A',
                 '&:hover': {
                   borderColor: '#1565c0',
                   backgroundColor: '#f3f8ff',
