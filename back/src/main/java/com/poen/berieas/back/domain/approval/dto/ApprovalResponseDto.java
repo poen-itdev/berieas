@@ -19,6 +19,11 @@ public class ApprovalResponseDto {
     private String signId3;
     private String signId4;
     private String signId5;
+    private LocalDateTime signDate1;
+    private LocalDateTime signDate2;
+    private LocalDateTime signDate3;
+    private LocalDateTime signDate4;
+    private LocalDateTime signDate5;
     private String referenceId;
 
     private String approvalAttachFile1;
