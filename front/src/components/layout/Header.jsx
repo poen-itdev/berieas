@@ -97,10 +97,14 @@ const Header = ({ onLogout, onMenuClick, isMobile = false }) => {
             color: '#fff',
             fontWeight: 700,
             cursor: 'pointer',
-            fontSize: isMobile ? '1.1rem' : '1.5rem',
+            fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' },
             position: 'absolute',
             left: '50%',
             transform: 'translateX(-50%)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: { xs: '120px', sm: '150px', md: '200px' },
           }}
           onClick={() => window.location.reload()}
         >
