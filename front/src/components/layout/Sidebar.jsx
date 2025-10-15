@@ -8,11 +8,6 @@ import {
   ListItemText,
   Collapse,
   ListItemIcon,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Typography,
 } from '@mui/material';
 import {
   Add,
@@ -21,6 +16,7 @@ import {
   People,
   Business,
 } from '@mui/icons-material';
+import SaveConfirmDialog from '../common/SaveConfirmDialog';
 
 const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
   const navigate = useNavigate();
@@ -40,6 +36,12 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
     { text: '회원관리', path: '/member-management', icon: <People /> },
     { text: '조직관리', path: '/organization-management', icon: <Business /> },
   ];
+
+  // 현재 활성화된 메뉴 확인
+  const isActiveMenu = (path) => {
+    const currentPath = location.pathname;
+    return currentPath === path;
+  };
 
   const handleMenuClick = (path, skipDialog = false) => {
     const currentApprovalNo = searchParams.get('approvalNo');
@@ -79,25 +81,33 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
   const handleSaveChoice = async (choice) => {
     const targetPath = pendingNavigation || '/draft/create';
 
-    switch (choice) {
-      case 'save':
-        if (onSaveBeforeNew) {
-          const saveSuccess = await onSaveBeforeNew();
-          if (saveSuccess) {
-            handleMenuClick(targetPath, true);
+    if (choice === 'save') {
+      // 현재 수정된 내용을 DB에 저장 후 이동
+      if (onSaveBeforeNew) {
+        const saveSuccess = await onSaveBeforeNew();
+        if (saveSuccess) {
+          sessionStorage.removeItem('unsavedDraft');
+          if (pendingNavigation === -1) {
+            window.history.back();
           } else {
-            alert('저장에 실패했습니다. 다시 시도해주세요.');
+            handleMenuClick(targetPath, true);
           }
-        } else {
-          handleMenuClick(targetPath, true);
         }
-        break;
-      case 'discard':
+        // 저장 실패 시 다이얼로그는 그대로 유지
+        if (!saveSuccess) {
+          return;
+        }
+      }
+    } else if (choice === 'discard') {
+      // 내용 버리고 이동
+      sessionStorage.removeItem('unsavedDraft');
+      if (pendingNavigation === -1) {
+        window.history.back();
+      } else {
         handleMenuClick(targetPath, true);
-        break;
-      case 'cancel':
-        break;
+      }
     }
+
     setShowSaveDialog(false);
     setPendingNavigation(null);
   };
@@ -139,7 +149,13 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
               borderRadius: 1,
               mx: 1,
               mb: 0.5,
+              bgcolor: isActiveMenu(item.path) ? '#e3f2fd' : 'transparent',
+              color: isActiveMenu(item.path) ? '#3275FC' : 'inherit',
               '&:hover': {
+                bgcolor: '#e3f2fd',
+                color: '#3275FC',
+              },
+              '&:focus': {
                 bgcolor: '#e3f2fd',
                 color: '#3275FC',
               },
@@ -163,6 +179,10 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
             mx: 1,
             mb: 0.5,
             '&:hover': {
+              bgcolor: '#e3f2fd',
+              color: '#3275FC',
+            },
+            '&:focus': {
               bgcolor: '#e3f2fd',
               color: '#3275FC',
             },
@@ -190,7 +210,13 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
                   mx: 1,
                   mb: 0.5,
                   pl: 4,
+                  bgcolor: isActiveMenu(item.path) ? '#e3f2fd' : 'transparent',
+                  color: isActiveMenu(item.path) ? '#3275FC' : 'inherit',
                   '&:hover': {
+                    bgcolor: '#e3f2fd',
+                    color: '#3275FC',
+                  },
+                  '&:focus': {
                     bgcolor: '#e3f2fd',
                     color: '#3275FC',
                   },
@@ -211,60 +237,12 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
         </Collapse>
       </List>
 
-      {/* 임시저장된 기안서 확인 다이얼로그 */}
-      <Dialog
+      {/* 전역 임시저장 확인 다이얼로그 */}
+      <SaveConfirmDialog
         open={showSaveDialog}
         onClose={() => setShowSaveDialog(false)}
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle sx={{ pb: 1 }}>
-          <Typography
-            component="div"
-            sx={{ fontWeight: 600, fontSize: '1.25rem' }}
-          >
-            임시저장된 기안서가 있습니다
-          </Typography>
-        </DialogTitle>
-        <DialogContent sx={{ pb: 2 }}>
-          <Typography variant="body1" sx={{ mb: 2 }}>
-            현재 임시저장된 기안서가 있습니다. 다른 페이지로 이동하기 전에
-            어떻게 하시겠습니까?
-          </Typography>
-          <Typography variant="body2" sx={{ color: '#666' }}>
-            • <strong>저장하고 이동:</strong> 현재 내용을 임시저장하고 선택한
-            페이지로 이동합니다.
-            <br />• <strong>내용 버리고 이동:</strong> 현재 내용을 삭제하고
-            선택한 페이지로 이동합니다.
-            <br />• <strong>취소:</strong> 이동을 취소합니다.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ p: 3, pt: 1 }}>
-          <Button
-            onClick={() => handleSaveChoice('save')}
-            variant="contained"
-            color="primary"
-            sx={{ minWidth: 120 }}
-          >
-            저장하고 이동
-          </Button>
-          <Button
-            onClick={() => handleSaveChoice('discard')}
-            variant="outlined"
-            color="warning"
-            sx={{ minWidth: 120 }}
-          >
-            내용 버리고 이동
-          </Button>
-          <Button
-            onClick={() => handleSaveChoice('cancel')}
-            variant="outlined"
-            sx={{ minWidth: 80 }}
-          >
-            취소
-          </Button>
-        </DialogActions>
-      </Dialog>
+        onConfirm={handleSaveChoice}
+      />
     </Box>
   );
 };

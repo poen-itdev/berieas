@@ -157,7 +157,8 @@ const ProgressListContent = ({ isMobile = false }) => {
         setProgressData(Array.isArray(data) ? data : []);
       }
     } catch (error) {
-      // 검색 실패 시 빈 배열로 설정
+      console.error('검색 실패:', error);
+      setProgressData([]);
     } finally {
       setLoading(false);
     }
@@ -210,7 +211,7 @@ const ProgressListContent = ({ isMobile = false }) => {
             sx={{
               display: 'flex',
               width: '100%',
-              overflowX: 'auto', // 가로 스크롤 허용
+              overflowX: 'auto',
               '&::-webkit-scrollbar': {
                 height: '6px',
               },

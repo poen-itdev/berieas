@@ -37,7 +37,7 @@ import { apiRequest } from '../../utils/apiHelper';
 const MemberManagementContent = () => {
   const [selectedTab, setSelectedTab] = useState(0); // 0: 전체, 1: 활성, 2: 비활성
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchQuery, setSearchQuery] = useState(''); // 실제 검색에 사용할 쿼리
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('전체');
   const [memberList, setMemberList] = useState([]);
   const [departments, setDepartments] = useState(['전체']);
