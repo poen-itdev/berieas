@@ -229,9 +229,14 @@ public class MemberService implements UserDetailsService{
     }
 
     // 전체 멤버 리스트
-    public List<MemberListResponseDto> getAllMembers() {
+    public List<MemberListResponseDto> getAllMembers(String keyword) {
 
-        List<Member> members = memberRepository.findAll();
+        List<Member> members;
+        if (keyword == null || keyword.isBlank()) {
+            members = memberRepository.findAll();
+        } else {
+            members = memberRepository.findAllByKeyword(keyword);
+        }
 
         return members.stream()
                 .map(member -> new MemberListResponseDto(
@@ -241,7 +246,7 @@ public class MemberService implements UserDetailsService{
                     member.getMemberId(),
                     member.getMemberEmail(),
                     member.getUseYn()
-                )).collect(Collectors.toList());
+        )).collect(Collectors.toList());
     }
 
     // 재직자 리스트

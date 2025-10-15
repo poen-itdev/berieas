@@ -4,13 +4,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -132,58 +136,123 @@ public class ApprovalService {
     }
 
     // 진행목록(전체)  전체는 내가 기안 올린 문서 + 결재할 문서 
-    public Page<ProgressListResponseDto> getAllApprovals(Pageable pageable) {
+     public Page<ProgressListResponseDto> getAllApprovals(
+            Pageable pageable, LocalDate from, LocalDate to, String keyword) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
         Page<Approval> approvals = approvalRepository.findAllRelatedApprovals(member.getMemberName(), pageable);
 
-        return approvals.map(approval -> {
+        List<ProgressListResponseDto> filtered = approvals.getContent().stream()
+                .filter(a -> {
 
-            ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
-            String currentSigner = getCurrentSigner(approval);
+                    // 날짜 필터
+                    if (from != null && a.getRegDate().toLocalDate().isBefore(from)) return false;
+                    if (to != null && a.getRegDate().toLocalDate().isAfter(to)) return false;
 
-            return new ProgressListResponseDto(
-                approval.getApprovalNo(),
-                approval.getRegDate(),
-                detail != null ? detail.getApprovalTitle() : null,
-                detail != null ? detail.getApprovalType() : null,
-                approval.getApprovalDepartment(),
-                approval.getApprovalName(),
-                currentSigner,
-                approval.getApprovalStatus()
-            );
-        });
+                    // 키워드 필터
+                    if (keyword != null && !keyword.isBlank()) {
+                        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                        String title = detail != null ? detail.getApprovalTitle() : "";
+                        String type = detail != null ? detail.getApprovalType() : "";
+                        String drafter = a.getApprovalName() != null ? a.getApprovalName() : "";
+                        String department = a.getApprovalDepartment() != null ? a.getApprovalDepartment() : "";
+                        String signerIds = String.join(",",
+                                Arrays.asList(a.getSignId1(), a.getSignId2(), a.getSignId3(), a.getSignId4(), a.getSignId5())
+                                        .stream().filter(Objects::nonNull).toList()
+                        );
+                        String lowerKeyword = keyword.toLowerCase();
+                        boolean matchKeyword = title.toLowerCase().contains(lowerKeyword)
+                                || type.toLowerCase().contains(lowerKeyword)
+                                || drafter.toLowerCase().contains(lowerKeyword)
+                                || department.toLowerCase().contains(lowerKeyword)
+                                || signerIds.toLowerCase().contains(lowerKeyword)
+                                || (a.getApprovalStatus() != null && a.getApprovalStatus().toLowerCase().contains(lowerKeyword));
+
+                        if (!matchKeyword) return false;
+                    }
+
+                    return true;
+                })
+                .map(a -> {
+                    ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                    String currentSigner = getCurrentSigner(a);
+                    return new ProgressListResponseDto(
+                            a.getApprovalNo(),
+                            a.getRegDate(),
+                            detail != null ? detail.getApprovalTitle() : null,
+                            detail != null ? detail.getApprovalType() : null,
+                            a.getApprovalDepartment(),
+                            a.getApprovalName(),
+                            currentSigner,
+                            a.getApprovalStatus()
+                    );
+                })
+                .toList();
+
+        return new PageImpl<>(filtered, pageable, filtered.size());
     }
 
+
     // 진행목록(진행중)
-    public Page<MyApprovalResponseDto> getInProgressApprovals(Pageable pageable) {
+    public Page<MyApprovalResponseDto> getInProgressApprovals(Pageable pageable, LocalDate from, LocalDate to, String keyword) {
 
         // 로그인한 유저의 memberId 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Page<Approval> approvals = approvalRepository.findInprogressApprovals(memberId, pageable);
 
-        return approvals.map(approval -> {
-                
-            ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()). orElse(null);
-            String currentSigner = getCurrentSigner(approval);
-            
-            return new MyApprovalResponseDto(
-                approval.getApprovalNo(),
-                approval.getApprovalStatus(),
-                detail != null ? detail.getApprovalType() : null,
-                detail != null ? detail.getApprovalTitle() : null,
-                currentSigner,
-                approval.getRegDate()
-            );
-        });
+        List<MyApprovalResponseDto> filtered = approvals.getContent().stream()
+                .filter(a -> {
+                    // 날짜 필터
+                    if (from != null && a.getRegDate().toLocalDate().isBefore(from)) return false;
+                    if (to != null && a.getRegDate().toLocalDate().isAfter(to)) return false;
+
+                    // 키워드 필터
+                    if (keyword != null && !keyword.isBlank()) {
+                        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                        String title = detail != null ? detail.getApprovalTitle() : "";
+                        String type = detail != null ? detail.getApprovalType() : "";
+                        String drafter = a.getApprovalName() != null ? a.getApprovalName() : "";
+                        String department = a.getApprovalDepartment() != null ? a.getApprovalDepartment() : "";
+                        String signerIds = String.join(",",
+                                Arrays.asList(a.getSignId1(), a.getSignId2(), a.getSignId3(), a.getSignId4(), a.getSignId5())
+                                        .stream().filter(Objects::nonNull).toList()
+                        );
+                        String lowerKeyword = keyword.toLowerCase();
+                        boolean matchKeyword = title.toLowerCase().contains(lowerKeyword)
+                                || type.toLowerCase().contains(lowerKeyword)
+                                || drafter.toLowerCase().contains(lowerKeyword)
+                                || department.toLowerCase().contains(lowerKeyword)
+                                || signerIds.toLowerCase().contains(lowerKeyword)
+                                || (a.getApprovalStatus() != null && a.getApprovalStatus().toLowerCase().contains(lowerKeyword));
+
+                        if (!matchKeyword) return false;
+                    }
+
+                    return true;
+                })
+                .map(a -> {
+                    ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                    String currentSigner = getCurrentSigner(a);
+                    return new MyApprovalResponseDto(
+                            a.getApprovalNo(),
+                            a.getApprovalStatus(),
+                            detail != null ? detail.getApprovalType() : null,
+                            detail != null ? detail.getApprovalTitle() : null,
+                            currentSigner,
+                            a.getRegDate()
+                    );
+                })
+                .toList();
+
+        return new PageImpl<>(filtered, pageable, filtered.size());
     }
 
     // 진행목록(기안중)
-    public Page<ProgressListResponseDto> getTemporarySavedApprovals(Pageable pageable) {
+    public Page<ProgressListResponseDto> getTemporarySavedApprovals(Pageable pageable, LocalDate from, LocalDate to, String keyword) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
@@ -191,76 +260,278 @@ public class ApprovalService {
 
         Page<Approval> approvals = approvalRepository.findTemporarySavedApprovals(memberId, pageable);
 
-        return approvals.map(approval -> {
-            ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
-            String currentSigner = getCurrentSigner(approval);
+        List<ProgressListResponseDto> filtered = approvals.getContent().stream()
+                .filter(a -> {
 
-            return new ProgressListResponseDto(
-                approval.getApprovalNo(),
-                approval.getRegDate(), 
-                detail != null ? detail.getApprovalTitle() : null,
-                detail != null ? detail.getApprovalType() : null,
-                approval.getApprovalDepartment(),
-                approval.getApprovalName(),
-                currentSigner,
-                "기안중"
-            );
-        });
+                    // 날짜 필터
+                    if (from != null && a.getRegDate().toLocalDate().isBefore(from)) return false;
+                    if (to != null && a.getRegDate().toLocalDate().isAfter(to)) return false;
+
+                    // 키워드 필터
+                    if (keyword != null && !keyword.isBlank()) {
+                        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                        String title = detail != null ? detail.getApprovalTitle() : "";
+                        String type = detail != null ? detail.getApprovalType() : "";
+                        String drafter = a.getApprovalName() != null ? a.getApprovalName() : "";
+                        String department = a.getApprovalDepartment() != null ? a.getApprovalDepartment() : "";
+                        String signerIds = String.join(",",
+                                Arrays.asList(a.getSignId1(), a.getSignId2(), a.getSignId3(), a.getSignId4(), a.getSignId5())
+                                        .stream().filter(Objects::nonNull).toList()
+                        );
+                        String lowerKeyword = keyword.toLowerCase();
+                        boolean matchKeyword = title.toLowerCase().contains(lowerKeyword)
+                                || type.toLowerCase().contains(lowerKeyword)
+                                || drafter.toLowerCase().contains(lowerKeyword)
+                                || department.toLowerCase().contains(lowerKeyword)
+                                || signerIds.toLowerCase().contains(lowerKeyword)
+                                || (a.getApprovalStatus() != null && a.getApprovalStatus().toLowerCase().contains(lowerKeyword));
+
+                        if (!matchKeyword) return false;
+                    }
+
+                    return true;
+                })
+                .map(a -> {
+                    ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                    String currentSigner = getCurrentSigner(a);
+                    return new ProgressListResponseDto(
+                            a.getApprovalNo(),
+                            a.getRegDate(),
+                            detail != null ? detail.getApprovalTitle() : null,
+                            detail != null ? detail.getApprovalType() : null,
+                            a.getApprovalDepartment(),
+                            a.getApprovalName(),
+                            currentSigner,
+                            a.getApprovalStatus()
+                    );
+                })
+                .toList();
+
+        return new PageImpl<>(filtered, pageable, filtered.size());
     }
 
     // 진행목록(반려)
-    public Page<ProgressListResponseDto> getReturnedApprovals(Pageable pageable) {
+    public Page<ProgressListResponseDto> getReturnedApprovals(Pageable pageable, LocalDate from, LocalDate to, String keyword) {
      
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
         Page<Approval> approvals = approvalRepository.findReturendApprovals(memberId, pageable);
-        return approvals.map(approval -> {
-            ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
-            String currentSigner = getCurrentSigner(approval);
 
-            return new ProgressListResponseDto(
-                approval.getApprovalNo(),
-                approval.getRegDate(),
-                detail != null ? detail.getApprovalTitle() : null,
-                detail != null ? detail.getApprovalType() : null,
-                approval.getApprovalDepartment(),
-                approval.getApprovalName(),
-                currentSigner,
-                approval.getApprovalStatus()
-            );
-        });
+        List<ProgressListResponseDto> filtered = approvals.getContent().stream()
+                .filter(a -> {
+
+                    // 날짜 필터
+                    if (from != null && a.getRegDate().toLocalDate().isBefore(from)) return false;
+                    if (to != null && a.getRegDate().toLocalDate().isAfter(to)) return false;
+
+                    // 키워드 필터
+                    if (keyword != null && !keyword.isBlank()) {
+                        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                        String title = detail != null ? detail.getApprovalTitle() : "";
+                        String type = detail != null ? detail.getApprovalType() : "";
+                        String drafter = a.getApprovalName() != null ? a.getApprovalName() : "";
+                        String department = a.getApprovalDepartment() != null ? a.getApprovalDepartment() : "";
+                        String signerIds = String.join(",",
+                                Arrays.asList(a.getSignId1(), a.getSignId2(), a.getSignId3(), a.getSignId4(), a.getSignId5())
+                                        .stream().filter(Objects::nonNull).toList()
+                        );
+                        String lowerKeyword = keyword.toLowerCase();
+                        boolean matchKeyword = title.toLowerCase().contains(lowerKeyword)
+                                || type.toLowerCase().contains(lowerKeyword)
+                                || drafter.toLowerCase().contains(lowerKeyword)
+                                || department.toLowerCase().contains(lowerKeyword)
+                                || signerIds.toLowerCase().contains(lowerKeyword)
+                                || (a.getApprovalStatus() != null && a.getApprovalStatus().toLowerCase().contains(lowerKeyword));
+
+                        if (!matchKeyword) return false;
+                    }
+
+                    return true;
+                })
+                .map(a -> {
+                    ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                    String currentSigner = getCurrentSigner(a);
+                    return new ProgressListResponseDto(
+                            a.getApprovalNo(),
+                            a.getRegDate(),
+                            detail != null ? detail.getApprovalTitle() : null,
+                            detail != null ? detail.getApprovalType() : null,
+                            a.getApprovalDepartment(),
+                            a.getApprovalName(),
+                            currentSigner,
+                            a.getApprovalStatus()
+                    );
+                })
+                .toList();
+
+        return new PageImpl<>(filtered, pageable, filtered.size());
     }
 
     // 진행목록(완료)
-    public Page<ProgressListResponseDto> getCompletedApprovals(Pageable pageable) {
+    public Page<ProgressListResponseDto> getCompletedApprovals(Pageable pageable, LocalDate from, LocalDate to, String keyword) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        Page<Approval> approvals = approvalRepository.findCompletedApprovals(memberId, member.getMemberName(), pageable);
-        return approvals.map(approval -> {
-            ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approval.getApprovalNo()).orElse(null);
-            String currentSigner = getCurrentSigner(approval);
+        Page<Approval> approvals = approvalRepository.findCompletedApprovals(memberId, pageable);
+        
+        List<ProgressListResponseDto> filtered = approvals.getContent().stream()
+                .filter(a -> {
 
-            return new ProgressListResponseDto(
-                approval.getApprovalNo(),
-                approval.getRegDate(),
-                detail != null ? detail.getApprovalTitle() : null,
-                detail != null ? detail.getApprovalType() : null,
-                approval.getApprovalDepartment(),
-                approval.getApprovalName(),
-                currentSigner,
-                approval.getApprovalStatus()
-            );
-        });
+                    // 날짜 필터
+                    if (from != null && a.getRegDate().toLocalDate().isBefore(from)) return false;
+                    if (to != null && a.getRegDate().toLocalDate().isAfter(to)) return false;
+
+                    // 키워드 필터
+                    if (keyword != null && !keyword.isBlank()) {
+                        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                        String title = detail != null ? detail.getApprovalTitle() : "";
+                        String type = detail != null ? detail.getApprovalType() : "";
+                        String drafter = a.getApprovalName() != null ? a.getApprovalName() : "";
+                        String department = a.getApprovalDepartment() != null ? a.getApprovalDepartment() : "";
+                        String signerIds = String.join(",",
+                                Arrays.asList(a.getSignId1(), a.getSignId2(), a.getSignId3(), a.getSignId4(), a.getSignId5())
+                                        .stream().filter(Objects::nonNull).toList()
+                        );
+                        String lowerKeyword = keyword.toLowerCase();
+                        boolean matchKeyword = title.toLowerCase().contains(lowerKeyword)
+                                || type.toLowerCase().contains(lowerKeyword)
+                                || drafter.toLowerCase().contains(lowerKeyword)
+                                || department.toLowerCase().contains(lowerKeyword)
+                                || signerIds.toLowerCase().contains(lowerKeyword)
+                                || (a.getApprovalStatus() != null && a.getApprovalStatus().toLowerCase().contains(lowerKeyword));
+
+                        if (!matchKeyword) return false;
+                    }
+
+                    return true;
+                })
+                .map(a -> {
+                    ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                    String currentSigner = getCurrentSigner(a);
+                    return new ProgressListResponseDto(
+                            a.getApprovalNo(),
+                            a.getRegDate(),
+                            detail != null ? detail.getApprovalTitle() : null,
+                            detail != null ? detail.getApprovalType() : null,
+                            a.getApprovalDepartment(),
+                            a.getApprovalName(),
+                            currentSigner,
+                            a.getApprovalStatus()
+                    );
+                })
+                .toList();
+
+        return new PageImpl<>(filtered, pageable, filtered.size());
+    }
+
+    // 첨언
+    @Transactional
+    public void addCommnet(int approvalNo, CommentRequestDto dto, List<MultipartFile> files) {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Member member = memberRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+        Approval approval = approvalRepository.findByApprovalNo(approvalNo)
+            .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
+        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approvalNo)
+            .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
+
+        boolean isDrafter = memberId.equals(approval.getApprovalId()); // 기안자
+        boolean isSigner = member.getMemberName().equals(approval.getNextId()); // 결재자
+        boolean referencer = member.getMemberName().equals(approval.getReferenceId()); // 참조자
+
+        if (!isDrafter && !isSigner && !referencer) {
+            throw new IllegalArgumentException("첨언 권한이 없습니다.");
+        }
+
+        // ----- 댓글 저장 -----
+        if(isSigner) {
+
+            String memberName = member.getMemberName();
+
+            if (memberName.equals(approval.getSignId1())) approval.setSignRemark1(dto.getComment());
+            else if (memberName.equals(approval.getSignId2())) approval.setSignRemark2(dto.getComment());
+            else if (memberName.equals(approval.getSignId3())) approval.setSignRemark3(dto.getComment());
+            else if (memberName.equals(approval.getSignId4())) approval.setSignRemark4(dto.getComment());
+            else if (memberName.equals(approval.getSignId5())) approval.setSignRemark5(dto.getComment());
+            else throw new IllegalArgumentException("결재자 정보가 일치하지 않습니다.");
+
+        } else if (isDrafter) {
+
+            detail.setDrafterRemark(dto.getComment());
+        } else if (referencer) {
+
+            detail.setReferenceRemark(dto.getComment());
+        }
+
+
+        // ===== 파일 업로드 =====
+        if (files != null && !files.isEmpty()) {
+            List<String> attachFiles = new ArrayList<>(Arrays.asList(
+                    detail.getApprovalAttachFile1(),
+                    detail.getApprovalAttachFile2(),
+                    detail.getApprovalAttachFile3(),
+                    detail.getApprovalAttachFile4(),
+                    detail.getApprovalAttachFile5()
+            ));
+
+            for (MultipartFile file : files) {
+                if (file.isEmpty()) continue;
+
+                int slotIndex = -1;
+                for (int j = 0; j < attachFiles.size(); j++) {
+                    if (attachFiles.get(j) == null) {
+                        slotIndex = j;
+                        break;
+                    }
+                }
+
+                if (slotIndex == -1) {
+                    throw new RuntimeException("첨부파일 최대 개수(5개)를 초과했습니다.");
+                }
+
+                try {
+                    // 파일명 중복 방지
+                    String savedFileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+                    Path savePath = Paths.get(uploadDir, savedFileName);
+                    Files.createDirectories(savePath.getParent());
+                    file.transferTo(savePath.toFile());
+
+                    String info = isDrafter ? "기안자첨언" : (isSigner ? "결재자첨언" : "참조자첨언");
+
+                    switch (slotIndex) {
+                        case 0 -> { detail.setApprovalAttachFile1(savedFileName); detail.setApprovalAttachPath1(uploadDir); detail.setApprovalAttachInfo1(info); }
+                        case 1 -> { detail.setApprovalAttachFile2(savedFileName); detail.setApprovalAttachPath2(uploadDir); detail.setApprovalAttachInfo2(info); }
+                        case 2 -> { detail.setApprovalAttachFile3(savedFileName); detail.setApprovalAttachPath3(uploadDir); detail.setApprovalAttachInfo3(info); }
+                        case 3 -> { detail.setApprovalAttachFile4(savedFileName); detail.setApprovalAttachPath4(uploadDir); detail.setApprovalAttachInfo4(info); }
+                        case 4 -> { detail.setApprovalAttachFile5(savedFileName); detail.setApprovalAttachPath5(uploadDir); detail.setApprovalAttachInfo5(info); }
+                    }
+
+                    attachFiles.set(slotIndex, savedFileName);
+
+                } catch (IOException e) {
+                    throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);
+                }
+            }
+        }
+
+        approval.setUpdateId(memberId);
+        approval.setUpdateDate(LocalDateTime.now());
+        detail.setUpdateId(memberId);
+        detail.setUpdateDate(LocalDateTime.now());
+
+        approvalRepository.save(approval);
+        approvalDetailRepository.save(detail);
     }
 
     // 결재자 첨언
     @Transactional
-    public void comments(int approvalNo, CommentRequestDto dto) {
+    public void comments(int approvalNo, CommentRequestDto dto, List<MultipartFile> files) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
@@ -269,7 +540,8 @@ public class ApprovalService {
         Approval approval = approvalRepository.findByApprovalNo(approvalNo)
             .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
 
-        System.out.println(memberId + "==================================");
+        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approvalNo)
+            .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
 
         // 현재 결재 차례인지 확인
         if (!member.getMemberName().equals(approval.getNextId())) {
@@ -296,8 +568,61 @@ public class ApprovalService {
             throw new IllegalStateException("해당 사용자는 결재자가 아닙니다.");
         }
 
-        approval.setUpdateDate(LocalDateTime.now());
+        // 파일 업로드 처리 (기안자 첨언 로직 참고)
+        if (files == null || files.isEmpty()) return;
 
+        // 기존 파일 정보 리스트
+        List<String> attachFiles = Arrays.asList(
+                detail.getApprovalAttachFile1(),
+                detail.getApprovalAttachFile2(),
+                detail.getApprovalAttachFile3(),
+                detail.getApprovalAttachFile4(),
+                detail.getApprovalAttachFile5()
+        );
+
+        for (MultipartFile file : files) {
+
+            if (file.isEmpty()) continue;
+
+            // 빈 슬롯 찾기
+            int slotIndex = -1;
+            for (int j = 0; j < attachFiles.size(); j++) {
+                if (attachFiles.get(j) == null) {
+                    slotIndex = j;
+                    break;
+                }
+            }
+
+            if (slotIndex == -1) {
+                throw new RuntimeException("첨부파일 최대 개수(5개)를 초과했습니다.");
+            }
+
+            try {
+                // 파일 저장
+                String savedFileName = file.getOriginalFilename();
+                Path savePath = Paths.get(uploadDir, savedFileName);
+                Files.createDirectories(savePath.getParent());
+                file.transferTo(savePath.toFile());
+
+                // 빈 슬롯에 파일 정보 저장
+                switch (slotIndex) {
+                    case 0 -> { detail.setApprovalAttachFile1(savedFileName); detail.setApprovalAttachPath1(uploadDir); detail.setApprovalAttachInfo1("첨언"); }
+                    case 1 -> { detail.setApprovalAttachFile2(savedFileName); detail.setApprovalAttachPath2(uploadDir); detail.setApprovalAttachInfo2("첨언"); }
+                    case 2 -> { detail.setApprovalAttachFile3(savedFileName); detail.setApprovalAttachPath3(uploadDir); detail.setApprovalAttachInfo3("첨언"); }
+                    case 3 -> { detail.setApprovalAttachFile4(savedFileName); detail.setApprovalAttachPath4(uploadDir); detail.setApprovalAttachInfo4("첨언"); }
+                    case 4 -> { detail.setApprovalAttachFile5(savedFileName); detail.setApprovalAttachPath5(uploadDir); detail.setApprovalAttachInfo5("첨언"); }
+                }
+
+                // attachFiles 리스트 업데이트 (다음 반복에서 빈 슬롯 체크용)
+                attachFiles.set(slotIndex, savedFileName);
+
+            } catch (IOException e) {
+                throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);
+            }
+        }
+
+        approval.setUpdateDate(LocalDateTime.now());
+        detail.setUpdateId(memberId);
         approvalRepository.save(approval);
     }
 

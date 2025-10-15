@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.poen.berieas.back.domain.member.dto.MemberListResponseDto;
@@ -111,9 +112,9 @@ public class MemberController {
 
     // 전체 회원 리스트
     @GetMapping(value = "/member/members", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<MemberListResponseDto>> getAllMembersApi() {
+    public ResponseEntity<List<MemberListResponseDto>> getAllMembersApi(@RequestParam(required = false) String keyword) {
 
-        List<MemberListResponseDto> members = memberService.getAllMembers();
+        List<MemberListResponseDto> members = memberService.getAllMembers(keyword);
         return ResponseEntity.ok(members);
     }
 
@@ -137,7 +138,7 @@ public class MemberController {
     @PutMapping(value = "/member/update/{memberId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateMemberApi(
         @PathVariable String memberId,
-        @Validated @RequestBody MemberRequestDto dto
+        @Validated(MemberRequestDto.updateGroup.class) @RequestBody MemberRequestDto dto
     ) {
 
         String updatedId = memberService.updateMember(memberId, dto);
