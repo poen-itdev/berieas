@@ -376,7 +376,7 @@ public class ApprovalService {
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        Page<Approval> approvals = approvalRepository.findCompletedApprovals(memberId, pageable);
+        Page<Approval> approvals = approvalRepository.findCompletedApprovals(memberId, member.getMemberName(), pageable);
         
         List<ProgressListResponseDto> filtered = approvals.getContent().stream()
                 .filter(a -> {
