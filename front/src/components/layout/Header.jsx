@@ -10,10 +10,10 @@ import {
   FormControl,
   IconButton,
 } from '@mui/material';
-import { Logout as LogoutIcon } from '@mui/icons-material';
+import { Logout as LogoutIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 
-const Header = ({ onLogout, isMobile = false }) => {
+const Header = ({ onLogout, onMenuClick, isMobile = false }) => {
   const [language, setLanguage] = useState('ko');
   const [headerUserInfo, setHeaderUserInfo] = useState(null);
 
@@ -72,21 +72,46 @@ const Header = ({ onLogout, isMobile = false }) => {
         sx={{
           minHeight: isMobile ? '56px' : '64px',
           px: isMobile ? 1 : 2,
+          position: 'relative',
         }}
       >
+        {/* 왼쪽: 햄버거 메뉴 (모바일에서만) */}
+        {isMobile && (
+          <IconButton
+            onClick={() => onMenuClick && onMenuClick('toggle-menu')}
+            sx={{
+              color: '#fff',
+              '&:hover': {
+                bgcolor: 'transparent',
+              },
+            }}
+          >
+            <MenuIcon sx={{ fontSize: 28 }} />
+          </IconButton>
+        )}
+
+        {/* 가운데: 로고 */}
         <Typography
           variant="h6"
           sx={{
             color: '#fff',
-            fontWeight: 600,
+            fontWeight: 700,
             cursor: 'pointer',
-            fontSize: isMobile ? '1.1rem' : '1.25rem',
+            fontSize: { xs: '1.1rem', sm: '1.3rem', md: '1.5rem' },
+            position: 'absolute',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: { xs: '120px', sm: '150px', md: '200px' },
           }}
           onClick={() => window.location.reload()}
         >
           BERI-EAS
         </Typography>
 
+        {/* 오른쪽: 사용자정보, 언어, 로그아웃 */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
           {!isMobile && headerUserInfo && (
             <Typography sx={{ color: '#fff', fontSize: '0.9rem' }}>

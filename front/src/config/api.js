@@ -40,7 +40,8 @@ const API_CONFIG = {
     APPROVAL_TEMPORARY_DRAFT: '/approvalDetail/temporaryDraft',
     APPROVAL_GET_DRAFT: '/approvalDetail/getDraft',
     APPROVAL_GET_DETAIL: '/approvalDetail',
-    APPROVAL_APPROVE: '/approval/approve',
+    APPROVAL_APPROVE: '/approval/doApproval',
+    APPROVAL_REJECT: '/approval/doReject',
     APPROVAL_FILE_DOWNLOAD: '/approvalDetail/file/download',
     APPROVAL_DELETE: '/approvalDetail/delete',
     APPROVAL_CANCEL: '/approvalDetail/cancel',
@@ -106,6 +107,7 @@ export const API_URLS = {
   ),
   APPROVAL_GET_DRAFT: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_GET_DRAFT),
   APPROVAL_APPROVE: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_APPROVE),
+  APPROVAL_REJECT: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_REJECT),
   APPROVAL_FILE_DOWNLOAD: getApiUrl(
     API_CONFIG.ENDPOINTS.APPROVAL_FILE_DOWNLOAD
   ),

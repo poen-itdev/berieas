@@ -73,14 +73,11 @@ const ProgressListContent = ({ isMobile = false }) => {
 
       if (response.ok) {
         let data = response.data;
-        console.log('API 응답 데이터:', data);
 
         // 페이지네이션 응답 처리
         if (data && data.content && Array.isArray(data.content)) {
           data = data.content;
-          console.log('페이지네이션 데이터:', data);
         } else if (!Array.isArray(data)) {
-          console.error('API 응답이 예상된 형태가 아닙니다:', data);
           setProgressData([]);
           return;
         }
@@ -92,11 +89,9 @@ const ProgressListContent = ({ isMobile = false }) => {
 
         setProgressData(data);
       } else {
-        console.error('API 응답 실패:', response.status, response.statusText);
         setProgressData([]);
       }
     } catch (error) {
-      console.error('진행목록 데이터 가져오기 실패:', error);
       setProgressData([]);
     } finally {
       setLoading(false);
@@ -115,8 +110,6 @@ const ProgressListContent = ({ isMobile = false }) => {
 
   // 행 클릭 핸들러
   const handleRowClick = (row) => {
-    console.log('행 클릭:', row);
-
     // 기안중 상태인 경우 기안작성 페이지로 이동
     if (row.approvalStatus === '기안중') {
       navigate(`/approvalwrite?approvalNo=${row.approvalNo}`);
@@ -165,6 +158,7 @@ const ProgressListContent = ({ isMobile = false }) => {
       }
     } catch (error) {
       console.error('검색 실패:', error);
+      setProgressData([]);
     } finally {
       setLoading(false);
     }
@@ -192,12 +186,14 @@ const ProgressListContent = ({ isMobile = false }) => {
         size="small"
         sx={{
           fontWeight: 500,
-          fontSize: '12px',
-          height: '24px',
+          fontSize: { xs: '10px', sm: '12px' },
+          height: { xs: '20px', sm: '24px' },
           backgroundColor: statusColor,
           color: 'white',
           '& .MuiChip-label': {
             color: 'white',
+            fontSize: { xs: '10px', sm: '12px' },
+            padding: { xs: '0 6px', sm: '0 8px' },
           },
         }}
       />
@@ -215,7 +211,7 @@ const ProgressListContent = ({ isMobile = false }) => {
             sx={{
               display: 'flex',
               width: '100%',
-              overflowX: 'auto', // 가로 스크롤 허용
+              overflowX: 'auto',
               '&::-webkit-scrollbar': {
                 height: '6px',
               },
@@ -376,24 +372,53 @@ const ProgressListContent = ({ isMobile = false }) => {
             <Table
               sx={{
                 '& .MuiTableCell-root': {
-                  fontSize: '14px',
+                  fontSize: { xs: '12px', sm: '14px' },
                   textAlign: 'center',
+                  padding: { xs: '8px 4px', sm: '12px 8px' },
                 },
                 '& .MuiTableCell-head': {
                   fontWeight: 600,
+                  fontSize: { xs: '12px', sm: '14px' },
+                  padding: { xs: '8px 4px', sm: '12px 8px' },
                 },
               }}
             >
               <TableHead>
                 <TableRow sx={{ bgcolor: '#F8F9FA' }}>
-                  <TableCell>번호</TableCell>
-                  <TableCell>기안일자</TableCell>
-                  <TableCell>제목</TableCell>
-                  <TableCell>구분</TableCell>
-                  <TableCell>부서명</TableCell>
-                  <TableCell>기안자</TableCell>
-                  <TableCell>결재자</TableCell>
-                  <TableCell>진행상태</TableCell>
+                  <TableCell sx={{ minWidth: { xs: '40px', sm: '60px' } }}>
+                    번호
+                  </TableCell>
+                  <TableCell sx={{ minWidth: { xs: '80px', sm: '100px' } }}>
+                    기안일자
+                  </TableCell>
+                  <TableCell sx={{ minWidth: { xs: '120px', sm: '200px' } }}>
+                    제목
+                  </TableCell>
+                  <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                    구분
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      display: { xs: 'none', md: 'table-cell' },
+                      minWidth: '80px',
+                    }}
+                  >
+                    부서명
+                  </TableCell>
+                  <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                    기안자
+                  </TableCell>
+                  <TableCell
+                    sx={{
+                      display: { xs: 'none', sm: 'table-cell' },
+                      minWidth: '80px',
+                    }}
+                  >
+                    결재자
+                  </TableCell>
+                  <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                    진행상태
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -421,31 +446,71 @@ const ProgressListContent = ({ isMobile = false }) => {
                         },
                       }}
                     >
-                      <TableCell>{index + 1}</TableCell>
-                      <TableCell>
+                      <TableCell sx={{ minWidth: { xs: '40px', sm: '60px' } }}>
+                        {index + 1}
+                      </TableCell>
+                      <TableCell sx={{ minWidth: { xs: '80px', sm: '100px' } }}>
                         {row.regDate
                           ? new Date(row.regDate).toLocaleDateString()
                           : '-'}
                       </TableCell>
-                      <TableCell sx={{ maxWidth: '300px' }}>
+                      <TableCell
+                        sx={{
+                          minWidth: { xs: '120px', sm: '200px' },
+                          maxWidth: { xs: '120px', sm: '300px' },
+                        }}
+                      >
                         <Typography
                           variant="body2"
                           sx={{
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
+                            fontSize: { xs: '12px', sm: '14px' },
                           }}
                         >
                           {row.approvalTitle}
                         </Typography>
                       </TableCell>
-                      <TableCell>
-                        {row.approvalType || row.aprovalType}
+                      <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                        <Typography
+                          sx={{ fontSize: { xs: '11px', sm: '12px' } }}
+                        >
+                          {row.approvalType || row.aprovalType}
+                        </Typography>
                       </TableCell>
-                      <TableCell>{row.approvalPostion || '-'}</TableCell>
-                      <TableCell>{row.approvalName || '-'}</TableCell>
-                      <TableCell>{row.approvalSigner || row.signId}</TableCell>
-                      <TableCell>
+                      <TableCell
+                        sx={{
+                          display: { xs: 'none', md: 'table-cell' },
+                          minWidth: '80px',
+                        }}
+                      >
+                        <Typography
+                          sx={{ fontSize: { xs: '11px', sm: '12px' } }}
+                        >
+                          {row.approvalPostion || '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
+                        <Typography
+                          sx={{ fontSize: { xs: '11px', sm: '12px' } }}
+                        >
+                          {row.approvalName || '-'}
+                        </Typography>
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          display: { xs: 'none', sm: 'table-cell' },
+                          minWidth: '80px',
+                        }}
+                      >
+                        <Typography
+                          sx={{ fontSize: { xs: '11px', sm: '12px' } }}
+                        >
+                          {row.approvalSigner || row.signId}
+                        </Typography>
+                      </TableCell>
+                      <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
                         {getStatusChip(
                           row.approvalStatus,
                           getStatusColor(row.approvalStatus)

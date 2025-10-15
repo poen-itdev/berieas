@@ -11,16 +11,16 @@ import ProgressListContent from '../components/dashboard/ProgressListContent';
 import ApprovalWriteContent from '../components/dashboard/ApprovalWriteContent';
 import ApprovalDetailContent from '../components/dashboard/ApprovalDetailContent';
 import FormManagementContent from '../components/dashboard/FormManagementContent';
-import { apiRequest } from '../utils/apiHelper';
-import { API_URLS } from '../config/api';
+import { useUserInfo } from '../hooks/useUserInfo';
+import { useResponsive } from '../hooks/useResponsive';
 import '../styles/custom.css';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [userInfo, setUserInfo] = useState(null);
+  const { userInfo } = useUserInfo();
+  const { isMobile } = useResponsive();
   const [currentView, setCurrentView] = useState('dashboard'); // 현재 보고 있는 뷰
-  const [isMobile, setIsMobile] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [saveFunction, setSaveFunction] = useState(null);
 
@@ -30,8 +30,6 @@ const DashboardPage = () => {
       navigate('/login');
       return;
     }
-
-    fetchUserInfo();
   }, [navigate]);
 
   // URL 경로에 따라 currentView 설정
@@ -67,48 +65,6 @@ const DashboardPage = () => {
     }
   }, [location.pathname]);
 
-  // 반응형 감지
-  useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth <= 900);
-    };
-
-    checkScreenSize();
-    window.addEventListener('resize', checkScreenSize);
-
-    return () => window.removeEventListener('resize', checkScreenSize);
-  }, []);
-
-  const fetchUserInfo = async () => {
-    try {
-      const accessToken = localStorage.getItem('accessToken');
-
-      if (!accessToken) {
-        setUserInfo({ memberName: '사용자' });
-        return;
-      }
-
-      const response = await apiRequest(API_URLS.MEMBER_INFO, {
-        method: 'GET',
-      });
-
-      if (response.ok) {
-        const userData = response.data;
-        setUserInfo(userData);
-      } else {
-        console.error(
-          '사용자 정보 가져오기 실패:',
-          response.status,
-          response.data
-        );
-        setUserInfo({ memberName: '사용자' });
-      }
-    } catch (error) {
-      console.error('사용자 정보 가져오기 실패:', error);
-      setUserInfo({ memberName: '사용자' });
-    }
-  };
-
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
@@ -116,6 +72,12 @@ const DashboardPage = () => {
   };
 
   const handleMenuClick = (path) => {
+    // 햄버거 메뉴 토글
+    if (path === 'toggle-menu') {
+      setMobileMenuOpen(!mobileMenuOpen);
+      return;
+    }
+
     try {
       if (location.pathname === path) {
         navigate(path, { replace: true });
@@ -198,40 +160,46 @@ const DashboardPage = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <Header onLogout={handleLogout} isMobile={isMobile} />
-      <Box sx={{ display: 'flex', flexGrow: 1, position: 'relative' }}>
+      <Header
+        onLogout={handleLogout}
+        onMenuClick={handleMenuClick}
+        isMobile={isMobile}
+      />
+      <Box sx={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
         {!isMobile && (
-          <Sidebar
-            onMenuClick={handleMenuClick}
-            onSaveBeforeNew={handleSaveBeforeNew}
-          />
-        )}
-
-        {isMobile && (
-          <IconButton
-            onClick={toggleMobileMenu}
+          <Box
             sx={{
-              position: 'fixed',
-              top: 16,
-              left: 16,
-              zIndex: 1300,
-              bgcolor: 'white',
-              boxShadow: 2,
+              width: 280,
+              flexShrink: 0,
+              height: '100%',
+              overflow: 'auto',
+              borderRight: '1px solid #e0e0e0',
+              bgcolor: '#fff',
             }}
           >
-            <MenuIcon />
-          </IconButton>
+            <Sidebar
+              onMenuClick={handleMenuClick}
+              onSaveBeforeNew={handleSaveBeforeNew}
+            />
+          </Box>
         )}
 
+        {/* 모바일: Drawer로 사이드바 */}
         {isMobile && (
           <Drawer
             anchor="left"
             open={mobileMenuOpen}
             onClose={() => setMobileMenuOpen(false)}
+            ModalProps={{
+              keepMounted: true,
+            }}
             sx={{
+              zIndex: 1100,
               '& .MuiDrawer-paper': {
                 width: 280,
                 bgcolor: '#fff',
+                top: { xs: 56, sm: 64 },
+                height: { xs: 'calc(100vh - 56px)', sm: 'calc(100vh - 64px)' },
               },
             }}
           >
@@ -241,12 +209,14 @@ const DashboardPage = () => {
             />
           </Drawer>
         )}
+
+        {/* 메인 컨텐츠 */}
         <Box
           sx={{
+            flexGrow: 1,
             bgcolor: '#fff',
             overflow: 'auto',
-            height: isMobile ? 'calc(100vh - 56px)' : 'calc(100vh - 64px)',
-            width: isMobile ? '100%' : 'calc(100% - 280px)',
+            height: '100%',
           }}
         >
           {renderContent()}

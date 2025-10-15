@@ -14,6 +14,7 @@ import {
   TextField,
   Chip,
   Divider,
+  Container,
 } from '@mui/material';
 import { Download, CheckCircle, Cancel } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
@@ -46,12 +47,10 @@ const ApprovalDetailContent = ({ userInfo }) => {
       if (response.ok) {
         setApprovalData(response.data);
       } else {
-        console.error('기안서 상세 로드 실패:', response.status, response.data);
         alert(`기안서를 불러올 수 없습니다.\n${response.data || ''}`);
         navigate('/progress-list');
       }
     } catch (error) {
-      console.error('기안서 상세 로드 실패:', error);
       alert('기안서를 불러올 수 없습니다.');
       navigate('/progress-list');
     } finally {
@@ -69,24 +68,30 @@ const ApprovalDetailContent = ({ userInfo }) => {
   const handleApproval = async (action) => {
     try {
       setSubmitting(true);
-      const response = await apiRequest(API_URLS.APPROVAL_APPROVE, {
+
+      // 승인과 반려는 별도 엔드포인트 사용
+      const apiUrl =
+        action === 'approve'
+          ? `${API_URLS.APPROVAL_APPROVE}/${approvalNo}`
+          : `${API_URLS.APPROVAL_REJECT}/${approvalNo}`;
+
+      const response = await apiRequest(apiUrl, {
         method: 'POST',
-        body: JSON.stringify({
-          approvalNo: parseInt(approvalNo),
-          action: action, // 'approve' 또는 'reject'
-          comment: comment.trim() || null, // 첨언은 선택사항
-        }),
       });
 
       if (response.ok) {
         alert(action === 'approve' ? '승인되었습니다.' : '반려되었습니다.');
-        navigate('/progress-list');
+        // 데이터 다시 로드해서 결재라인 업데이트
+        await loadApprovalDetail();
+        // 잠시 후 진행목록으로 이동
+        setTimeout(() => {
+          navigate('/progress-list');
+        }, 1000);
       } else {
-        alert('처리에 실패했습니다.');
+        alert(`처리에 실패했습니다.\n${response.data || ''}`);
       }
     } catch (error) {
-      console.error('결재 처리 실패:', error);
-      alert('처리에 실패했습니다.');
+      alert('처리에 실패했습니다: ' + error.message);
     } finally {
       setSubmitting(false);
     }
@@ -94,13 +99,6 @@ const ApprovalDetailContent = ({ userInfo }) => {
 
   // 기안취소 처리 (진행중 -> 기안중으로 되돌리기)
   const handleCancelApproval = async () => {
-    if (
-      !confirm(
-        '기안을 취소하시겠습니까?\n다음 결재자의 결재가 이루어진 경우 취소 불가합니다.'
-      )
-    )
-      return;
-
     try {
       setSubmitting(true);
 
@@ -112,13 +110,11 @@ const ApprovalDetailContent = ({ userInfo }) => {
       );
 
       if (response.ok) {
-        alert('기안이 취소되었습니다. 기안중 상태로 변경되었습니다.');
         navigate('/progress-list');
       } else {
         alert(response.data || '기안취소에 실패했습니다. 조건을 확인해주세요.');
       }
     } catch (error) {
-      console.error('기안취소 실패:', error);
       alert('기안취소에 실패했습니다: ' + error.message);
     } finally {
       setSubmitting(false);
@@ -126,14 +122,28 @@ const ApprovalDetailContent = ({ userInfo }) => {
   };
 
   // 파일 다운로드
-  const handleFileDownload = (fileName) => {
-    const downloadUrl = `${API_URLS.APPROVAL_FILE_DOWNLOAD}/${approvalNo}/${fileName}`;
+  const handleFileDownload = (fileName, fileIndex) => {
+    // 백엔드에서 요구하는 필드명으로 변환
+    const fieldName = `approvalAttachFile${fileIndex + 1}`;
+    const downloadUrl = `${API_URLS.APPROVAL_FILE_DOWNLOAD}/${approvalNo}/${fieldName}`;
     window.open(downloadUrl, '_blank');
   };
 
   // 첨언 등록
   const handleCommentSubmit = () => {
     if (!comment.trim()) return;
+
+    // 현재 사용자가 이미 첨언을 작성했는지 확인
+    const existingComment = comments.find(
+      (c) => c.author === userInfo?.memberName
+    );
+
+    if (existingComment) {
+      alert(
+        '이미 첨언을 작성하셨습니다. 각 결재자당 1개의 첨언만 작성할 수 있습니다.'
+      );
+      return;
+    }
 
     const newComment = {
       id: Date.now(), // 임시 ID
@@ -216,350 +226,419 @@ const ApprovalDetailContent = ({ userInfo }) => {
   for (let i = 1; i <= 5; i++) {
     const signId = approvalData[`signId${i}`];
     if (signId) {
+      const signDate = approvalData[`signDate${i}`];
+
+      // 전체 문서가 반려 상태이고 날짜가 있으면 반려, 아니면 날짜 있으면 승인
+      let status = 'pending';
+      if (signDate) {
+        status =
+          approvalData.approvalStatus === '반려' ? 'rejected' : 'approved';
+      }
+
       approvalLine.push({
-        title: '결재자', // 모든 결재자를 "결재자"로 통일
+        title: '결재자',
         name: signId,
-        date: approvalData[`signDate${i}`] || null,
-        status: approvalData[`signStatus${i}`] || 'pending',
+        date: signDate || null,
+        status: status,
       });
     }
   }
 
+  // 현재 사용자가 결재자인지 확인
+  const isApprover = [
+    approvalData.signId1,
+    approvalData.signId2,
+    approvalData.signId3,
+    approvalData.signId4,
+    approvalData.signId5,
+  ].includes(userInfo?.memberName);
+
   return (
     <Box sx={{ p: 3, mt: 3 }}>
-      <PageHeader title="기안서 상세" fontSize="30px" />
+      <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
+        <PageHeader title="기안서 상세" fontSize={{ xs: '20px', sm: '30px' }} />
 
-      <Paper sx={{ p: 4, mt: 3 }}>
-        {/* 문서 제목 */}
-        <Typography
-          variant="h4"
-          sx={{ mb: 2, textAlign: 'center', fontWeight: 600 }}
-        >
-          {approvalData.approvalTitle}
-        </Typography>
-
-        {/* 결재라인 - 제목 바로 밑 오른쪽 정렬 */}
-        <Box sx={{ mb: 4, display: 'flex', justifyContent: 'flex-end' }}>
-          <TableContainer
-            component={Paper}
-            variant="outlined"
-            sx={{ maxWidth: 'fit-content' }}
-          >
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  {/* 모든 직급 헤더들 */}
-                  {approvalLine.map((item, index) => (
-                    <TableCell
-                      key={index}
-                      align="center"
-                      sx={{
-                        fontWeight: 600,
-                        fontSize: '0.75rem',
-                        py: 1,
-                        px: 2,
-                        backgroundColor: 'grey.100',
-                      }}
-                    >
-                      {item.title}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                <TableRow>
-                  {/* 모든 데이터 */}
-                  {approvalLine.map((item, index) => (
-                    <TableCell key={index} align="center" sx={{ py: 1, px: 2 }}>
-                      <Box>
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            fontWeight: 500,
-                            fontSize: '0.7rem',
-                            color:
-                              item.status === 'approved'
-                                ? 'success.main'
-                                : item.status === 'rejected'
-                                ? 'error.main'
-                                : item.status === 'draft'
-                                ? 'primary.main'
-                                : 'text.primary',
-                          }}
-                        >
-                          {item.name}
-                        </Typography>
-                        {item.date && (
-                          <Typography
-                            variant="caption"
-                            color="text.secondary"
-                            sx={{ fontSize: '0.65rem', display: 'block' }}
-                          >
-                            {new Date(item.date).toLocaleDateString()}
-                          </Typography>
-                        )}
-                        {!item.date && item.status === 'pending' && (
-                          <Typography
-                            variant="caption"
-                            color="text.disabled"
-                            sx={{ fontSize: '0.65rem', display: 'block' }}
-                          >
-                            대기중
-                          </Typography>
-                        )}
-                      </Box>
-                    </TableCell>
-                  ))}
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </Box>
-
-        {/* 기안번호 */}
-        <Box sx={{ mb: 3 }}>
+        <Paper sx={{ p: { xs: 2, sm: 4 }, mt: 3 }}>
+          {/* 문서 제목 */}
           <Typography
-            variant="body1"
-            sx={{ fontWeight: 500, textAlign: 'left' }}
+            variant="h4"
+            sx={{
+              mb: 3,
+              textAlign: 'center',
+              fontWeight: 600,
+              fontSize: { xs: '20px', sm: '28px' },
+            }}
           >
-            기안번호: {approvalNo}
+            {approvalData.approvalTitle}
           </Typography>
-        </Box>
 
-        {/* 문서 내용 */}
-        <Box sx={{ mb: 4 }}>
-          <Paper variant="outlined" sx={{ p: 3, minHeight: 200 }}>
-            <div
-              dangerouslySetInnerHTML={{
-                __html: approvalData.approvalDocument || '내용이 없습니다.',
-              }}
-            />
-          </Paper>
-        </Box>
+          {/* 결재라인 - 제목 바로 밑 오른쪽 정렬 */}
+          <Box sx={{ mb: 4, display: 'flex', justifyContent: 'flex-end' }}>
+            <TableContainer
+              component={Paper}
+              variant="outlined"
+              sx={{ maxWidth: 'fit-content' }}
+            >
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    {/* 모든 직급 헤더들 */}
+                    {approvalLine.map((item, index) => (
+                      <TableCell
+                        key={index}
+                        align="center"
+                        sx={{
+                          fontWeight: 600,
+                          fontSize: { xs: '12px', sm: '14px' },
+                          py: { xs: 1, sm: 1.5 },
+                          px: { xs: 2, sm: 3 },
+                          backgroundColor: 'grey.100',
+                        }}
+                      >
+                        {item.title}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  <TableRow>
+                    {/* 모든 데이터 */}
+                    {approvalLine.map((item, index) => (
+                      <TableCell
+                        key={index}
+                        align="center"
+                        sx={{ py: { xs: 1.5, sm: 2 }, px: { xs: 2, sm: 3 } }}
+                      >
+                        <Box>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              fontWeight: 600,
+                              fontSize: { xs: '13px', sm: '15px' },
+                              color: '#141414',
+                            }}
+                          >
+                            {item.name}
+                          </Typography>
+                          {item.date && (
+                            <Typography
+                              variant="caption"
+                              sx={{
+                                fontSize: { xs: '11px', sm: '12px' },
+                                display: 'block',
+                                fontWeight: 500,
+                                mt: 0.5,
+                                color:
+                                  item.status === 'rejected'
+                                    ? '#d32f2f'
+                                    : '#1976d2',
+                              }}
+                            >
+                              {new Date(item.date).toLocaleDateString()}
+                            </Typography>
+                          )}
+                          {!item.date && item.status === 'pending' && (
+                            <Typography
+                              variant="caption"
+                              color="text.disabled"
+                              sx={{
+                                fontSize: { xs: '11px', sm: '12px' },
+                                display: 'block',
+                                mt: 0.5,
+                              }}
+                            >
+                              대기중
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </Box>
 
-        {/* 참조자 */}
-        {approvalData.referenceId && (
+          {/* 기안번호 */}
+          <Box sx={{ mb: 3 }}>
+            <Typography
+              variant="body1"
+              sx={{ fontWeight: 500, textAlign: 'left' }}
+            >
+              기안번호: {approvalNo}
+            </Typography>
+          </Box>
+
+          {/* 문서 내용 */}
+          <Box sx={{ mb: 4 }}>
+            <Paper variant="outlined" sx={{ p: 3, minHeight: 200 }}>
+              <div
+                dangerouslySetInnerHTML={{
+                  __html: approvalData.approvalDocument || '내용이 없습니다.',
+                }}
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  lineHeight: '1.6',
+                  textAlign: 'left',
+                }}
+              />
+            </Paper>
+          </Box>
+
+          {/* 참조자 */}
+          {approvalData.referenceId && (
+            <Box sx={{ mb: 4 }}>
+              <Typography
+                variant="h6"
+                sx={{ mb: 2, fontWeight: 600, textAlign: 'left' }}
+              >
+                참조자
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {approvalData.referenceId.split(',').map((name, index) => (
+                  <Chip
+                    key={index}
+                    label={name.trim()}
+                    variant="outlined"
+                    color="secondary"
+                  />
+                ))}
+              </Box>
+            </Box>
+          )}
+
+          {/* 첨부파일 */}
           <Box sx={{ mb: 4 }}>
             <Typography
               variant="h6"
               sx={{ mb: 2, fontWeight: 600, textAlign: 'left' }}
             >
-              참조자
+              첨부파일
             </Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {approvalData.referenceId.split(',').map((name, index) => (
-                <Chip
-                  key={index}
-                  label={name.trim()}
-                  variant="outlined"
-                  color="secondary"
-                />
-              ))}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {[
+                approvalData.approvalAttachFile1,
+                approvalData.approvalAttachFile2,
+                approvalData.approvalAttachFile3,
+                approvalData.approvalAttachFile4,
+                approvalData.approvalAttachFile5,
+              ]
+                .filter(Boolean)
+                .map((fileName, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 2,
+                    }}
+                  >
+                    <Typography variant="body2">{fileName}</Typography>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<Download />}
+                      onClick={() => handleFileDownload(fileName, index)}
+                    >
+                      다운로드
+                    </Button>
+                  </Box>
+                ))}
+              {!approvalData.approvalAttachFile1 && (
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ textAlign: 'left' }}
+                >
+                  첨부파일이 없습니다.
+                </Typography>
+              )}
             </Box>
           </Box>
-        )}
 
-        {/* 첨부파일 */}
-        <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h6"
-            sx={{ mb: 2, fontWeight: 600, textAlign: 'left' }}
-          >
-            첨부파일
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {[
-              approvalData.approvalAttachFile1,
-              approvalData.approvalAttachFile2,
-              approvalData.approvalAttachFile3,
-              approvalData.approvalAttachFile4,
-              approvalData.approvalAttachFile5,
-            ]
-              .filter(Boolean)
-              .map((fileName, index) => (
-                <Box
-                  key={index}
-                  sx={{ display: 'flex', alignItems: 'center', gap: 2 }}
-                >
-                  <Typography variant="body2">{fileName}</Typography>
-                  <Button
+          <Divider sx={{ my: 4 }} />
+          {/* 첨언 */}
+          <Box sx={{ mb: 2, textAlign: 'left' }}>
+            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+              첨언 (선택사항)
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              * 1개의 첨언만 작성할 수 있습니다.
+            </Typography>
+
+            {/* 등록된 첨언 목록 */}
+            {comments.length > 0 && (
+              <Box sx={{ mb: 2 }}>
+                {comments.map((commentItem) => (
+                  <Paper
+                    key={commentItem.id}
                     variant="outlined"
-                    size="small"
-                    startIcon={<Download />}
-                    onClick={() => handleFileDownload(fileName)}
+                    sx={{
+                      p: 1.5,
+                      mb: 1.5,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                    }}
                   >
-                    다운로드
-                  </Button>
-                </Box>
-              ))}
-            {!approvalData.approvalAttachFile1 && (
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ textAlign: 'left' }}
-              >
-                첨부파일이 없습니다.
-              </Typography>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="body2" sx={{ mb: 0.5 }}>
+                        {commentItem.content}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {commentItem.author} • {commentItem.date}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => handleCommentEdit(commentItem.id)}
+                        disabled={editingComment === commentItem.id}
+                      >
+                        수정
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleCommentDelete(commentItem.id)}
+                      >
+                        삭제
+                      </Button>
+                    </Box>
+                  </Paper>
+                ))}
+              </Box>
             )}
-          </Box>
-        </Box>
 
-        <Divider sx={{ my: 4 }} />
-
-        {/* 첨언 */}
-        <Box sx={{ mb: 4 }}>
-          <Typography
-            variant="h6"
-            sx={{ mb: 2, fontWeight: 600, textAlign: 'left' }}
-          >
-            첨언 (선택사항)
-          </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ mb: 2, textAlign: 'left' }}
-          >
-            * 각 결재자당 1개의 첨언만 작성할 수 있습니다.
-          </Typography>
-
-          {/* 등록된 첨언 목록 */}
-          {comments.length > 0 && (
-            <Box sx={{ mb: 3 }}>
-              {comments.map((commentItem) => (
-                <Paper
-                  key={commentItem.id}
-                  variant="outlined"
-                  sx={{
-                    p: 2,
-                    mb: 2,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                  }}
-                >
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" sx={{ mb: 1 }}>
-                      {commentItem.content}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {commentItem.author} • {commentItem.date}
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
+            {/* 첨언 입력 */}
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+              <TextField
+                fullWidth
+                multiline
+                rows={1}
+                placeholder={
+                  comments.find((c) => c.author === userInfo?.memberName)
+                    ? '이미 첨언을 작성하셨습니다.'
+                    : '의견을 입력하세요'
+                }
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                variant="outlined"
+                disabled={
+                  !!comments.find((c) => c.author === userInfo?.memberName) &&
+                  !editingComment
+                }
+              />
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                {editingComment ? (
+                  <>
                     <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => handleCommentEdit(commentItem.id)}
-                      disabled={editingComment === commentItem.id}
+                      variant="contained"
+                      color="primary"
+                      sx={{ minWidth: 80, height: '56px' }}
+                      onClick={handleCommentUpdate}
+                      disabled={!comment.trim()}
                     >
                       수정
                     </Button>
                     <Button
-                      size="small"
                       variant="outlined"
-                      color="error"
-                      onClick={() => handleCommentDelete(commentItem.id)}
+                      sx={{ minWidth: 80, height: '56px' }}
+                      onClick={handleCommentCancel}
                     >
-                      삭제
+                      취소
                     </Button>
-                  </Box>
-                </Paper>
-              ))}
-            </Box>
-          )}
-
-          {/* 첨언 입력 */}
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-            <TextField
-              fullWidth
-              multiline
-              rows={1}
-              placeholder="의견을 입력하세요"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              variant="outlined"
-            />
-            <Box sx={{ display: 'flex', gap: 1 }}>
-              {editingComment ? (
-                <>
+                  </>
+                ) : (
                   <Button
                     variant="contained"
                     color="primary"
-                    sx={{ minWidth: 80, height: '56px' }}
-                    onClick={handleCommentUpdate}
-                    disabled={!comment.trim()}
+                    sx={{ minWidth: 100, height: '56px' }}
+                    onClick={handleCommentSubmit}
+                    disabled={
+                      !comment.trim() ||
+                      (!!comments.find(
+                        (c) => c.author === userInfo?.memberName
+                      ) &&
+                        !editingComment)
+                    }
                   >
-                    수정
+                    등록
                   </Button>
-                  <Button
-                    variant="outlined"
-                    sx={{ minWidth: 80, height: '56px' }}
-                    onClick={handleCommentCancel}
-                  >
-                    취소
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="contained"
-                  color="primary"
-                  sx={{ minWidth: 100, height: '56px' }}
-                  onClick={handleCommentSubmit}
-                  disabled={!comment.trim()}
-                >
-                  등록
-                </Button>
-              )}
+                )}
+              </Box>
             </Box>
           </Box>
-        </Box>
 
-        {/* 결재 버튼 */}
-        <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 4 }}>
-          {/* 기안자인 경우 - 기안취소 버튼 */}
-          {approvalData.approvalName === userInfo?.memberName && (
-            <Button
-              variant="contained"
-              color="warning"
-              size="large"
-              startIcon={<Cancel />}
-              onClick={handleCancelApproval}
-              disabled={submitting}
-              sx={{ minWidth: 120 }}
-            >
-              기안취소
-            </Button>
-          )}
+          {/* 결재 버튼 */}
+          <Box
+            sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 4 }}
+          >
+            {/* 기안자인 경우 - 기안취소 버튼 */}
+            {(() => {
+              const isAuthor =
+                approvalData.approvalName === userInfo?.memberName;
+              const isProgressing = approvalData.approvalStatus === '진행중';
+              const isCompleted = approvalData.approvalStatus === '완료';
+              const isRejected = approvalData.approvalStatus === '반려';
+              const noSecondApproval = !approvalData.signDate2;
 
-          {/* 결재자인 경우 - 승인/반려 버튼 */}
-          {approvalData.approvalName !== userInfo?.memberName && (
-            <>
+              return (
+                isAuthor &&
+                isProgressing &&
+                !isCompleted &&
+                !isRejected &&
+                noSecondApproval
+              );
+            })() ? (
               <Button
                 variant="contained"
-                color="success"
-                size="large"
-                startIcon={<CheckCircle />}
-                onClick={() => handleApproval('approve')}
-                disabled={submitting}
-                sx={{ minWidth: 120 }}
-              >
-                승인
-              </Button>
-              <Button
-                variant="contained"
-                color="error"
+                color="warning"
                 size="large"
                 startIcon={<Cancel />}
-                onClick={() => handleApproval('reject')}
+                onClick={handleCancelApproval}
                 disabled={submitting}
                 sx={{ minWidth: 120 }}
               >
-                반려
+                기안취소
               </Button>
-            </>
-          )}
-        </Box>
-      </Paper>
+            ) : null}
+
+            {/* 결재자인 경우 - 승인/반려 버튼 */}
+            {isApprover &&
+              approvalData.approvalName !== userInfo?.memberName && (
+                <>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    size="large"
+                    startIcon={<CheckCircle />}
+                    onClick={() => handleApproval('approve')}
+                    disabled={submitting}
+                    sx={{ minWidth: 120 }}
+                  >
+                    승인
+                  </Button>
+                  <Button
+                    variant="contained"
+                    color="error"
+                    size="large"
+                    startIcon={<Cancel />}
+                    onClick={() => handleApproval('reject')}
+                    disabled={submitting}
+                    sx={{ minWidth: 120 }}
+                  >
+                    반려
+                  </Button>
+                </>
+              )}
+          </Box>
+        </Paper>
+      </Container>
     </Box>
   );
 };

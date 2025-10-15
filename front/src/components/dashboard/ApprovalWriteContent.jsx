@@ -25,6 +25,9 @@ import { AttachFile, Description } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 import PageHeader from '../common/PageHeader';
+import SaveConfirmDialog from '../common/SaveConfirmDialog';
+import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
+import SuccessDialog from '../common/SuccessDialog';
 
 const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
   const [searchParams] = useSearchParams();
@@ -53,6 +56,11 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
   const [members, setMembers] = useState([]);
   const [selectedApprovers, setSelectedApprovers] = useState([]);
   const [selectedReferrers, setSelectedReferrers] = useState([]);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [pendingNavigation, setPendingNavigation] = useState(null);
 
   // 기존 기안서 데이터 로드
   const loadExistingApproval = async (approvalNo) => {
@@ -157,8 +165,6 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
           setFormTemplates(backendForms);
         } else {
           console.error('양식 목록 가져오기 실패:', response.status);
-          // 백엔드 API가 없을 경우 기본 템플릿 사용
-          setFormTemplates(getDefaultFormTemplates());
         }
       } catch (error) {
         console.error('양식 목록 가져오기 실패:', error);
@@ -191,6 +197,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
 
     if (approvalNo && members.length > 0) {
       loadExistingApproval(approvalNo);
+      setHasUnsavedChanges(false); // 기존 데이터 로드 시에는 변경사항 없음
     } else if (!approvalNo) {
       // URL에 approvalNo가 없으면 폼 초기화
       setFormData({
@@ -210,15 +217,54 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
       setSelectedReferrers([]);
       setAttachedFiles([]);
       setSelectedForm(null);
+      setHasUnsavedChanges(false); // 초기화 시에는 변경사항 없음
     }
   }, [searchParams, members]);
 
-  // 외부에서 저장 함수 호출할 수 있도록 등록
+  // 내용 변경 감지
   useEffect(() => {
-    if (onSaveBeforeNew) {
-      onSaveBeforeNew(handleSave);
+    setHasUnsavedChanges(true);
+  }, [formData, attachedFiles, selectedApprovers, selectedReferrers]);
+
+  // 기안중(임시저장 편집) 진입 시 플래그 설정, 종료/저장 시 해제
+  useEffect(() => {
+    const approvalNo = searchParams.get('approvalNo');
+    if (approvalNo) {
+      sessionStorage.setItem('unsavedDraft', '1');
     }
-  }, [onSaveBeforeNew]);
+    return () => {
+      sessionStorage.removeItem('unsavedDraft');
+    };
+  }, []);
+
+  // 브라우저 뒤로가기/앞으로가기 감지
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  // 브라우저 뒤로가기(popstate) 차단 및 다이얼로그 표출
+  useEffect(() => {
+    const handlePopState = () => {
+      // 임시저장 편집 중이면 뒤로가기 차단하고 다이얼로그 표시
+      if (sessionStorage.getItem('unsavedDraft') === '1') {
+        history.pushState(null, '', location.href);
+        setPendingNavigation(-1);
+        setShowSaveDialog(true);
+      }
+    };
+    // 현재 상태를 한 번 더 쌓아서 즉시 뒤로가기에 대비
+    history.pushState(null, '', location.href);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   const getDefaultFormTemplates = () => [
     {
@@ -378,8 +424,15 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
       setLoading(true);
 
       // 필수 필드 검증
-      if (!formData.formNo || !formData.approvalTitle) {
-        alert('양식과 제목을 선택해주세요.');
+      if (
+        !formData.formNo ||
+        formData.formNo.trim() === '' ||
+        !formData.approvalTitle ||
+        formData.approvalTitle.trim() === ''
+      ) {
+        alert(
+          `양식과 제목을 선택해주세요.\n현재 상태: formNo="${formData.formNo}", approvalTitle="${formData.approvalTitle}"`
+        );
         return false;
       }
 
@@ -411,23 +464,14 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
       });
 
       formDataToSend.append('approvalDto', JSON.stringify(approvalData));
-
-      console.log('임시저장 데이터:', approvalData);
-      console.log(
-        '첨부파일 수:',
-        attachedFiles.filter((f) => f.size > 0).length
-      );
-
       const response = await apiRequest(API_URLS.APPROVAL_TEMPORARY_DRAFT, {
         method: 'POST',
         body: formDataToSend,
       });
 
-      console.log('임시저장 응답:', response);
-
       if (response.ok) {
-        alert('임시저장이 완료되었습니다.');
-        navigate('/progress-list');
+        setShowSuccessDialog(true);
+        setHasUnsavedChanges(false);
         return true;
       } else {
         alert(
@@ -442,15 +486,113 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
     } finally {
       setLoading(false);
     }
-  }, [formData, attachedFiles, searchParams, onSaveBeforeNew, navigate]);
+  }, [formData, attachedFiles, searchParams, navigate]);
+
+  // 외부에서 저장 함수 호출할 수 있도록 등록
+  useEffect(() => {
+    if (onSaveBeforeNew) {
+      onSaveBeforeNew(handleSave);
+    }
+  }, [onSaveBeforeNew, handleSave]);
+
+  // 다이얼로그 핸들러 함수들
+  const handleSaveChoice = async (choice) => {
+    if (choice === 'save') {
+      const success = await handleSave();
+      if (success) {
+        setHasUnsavedChanges(false);
+        sessionStorage.removeItem('unsavedDraft');
+        if (pendingNavigation === -1) {
+          navigate('/progress-list');
+        } else if (pendingNavigation) {
+          navigate(pendingNavigation);
+        }
+      }
+      // 저장 실패 시 다이얼로그는 그대로 유지
+      if (!success) {
+        return;
+      }
+    } else if (choice === 'discard') {
+      setHasUnsavedChanges(false);
+      sessionStorage.removeItem('unsavedDraft');
+      if (pendingNavigation === -1) {
+        navigate('/progress-list');
+      } else if (pendingNavigation) {
+        navigate(pendingNavigation);
+      }
+    }
+    // cancel의 경우 아무것도 하지 않고 다이얼로그만 닫기
+
+    setShowSaveDialog(false);
+    setPendingNavigation(null);
+  };
+
+  const handleCancel = async () => {
+    // 삭제 확인 다이얼로그 표시
+    setShowDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    const approvalNo = searchParams.get('approvalNo');
+    if (approvalNo) {
+      // 임시저장된 문서가 있는 경우 - 완전 삭제
+      try {
+        const response = await apiRequest(
+          `${API_URLS.APPROVAL_DELETE}/${approvalNo}`,
+          {
+            method: 'DELETE',
+          }
+        );
+
+        if (response.ok) {
+          navigate('/progress-list');
+        } else {
+          alert(
+            `문서 삭제에 실패했습니다. (${response.status}: ${response.statusText})`
+          );
+        }
+      } catch (error) {
+        console.error('문서 삭제 실패:', error);
+        alert('문서 삭제에 실패했습니다: ' + error.message);
+      }
+    } else {
+      // 새로 작성 중인 경우 - 내용만 초기화
+      setFormData({
+        formNo: '',
+        formTitle: '',
+        approvalTitle: '',
+        approvalType: '',
+        approvalDocument: '',
+        signId1: '',
+        signId2: '',
+        signId3: '',
+        signId4: '',
+        signId5: '',
+        referenceId: '',
+      });
+      setSelectedApprovers([]);
+      setSelectedReferrers([]);
+      setAttachedFiles([]);
+      setSelectedForm(null);
+      setHasUnsavedChanges(false);
+    }
+    setShowDeleteDialog(false);
+  };
 
   const handleSubmit = async () => {
     try {
       setLoading(true);
 
       // 필수 필드 검증
-      if (!formData.formNo || !formData.approvalTitle) {
-        alert('양식과 제목을 선택해주세요.');
+      if (
+        !formData.formNo ||
+        formData.formNo.trim() === '' ||
+        !formData.approvalTitle ||
+        formData.approvalTitle.trim() === ''
+      ) {
+        alert(
+          `양식과 제목을 선택해주세요.\n현재 상태: formNo="${formData.formNo}", approvalTitle="${formData.approvalTitle}"`
+        );
         return;
       }
 
@@ -490,6 +632,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
 
       if (response.ok) {
         alert('기안서가 제출되었습니다.');
+        setHasUnsavedChanges(false);
         // 저장 후 문서 리스트로 이동
         navigate('/progress-list');
       } else {
@@ -508,57 +651,6 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
     }
   };
 
-  // 취소/삭제 처리
-  const handleCancel = async () => {
-    const approvalNo = searchParams.get('approvalNo');
-
-    if (approvalNo) {
-      // 임시저장된 문서가 있는 경우 - 완전 삭제
-      if (!confirm('임시저장된 문서를 완전히 삭제하시겠습니까?')) return;
-
-      try {
-        const response = await apiRequest(
-          `${API_URLS.APPROVAL_DELETE}/${approvalNo}`,
-          {
-            method: 'DELETE',
-          }
-        );
-
-        if (response.ok) {
-          alert('문서가 삭제되었습니다.');
-          navigate('/progress-list');
-        } else {
-          alert(
-            `문서 삭제에 실패했습니다. (${response.status}: ${response.statusText})`
-          );
-        }
-      } catch (error) {
-        console.error('문서 삭제 실패:', error);
-        alert('문서 삭제에 실패했습니다: ' + error.message);
-      }
-    } else {
-      // 새로 작성 중인 경우 - 내용만 초기화
-      if (!confirm('작성 중인 내용을 초기화하시겠습니까?')) return;
-
-      setFormData({
-        formNo: '',
-        formTitle: '',
-        approvalTitle: '',
-        approvalType: '',
-        approvalDocument: '',
-        signId1: '',
-        signId2: '',
-        signId3: '',
-        signId4: '',
-        signId5: '',
-        referenceId: '',
-      });
-      setSelectedApprovers([]);
-      setSelectedReferrers([]);
-      setAttachedFiles([]);
-      setSelectedForm(null);
-    }
-  };
   return (
     <Box sx={{ p: 3, mt: 3 }}>
       <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
@@ -836,9 +928,6 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                   >
                     파일 선택
                   </Typography>
-                  <Typography variant="caption" sx={{ color: '#666' }}>
-                    또는 여기로 파일을 끌어오세요
-                  </Typography>
                 </Box>
                 {attachedFiles.length > 0 && (
                   <Box
@@ -920,7 +1009,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                     },
                   }}
                 >
-                  {searchParams.get('approvalNo') ? '삭제' : '취소'}
+                  {searchParams.get('approvalNo') ? '삭제' : '초기화'}
                 </Button>
               </Box>
             </Paper>
@@ -1004,7 +1093,10 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
               mb: 3,
             }}
           >
-            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            <Typography
+              component="div"
+              sx={{ fontWeight: 600, fontSize: '1.25rem' }}
+            >
               양식 선택
             </Typography>
             <Typography variant="body2" sx={{ color: '#666', mt: 1 }}>
@@ -1107,6 +1199,33 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* SaveConfirmDialog */}
+        <SaveConfirmDialog
+          open={showSaveDialog}
+          onClose={() => setShowSaveDialog(false)}
+          onConfirm={handleSaveChoice}
+        />
+
+        {/* DeleteConfirmDialog */}
+        <DeleteConfirmDialog
+          open={showDeleteDialog}
+          onClose={() => setShowDeleteDialog(false)}
+          onConfirm={handleDeleteConfirm}
+          isExistingDocument={!!searchParams.get('approvalNo')}
+        />
+
+        {/* SuccessDialog */}
+        <SuccessDialog
+          open={showSuccessDialog}
+          onClose={() => {
+            setShowSuccessDialog(false);
+            navigate('/progress-list');
+          }}
+          title="저장 완료"
+          message="저장이 완료되었습니다."
+          buttonText="확인"
+        />
       </Container>
     </Box>
   );
