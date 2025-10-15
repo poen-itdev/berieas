@@ -93,4 +93,10 @@ public class ApprovalDetail {
     @LastModifiedDate
     @Column(name = "update_date")
     private LocalDateTime updateDate;
+
+    @Column(name = "drafter_remark")
+    private String drafterRemark;
+
+    @Column(name = "reference_remark")
+    private String referenceRemark;
 }

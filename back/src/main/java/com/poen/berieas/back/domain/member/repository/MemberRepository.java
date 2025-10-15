@@ -5,6 +5,7 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import com.poen.berieas.back.domain.member.entity.Member;
 
@@ -29,5 +30,10 @@ public interface MemberRepository extends JpaRepository<Member, String>{
     // 퇴사자 리스트
     @Query("select m from Member m where m.useYn = 'N'")
     List<Member> findRetiredMembers();
+
+    @Query("select m from Member m where m.memberName like concat('%', :keyword, '%') " +
+       "or m.memberId like concat('%', :keyword, '%') " +
+       "or m.memberEmail like concat('%', :keyword, '%')")
+    List<Member> findAllByKeyword(@Param("keyword") String keyword);
 
 }
