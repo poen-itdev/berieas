@@ -99,13 +99,6 @@ const ApprovalDetailContent = ({ userInfo }) => {
 
   // 기안취소 처리 (진행중 -> 기안중으로 되돌리기)
   const handleCancelApproval = async () => {
-    if (
-      !confirm(
-        '기안을 취소하시겠습니까?\n다음 결재자의 결재가 이루어진 경우 취소 불가합니다.'
-      )
-    )
-      return;
-
     try {
       setSubmitting(true);
 
@@ -117,7 +110,6 @@ const ApprovalDetailContent = ({ userInfo }) => {
       );
 
       if (response.ok) {
-        alert('기안이 취소되었습니다. 기안중 상태로 변경되었습니다.');
         navigate('/progress-list');
       } else {
         alert(response.data || '기안취소에 실패했습니다. 조건을 확인해주세요.');
@@ -383,6 +375,12 @@ const ApprovalDetailContent = ({ userInfo }) => {
               <div
                 dangerouslySetInnerHTML={{
                   __html: approvalData.approvalDocument || '내용이 없습니다.',
+                }}
+                style={{
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  lineHeight: '1.6',
+                  textAlign: 'left',
                 }}
               />
             </Paper>
