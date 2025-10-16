@@ -28,7 +28,7 @@ public class SystemLog {
     
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idx")
-    private String idx;
+    private int idx;
 
     @Column(name = "log_key")
     private String logKey;

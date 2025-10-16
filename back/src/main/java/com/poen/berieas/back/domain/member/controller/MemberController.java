@@ -50,19 +50,18 @@ public class MemberController {
 
         // 응답 바디를 Json형태로 만들기
         Map<String, String> responseBody = Collections.singletonMap("memberId", memberId);
-
         return ResponseEntity.status(201).body(responseBody);
     }
 
     // 멤버 정보
-    @GetMapping("/member/info")
+    @GetMapping(value = "/member/info")
     public MemberResponseDto memberMeApi() {
 
         return memberService.readMember();
     }
     
     // 멤버 제거
-    @DeleteMapping(value = "/member/delete", consumes = MediaType.APPLICATION_JSON_VALUE) 
+    @DeleteMapping(value = "/admin/delete", consumes = MediaType.APPLICATION_JSON_VALUE) 
     public ResponseEntity<Boolean> deleteMemberApi(
         @Validated(MemberRequestDto.deleteGroup.class) @RequestBody MemberRequestDto dto) throws AccessDeniedException {
 
@@ -111,7 +110,7 @@ public class MemberController {
     }
 
     // 전체 회원 리스트
-    @GetMapping(value = "/member/members", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/admin/members")
     public ResponseEntity<List<MemberListResponseDto>> getAllMembersApi(@RequestParam(required = false) String keyword) {
 
         List<MemberListResponseDto> members = memberService.getAllMembers(keyword);
@@ -119,7 +118,7 @@ public class MemberController {
     }
 
     // 재직자 리스트
-    @GetMapping(value = "/member/active-members", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/admin/active-members")
     public ResponseEntity<List<MemberListResponseDto>> getActiveMembersApi() {
 
         List<MemberListResponseDto> activeMembers = memberService.getActiveMembers();
@@ -127,7 +126,7 @@ public class MemberController {
     }
 
     // 퇴사자 리스트
-    @GetMapping(value = "/member/retired-members", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/admin/retired-members")
     public ResponseEntity<List<MemberListResponseDto>> getRetiredMembersApi() {
 
         List<MemberListResponseDto> retiredMembers = memberService.getRetiredMembers();
@@ -135,7 +134,7 @@ public class MemberController {
     }
 
     // 멤버 수정
-    @PutMapping(value = "/member/update/{memberId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/admin/update/{memberId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateMemberApi(
         @PathVariable String memberId,
         @Validated(MemberRequestDto.updateGroup.class) @RequestBody MemberRequestDto dto
@@ -146,7 +145,7 @@ public class MemberController {
     }
 
     // 멤버 비활성화
-    @PostMapping(value = "/member/deactivate/{memberId}")
+    @PostMapping(value = "/admin/deactivate/{memberId}")
     public ResponseEntity<String> deactivateMemberApi(@PathVariable String memberId) {
 
         memberService.deactivateMember(memberId);
