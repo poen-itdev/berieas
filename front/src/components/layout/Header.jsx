@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -11,43 +11,11 @@ import {
   IconButton,
 } from '@mui/material';
 import { Logout as LogoutIcon, Menu as MenuIcon } from '@mui/icons-material';
-import { API_URLS } from '../../config/api';
+import { useUserInfo } from '../../hooks/useUserInfo';
 
 const Header = ({ onLogout, onMenuClick, isMobile = false }) => {
   const [language, setLanguage] = useState('ko');
-  const [headerUserInfo, setHeaderUserInfo] = useState(null);
-
-  useEffect(() => {
-    const fetchHeaderUserInfo = async () => {
-      try {
-        const response = await fetch(API_URLS.MEMBER_MEMBERS, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        });
-
-        const responseData = await response.json();
-        const memberList = Array.isArray(responseData)
-          ? responseData
-          : responseData.data || [];
-        const token = localStorage.getItem('accessToken');
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        const currentMemberId = payload.sub;
-        const currentUser = memberList.find(
-          (member) => member.memberId === currentMemberId
-        );
-
-        if (currentUser) {
-          setHeaderUserInfo(currentUser);
-        }
-      } catch (error) {
-        console.error('Header 사용자 정보 조회 실패:', error);
-      }
-    };
-
-    fetchHeaderUserInfo();
-  }, []);
+  const { userInfo: headerUserInfo, loading } = useUserInfo();
 
   const handleLanguageChange = (event) => {
     setLanguage(event.target.value);
@@ -113,7 +81,7 @@ const Header = ({ onLogout, onMenuClick, isMobile = false }) => {
 
         {/* 오른쪽: 사용자정보, 언어, 로그아웃 */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, ml: 'auto' }}>
-          {!isMobile && headerUserInfo && (
+          {!isMobile && !loading && headerUserInfo && (
             <Typography sx={{ color: '#fff', fontSize: '0.9rem' }}>
               {headerUserInfo.memberName} | {headerUserInfo.memberDepartment}
             </Typography>
