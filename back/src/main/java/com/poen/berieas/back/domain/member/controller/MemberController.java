@@ -118,7 +118,7 @@ public class MemberController {
     }
 
     // 재직자 리스트
-    @GetMapping(value = "/admin/active-members")
+    @GetMapping(value = "/member/active-members")
     public ResponseEntity<List<MemberListResponseDto>> getActiveMembersApi() {
 
         List<MemberListResponseDto> activeMembers = memberService.getActiveMembers();
