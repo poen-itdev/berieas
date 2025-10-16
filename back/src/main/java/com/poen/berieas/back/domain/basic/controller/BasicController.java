@@ -25,7 +25,7 @@ public class BasicController {
     private final BasicService basicService;
 
     // 부서 조회 
-    @GetMapping(value = "/departments", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/departments")
     public ResponseEntity<List<BasicResponseDto>> getDepartmentsApi() {
         
         List<BasicResponseDto> departments = basicService.getDepartments();
@@ -57,7 +57,7 @@ public class BasicController {
     }
 
     // 직급 리스트
-    @GetMapping(value = "/positions", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/positions")
     public ResponseEntity<List<BasicResponseDto>> getPositionsApi() {
 
         List<BasicResponseDto> positions = basicService.getPositions();

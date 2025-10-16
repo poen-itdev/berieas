@@ -19,7 +19,7 @@ public class ApprovalHistoryController {
     private final ApprovalHistoryService approvalHistoryService;
     
     // 이력 리스트
-    @GetMapping(value = "/history/list", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/history/list")
     public ResponseEntity<List<ApprovalHistoryResponseDto>> historyListApi() {
 
         List<ApprovalHistoryResponseDto> historys = approvalHistoryService.getHistorys();

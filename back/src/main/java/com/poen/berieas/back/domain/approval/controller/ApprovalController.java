@@ -32,7 +32,7 @@ public class ApprovalController {
     private final ApprovalService approvalService;
 
     // 대시보드(전체)
-    @GetMapping(value = "/approval/total", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/approval/total")
     public ResponseEntity<Integer> totalApprovalCountApi() {
 
         int total = approvalService.totalApprovalCount();
@@ -41,7 +41,7 @@ public class ApprovalController {
     }
 
     // 대시보드(진행중)
-    @GetMapping(value = "/approval/inProgress", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/approval/inProgress")
     public ResponseEntity<Integer> inProgressCountApi() {
 
         int inProgress = approvalService.inProgressCount();
@@ -50,7 +50,7 @@ public class ApprovalController {
     }
 
     // 대시보드(완료)
-    @GetMapping(value = "/approval/completed", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/approval/completed")
     public ResponseEntity<Integer> completedCountApi() {
 
         int completed = approvalService.completedCount();
@@ -59,7 +59,7 @@ public class ApprovalController {
     }
     
     // 대시보드(내가 상신한 문서)
-    @GetMapping(value = "/approval/mySubmitted", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/approval/mySubmitted")
     public ResponseEntity<List<MyApprovalResponseDto>> getMySubmittedApi() {
         
         List<MyApprovalResponseDto> mySubmittedDocs = approvalService.getMySubmitted();
@@ -67,7 +67,7 @@ public class ApprovalController {
     }
 
     // 대시보드(내가 결재할 문서)
-    @GetMapping(value = "/approval/mypending", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/approval/mypending")
     public ResponseEntity<List<MyApprovalResponseDto>> getPendingApprovalsApi() {
 
         List<MyApprovalResponseDto> pendingApprovals = approvalService.getPendingApprovals();
@@ -75,7 +75,7 @@ public class ApprovalController {
     }
 
     // 진행목록(전체)
-    @GetMapping(value = "/approval/allAprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/approval/allAprovals")
     public ResponseEntity<Page<ProgressListResponseDto>> getAllApprovalsApi(
         @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -88,7 +88,7 @@ public class ApprovalController {
     }
 
     // 진행목록(진행중)
-    @GetMapping(value = "/approval/inProgressApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/approval/inProgressApprovals")
     public ResponseEntity<Page<MyApprovalResponseDto>> getInprogressApprovalsApi(
         @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -101,7 +101,7 @@ public class ApprovalController {
     }
 
     // 진행목록(기안중)
-    @GetMapping(value = "/approval/temporarySavedApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/approval/temporarySavedApprovals")
     public ResponseEntity<Page<ProgressListResponseDto>> getTemporarySavedApprovalsApi(
         @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable,
         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -114,7 +114,7 @@ public class ApprovalController {
     }
 
     // 진행목록(반려)
-    @GetMapping(value = "/approval/returnedApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/approval/returnedApprovals")
     public ResponseEntity<Page<ProgressListResponseDto>> getReturnedApprovalsApi(
         @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable,
          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -127,7 +127,7 @@ public class ApprovalController {
     }
 
     // 진행목록(결재)
-    @GetMapping(value = "/approval/completedApprovals", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/approval/completedApprovals")
     public ResponseEntity<Page<ProgressListResponseDto>> getCompletedApprovalsApi(
         @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable,
          @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -137,6 +137,23 @@ public class ApprovalController {
 
         Page<ProgressListResponseDto> approvals = approvalService.getCompletedApprovals(pageable, from, to, keyword);
         return ResponseEntity.ok(approvals);
+    }
+
+    // 첨언
+    @PostMapping(value = "/approval/addcomments/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> addCommentsApi(
+            @PathVariable int approvalNo, 
+            CommentRequestDto dto,
+            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+
+        try {
+            
+            approvalService.addCommnet(approvalNo, dto, files);
+            return ResponseEntity.ok("첨언 등록 완료");
+        } catch (Exception e) {
+
+            return ResponseEntity.internalServerError().body("첨언 실패: " + e.getMessage());
+        }
     }
 
     // 결재자 첨언

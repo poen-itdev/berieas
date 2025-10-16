@@ -48,12 +48,13 @@ public class JWTFilter extends OncePerRequestFilter{
             String memberId = JWTUtil.getMemberId(accessToken);
             String role = JWTUtil.getRole(accessToken);
 
-            List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
+            List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
 
             Authentication auth = new UsernamePasswordAuthenticationToken(memberId, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
             log.info("JWT Valid. MemberId: {}", memberId);
+            log.info("JWT Valid. role: {}", role);
 
             filterChain.doFilter(request, response);
 

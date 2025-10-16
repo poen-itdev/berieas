@@ -123,6 +123,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/jwt/refresh").permitAll()
                     .requestMatchers("/approval/**").authenticated()
+                    .requestMatchers("/admin/**").hasRole("ADMIN")
                     // .requestMatchers("/member/exist", "/member").permitAll() // POST/GET/PUT/DELETE 전부 허용
                     // .requestMatchers("/member/info").hasRole(RoleType.USER.name()) // info는 USER 권한 필요
                     // .requestMatchers(HttpMethod.POST, "/member/exist", "/member").permitAll()

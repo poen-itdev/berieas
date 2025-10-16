@@ -141,7 +141,7 @@ public class MemberService implements UserDetailsService{
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new UsernameNotFoundException("해당 멤버를 찾을 수 없습니다." + memberId));
 
-        return new MemberResponseDto(memberId, member.getMemberName(), member.getMemberEmail());
+        return new MemberResponseDto(memberId, member.getMemberName(), member.getMemberEmail(), member.getRole());
     }
 
     // 최초 로그인 시 비밀번호 변경
