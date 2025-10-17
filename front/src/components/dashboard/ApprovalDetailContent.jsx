@@ -209,7 +209,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
     );
   }
 
-  // 결재라인 구성
+  // 상태 라인 생성
   const approvalLine = [];
 
   // 기안자 (실제 기안자 이름과 직급)
@@ -217,31 +217,94 @@ const ApprovalDetailContent = ({ userInfo }) => {
     approvalLine.push({
       title: '기안자',
       name: approvalData.approvalName,
-      date: approvalData.startDate || null,
+      date: approvalData.startDate || new Date().toISOString().split('T')[0], // 기안일이 없으면 현재 날짜
       status: 'draft',
     });
   }
 
-  // 결재자들 (signId1~5) - 모두 "결재자"로 통일
+  // 0) 헬퍼 / 준비
+  const isRejectedDoc = approvalData.approvalStatus === '반려';
+  const normalizeId = (v) => {
+    if (v === null || v === undefined) return null;
+    const s = String(v).trim();
+    return s.length ? s : null;
+  };
+  const nextId = normalizeId(approvalData.nextId);
+
+  // 가장 최근 결재자(한 번만 계산)
+  const getLatestSigner = () => {
+    let latestId = null;
+    let latestTs = null;
+    for (let j = 1; j <= 5; j++) {
+      const id = approvalData[`signId${j}`];
+      const dt = approvalData[`signDate${j}`];
+      if (!id || !dt) continue;
+      const t = new Date(dt).getTime(); // dt가 ISO가 아닐 수 있으면 파서 보완 필요
+      if (latestTs === null || t > latestTs) {
+        latestTs = t;
+        latestId = id;
+      }
+    }
+    return latestId;
+  };
+
+  // signStatus 기반으로 반려자 우선 탐색
+  let rejectedBy = null;
+  if (isRejectedDoc) {
+    for (let k = 1; k <= 5; k++) {
+      const id = approvalData[`signId${k}`];
+      const st = approvalData[`signStatus${k}`];
+      if (id && st === 'REJECTED') {
+        rejectedBy = id;
+        break;
+      }
+    }
+    // 팀 규칙: 반려 시 nextId = 반려자 → 우선 반영
+    if (!rejectedBy && nextId) rejectedBy = nextId;
+    // 그래도 없으면 마지막 결재자를 반려자로 추정 (백엔드 로직과 동일)
+    if (!rejectedBy) rejectedBy = getLatestSigner();
+  }
+
+  // 1) 라인 렌더링
+  let seenRejection = false;
+
   for (let i = 1; i <= 5; i++) {
     const signId = approvalData[`signId${i}`];
-    if (signId) {
-      const signDate = approvalData[`signDate${i}`];
+    if (!signId) continue;
 
-      // 전체 문서가 반려 상태이고 날짜가 있으면 반려, 아니면 날짜 있으면 승인
-      let status = 'pending';
-      if (signDate) {
-        status =
-          approvalData.approvalStatus === '반려' ? 'rejected' : 'approved';
+    const signDate = approvalData[`signDate${i}`] || null;
+    const signStatus = approvalData[`signStatus${i}`] || null;
+
+    let status = 'pending';
+
+    if (signStatus === 'APPROVED') status = 'approved';
+    else if (signStatus === 'REJECTED') {
+      status = 'rejected';
+      seenRejection = true;
+    } else {
+      if (isRejectedDoc) {
+        // 문서가 반려라면: 반려자=rejected, 이후 라인=cancelled
+        if (rejectedBy && signId === rejectedBy) {
+          status = 'rejected';
+          seenRejection = true;
+        } else {
+          status = 'cancelled';
+        }
+      } else if (signDate) {
+        // 일반 승인 상태
+        status = 'approved';
       }
-
-      approvalLine.push({
-        title: '결재자',
-        name: signId,
-        date: signDate || null,
-        status: status,
-      });
     }
+    if (seenRejection && !signDate && status === 'pending') {
+      status = 'cancelled';
+    }
+
+    approvalLine.push({
+      title: '결재자',
+      name: signId,
+      date: signDate,
+      status, // 'approved' | 'rejected' | 'pending' | 'cancelled'
+    });
   }
 
   // 현재 사용자가 결재자인지 확인
@@ -252,6 +315,43 @@ const ApprovalDetailContent = ({ userInfo }) => {
     approvalData.signId4,
     approvalData.signId5,
   ].includes(userInfo?.memberName);
+
+  // 현재 사용자가 이미 결재했는지 확인
+  const hasCurrentUserApproved = () => {
+    for (let i = 1; i <= 5; i++) {
+      const signId = approvalData[`signId${i}`];
+      const signDate = approvalData[`signDate${i}`];
+      if (signId === userInfo?.memberName && signDate) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // 현재 사용자의 결재 순서 확인
+  const getCurrentUserApprovalOrder = () => {
+    for (let i = 1; i <= 5; i++) {
+      const signId = approvalData[`signId${i}`];
+      if (signId === userInfo?.memberName) {
+        return i;
+      }
+    }
+    return null;
+  };
+
+  // 다음 결재자가 아직 결재하지 않았는지 확인
+  const isNextApproverPending = () => {
+    const currentOrder = getCurrentUserApprovalOrder();
+    if (!currentOrder) return false;
+
+    // 다음 결재자 확인
+    const nextOrder = currentOrder + 1;
+    const nextSignId = approvalData[`signId${nextOrder}`];
+    const nextSignDate = approvalData[`signDate${nextOrder}`];
+
+    // 다음 결재자가 있고 아직 결재하지 않았으면 true
+    return nextSignId && !nextSignDate;
+  };
 
   return (
     <Box sx={{ p: 3, mt: 3 }}>
@@ -320,7 +420,23 @@ const ApprovalDetailContent = ({ userInfo }) => {
                           >
                             {item.name}
                           </Typography>
-                          {item.date && (
+                          {item.date &&
+                            (item.status === 'approved' ||
+                              item.status === 'draft') && (
+                              <Typography
+                                variant="caption"
+                                sx={{
+                                  fontSize: { xs: '11px', sm: '12px' },
+                                  display: 'block',
+                                  fontWeight: 500,
+                                  mt: 0.5,
+                                  color: '#1976d2', // 파란색
+                                }}
+                              >
+                                {new Date(item.date).toLocaleDateString()}
+                              </Typography>
+                            )}
+                          {item.date && item.status === 'rejected' && (
                             <Typography
                               variant="caption"
                               sx={{
@@ -328,13 +444,10 @@ const ApprovalDetailContent = ({ userInfo }) => {
                                 display: 'block',
                                 fontWeight: 500,
                                 mt: 0.5,
-                                color:
-                                  item.status === 'rejected'
-                                    ? '#d32f2f'
-                                    : '#1976d2',
+                                color: '#d32f2f', // 빨간색
                               }}
                             >
-                              {new Date(item.date).toLocaleDateString()}
+                              {new Date(item.date).toLocaleDateString()}/반려
                             </Typography>
                           )}
                           {!item.date && item.status === 'pending' && (
@@ -347,8 +460,12 @@ const ApprovalDetailContent = ({ userInfo }) => {
                                 mt: 0.5,
                               }}
                             >
-                              대기중
+                              대기
                             </Typography>
+                          )}
+                          {item.status === 'cancelled' && (
+                            // 반려 이후 결재자는 레이아웃을 유지하면서 날짜 영역만 비움
+                            <Box sx={{ height: 18, mt: 0.5 }} />
                           )}
                         </Box>
                       </TableCell>
@@ -607,35 +724,6 @@ const ApprovalDetailContent = ({ userInfo }) => {
                 기안취소
               </Button>
             ) : null}
-
-            {/* 결재자인 경우 - 승인/반려 버튼 */}
-            {isApprover &&
-              approvalData.approvalName !== userInfo?.memberName && (
-                <>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    size="large"
-                    startIcon={<CheckCircle />}
-                    onClick={() => handleApproval('approve')}
-                    disabled={submitting}
-                    sx={{ minWidth: 120 }}
-                  >
-                    승인
-                  </Button>
-                  <Button
-                    variant="contained"
-                    color="error"
-                    size="large"
-                    startIcon={<Cancel />}
-                    onClick={() => handleApproval('reject')}
-                    disabled={submitting}
-                    sx={{ minWidth: 120 }}
-                  >
-                    반려
-                  </Button>
-                </>
-              )}
           </Box>
         </Paper>
       </Container>

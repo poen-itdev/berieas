@@ -26,6 +26,7 @@ public class ApprovalResponseDto {
     private LocalDateTime signDate4;
     private LocalDateTime signDate5;
     private String referenceId;
+    private String nextId;
 
     private String approvalAttachFile1;
     private String approvalAttachFile2;

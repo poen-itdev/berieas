@@ -167,13 +167,13 @@ const ProgressListContent = ({ isMobile = false }) => {
   const getStatusColor = (status) => {
     switch (status) {
       case '기안중':
-        return '#FFA726';
+        return '#F59E0B';
       case '진행중':
-        return '#42A5F5';
+        return '#3B82F6';
       case '완료':
-        return '#66BB6A';
+        return '#10B981';
       case '반려':
-        return '#EF5350';
+        return '#EF4444';
       default:
         return '#9E9E9E';
     }
@@ -505,9 +505,13 @@ const ProgressListContent = ({ isMobile = false }) => {
                         }}
                       >
                         <Typography
-                          sx={{ fontSize: { xs: '11px', sm: '12px' } }}
+                          sx={{
+                            fontSize: { xs: '11px', sm: '12px' },
+                          }}
                         >
-                          {row.approvalSigner || row.signId}
+                          {row.approvalStatus === '반려'
+                            ? `${row.approvalSigner || row.signId}`
+                            : row.approvalSigner || row.signId}
                         </Typography>
                       </TableCell>
                       <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
