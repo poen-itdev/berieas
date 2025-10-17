@@ -289,6 +289,7 @@ public class ApprovalDetailService {
             approval.getSignDate4(),
             approval.getSignDate5(),
             approval.getReferenceId(),
+            approval.getNextId(),
             approvalDetail.getApprovalAttachFile1(),
             approvalDetail.getApprovalAttachFile2(),
             approvalDetail.getApprovalAttachFile3(),
