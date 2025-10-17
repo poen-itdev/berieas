@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -24,6 +24,7 @@ import { apiRequest } from '../../utils/apiHelper';
 
 const ProgressListContent = ({ isMobile = false }) => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [selectedTab, setSelectedTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -99,8 +100,29 @@ const ProgressListContent = ({ isMobile = false }) => {
   };
 
   useEffect(() => {
-    fetchProgressData();
-  }, []);
+    // URL 쿼리 파라미터에서 tab 값을 확인하여 탭 설정
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      let tabIndex = 0; // 기본값: 전체
+      switch (tabParam) {
+        case 'all':
+          tabIndex = 0; // 전체
+          break;
+        case 'inProgress':
+          tabIndex = 2; // 진행중
+          break;
+        case 'completed':
+          tabIndex = 4; // 완료
+          break;
+        default:
+          tabIndex = 0;
+      }
+      setSelectedTab(tabIndex);
+      fetchProgressData(tabIndex);
+    } else {
+      fetchProgressData();
+    }
+  }, [searchParams]);
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);

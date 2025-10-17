@@ -138,12 +138,16 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
     if (document.approvalStatus === '기안중') {
       navigate(`/approvalwrite?approvalNo=${document.approvalNo}`);
     } else {
-      // 다른 상태인 경우 상세보기 페이지로 이동
       navigate(`/approval-detail?approvalNo=${document.approvalNo}`);
     }
   };
 
   const handleTabChange = (_e, value) => setSelectedTab(value);
+
+  const handleStatusCardClick = (status) => {
+    // 진행목록 페이지로 이동하면서 해당 탭으로 설정
+    navigate(`/progress-list?tab=${status}`);
+  };
 
   return (
     <Box sx={{ p: { xs: 1.5, sm: 3 }, mt: { xs: 1.5, sm: 3 } }}>
@@ -174,12 +178,17 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
           sx={{ mb: { xs: 3, sm: 5 } }}
         >
           {[
-            { value: statusData.total, label: '전체' },
-            { value: statusData.inProgress, label: '진행중' },
-            { value: statusData.completed, label: '완료' },
+            { value: statusData.total, label: '전체', status: 'all' },
+            {
+              value: statusData.inProgress,
+              label: '진행중',
+              status: 'inProgress',
+            },
+            { value: statusData.completed, label: '완료', status: 'completed' },
           ].map((item, idx) => (
             <Grid key={idx} size={{ xs: 12, md: 4 }}>
               <Paper
+                onClick={() => handleStatusCardClick(item.status)}
                 sx={{
                   p: { xs: 2, sm: 3 },
                   height: { xs: 100, sm: 150 },
@@ -191,6 +200,13 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
                   position: 'relative',
                   border: '1px solid #3275FC',
                   bgcolor: '#eef4ff',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease-in-out',
+                  '&:hover': {
+                    bgcolor: '#d6e3ff',
+                    transform: 'translateY(-2px)',
+                    boxShadow: '0 4px 12px rgba(50, 117, 252, 0.15)',
+                  },
                 }}
               >
                 <Typography
@@ -232,8 +248,52 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
               },
             }}
           >
-            <Tab label="내가 상신한 문서" />
-            <Tab label="내가 결재할 문서" />
+            <Tab
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  내가 상신한 문서
+                  <Box
+                    sx={{
+                      bgcolor: '#3275FC',
+                      color: 'white',
+                      borderRadius: '50%',
+                      minWidth: 20,
+                      height: 20,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {mySubmittedDocs.length}
+                  </Box>
+                </Box>
+              }
+            />
+            <Tab
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  내가 결재할 문서
+                  <Box
+                    sx={{
+                      bgcolor: '#3275FC',
+                      color: 'white',
+                      borderRadius: '50%',
+                      minWidth: 20,
+                      height: 20,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {myPendingDocs.length}
+                  </Box>
+                </Box>
+              }
+            />
           </Tabs>
         </Box>
 
