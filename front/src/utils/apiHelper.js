@@ -67,7 +67,6 @@ export const apiRequest = async (url, options = {}) => {
 
     // 401 에러 시 토큰 refresh 시도
     if (response.status === 401) {
-      console.log('Token expired, attempting refresh...');
       const newAccessToken = await refreshToken();
 
       // 새로운 토큰으로 재요청

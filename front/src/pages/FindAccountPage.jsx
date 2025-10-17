@@ -118,10 +118,7 @@ const FindAccountPage = () => {
     setError('');
 
     try {
-      // 디버깅을 위한 콘솔 출력
-      console.log('인증 요청 데이터:', {
-        email: email,
-        code: verificationCode,
+      // 인증 요청 데이터
         codeLength: verificationCode.length,
       });
 
