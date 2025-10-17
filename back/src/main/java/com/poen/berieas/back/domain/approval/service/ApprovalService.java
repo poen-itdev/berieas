@@ -8,7 +8,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -103,6 +105,21 @@ public class ApprovalService {
 
     // 현재 결재자
     private String getCurrentSigner(Approval approval) {
+
+        if("반려".equals(approval.getApprovalStatus())) {
+            Map<LocalDateTime, String> signerMap = new HashMap<>();
+
+            if (approval.getSignDate1() != null) signerMap.put(approval.getSignDate1(), approval.getSignId1());
+            if (approval.getSignDate2() != null) signerMap.put(approval.getSignDate2(), approval.getSignId2());
+            if (approval.getSignDate3() != null) signerMap.put(approval.getSignDate3(), approval.getSignId3());
+            if (approval.getSignDate4() != null) signerMap.put(approval.getSignDate4(), approval.getSignId4());
+            if (approval.getSignDate5() != null) signerMap.put(approval.getSignDate5(), approval.getSignId5());
+
+            return signerMap.entrySet().stream()
+                    .max(Map.Entry.comparingByKey()) // 가장 최근 결재자 찾기
+                    .map(Map.Entry::getValue)
+                    .orElse(" ");
+        }
 
         if (approval.getSignDate1() == null) return approval.getSignId1();
         if (approval.getSignDate2() == null) return approval.getSignId2();
