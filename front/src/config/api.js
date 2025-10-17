@@ -7,12 +7,6 @@ const API_CONFIG = {
     MEMBER_EXIST: '/member/exist',
     MEMBER_JOIN: '/member/join',
     MEMBER_INFO: '/member/info',
-    MEMBER_MEMBERS: '/member/members',
-    MEMBER_ACTIVE_MEMBERS: '/member/active-members',
-    MEMBER_RETIRED_MEMBERS: '/member/retired-members',
-    MEMBER_UPDATE: '/member/update',
-    MEMBER_DELETE: '/member/delete',
-    MEMBER_DEACTIVATE: '/member/deactivate',
     MEMBER_CHANGE_PASSWORD: '/member/changepassword',
     JWT_REFRESH: '/jwt/refresh',
     MEMBER_SEND_CODE: '/member/send-code',
@@ -35,6 +29,15 @@ const API_CONFIG = {
     APPROVAL_DRAFTING: '/approval/temporarySavedApprovals',
     APPROVAL_RETURENED: '/approval/returnedApprovals',
     APPROVAL_APPROVED: '/approval/completedApprovals',
+
+    // 관리자용 직원,직급,부서관리
+    MEMBER_MEMBERS: '/admin/members',
+    MEMBER_ACTIVE_MEMBERS: '/admin/active-members',
+    MEMBER_RETIRED_MEMBERS: '/admin/retired-members',
+    MEMBER_DEACTIVATE: '/admin/deactivate',
+    MEMBER_UPDATE: '/admin/update',
+    MEMBER_DELETE: '/admin/delete',
+
     // 기안서 작성 관련
     APPROVAL_ADD_DRAFT: '/approvalDetail/addDraft',
     APPROVAL_TEMPORARY_DRAFT: '/approvalDetail/temporaryDraft',

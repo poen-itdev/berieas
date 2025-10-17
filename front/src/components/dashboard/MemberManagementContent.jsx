@@ -33,6 +33,7 @@ import PageHeader from '../common/PageHeader';
 import { Add, Search } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
+import PermissionGuard from '../common/PermissionGuard';
 
 const MemberManagementContent = () => {
   const [selectedTab, setSelectedTab] = useState(0); // 0: 전체, 1: 활성, 2: 비활성
@@ -903,4 +904,25 @@ const MemberManagementContent = () => {
   );
 };
 
-export default MemberManagementContent;
+// 관리자 권한이 필요한 컴포넌트
+const AdminOnlyContent = () => (
+  <Box sx={{ p: 3, mt: 3 }}>
+    <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
+      <PageHeader title="회원 관리" fontSize="30px" />
+      <Paper sx={{ p: 4, textAlign: 'center', mt: 3 }}>
+        <Typography variant="h5" sx={{ color: '#666', fontWeight: 500 }}>
+          관리자페이지 입니다
+        </Typography>
+        <Typography variant="body1" sx={{ color: '#999', mt: 1 }}>
+          이 페이지는 관리자 권한이 필요한 페이지입니다.
+        </Typography>
+      </Paper>
+    </Container>
+  </Box>
+);
+
+export default () => (
+  <PermissionGuard requiredPermission="ADMIN" fallback={<AdminOnlyContent />}>
+    <MemberManagementContent />
+  </PermissionGuard>
+);
