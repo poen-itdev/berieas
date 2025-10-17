@@ -27,6 +27,11 @@ export const useUserInfo = () => {
       if (response.ok) {
         const userData = response.data;
         setUserInfo(userData);
+
+        // 권한 정보를 localStorage에 저장
+        if (userData.role) {
+          localStorage.setItem('permissions', userData.role);
+        }
       } else {
         setUserInfo({ memberName: '사용자' });
       }
