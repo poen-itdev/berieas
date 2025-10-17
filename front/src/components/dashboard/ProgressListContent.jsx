@@ -29,8 +29,10 @@ const ProgressListContent = ({ isMobile = false }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
+  const [pageSize] = useState(15);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalElements, setTotalElements] = useState(0);
   const [progressData, setProgressData] = useState([]);
-  const [originalData, setOriginalData] = useState([]); // 원본 데이터 저장
   const [loading, setLoading] = useState(false);
 
   const tabData = [
@@ -41,104 +43,85 @@ const ProgressListContent = ({ isMobile = false }) => {
     { label: '완료' },
   ];
 
-  // 프론트엔드 필터링 함수
-  const applyFilters = (data) => {
-    let filteredData = [...data];
+  // API 파라미터 생성 함수 (pageNum 인자 사용)
+  const buildApiParams = (pageNum) => {
+    const params = new URLSearchParams();
+    params.append('page', String((pageNum ?? page) - 1)); // Spring page index = 0-based
+    params.append('size', String(pageSize));
 
-    // 검색어 필터링
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase().trim();
-      filteredData = filteredData.filter((item) => {
-        return (
-          (item.approvalTitle &&
-            item.approvalTitle.toLowerCase().includes(searchLower)) ||
-          (item.approvalType &&
-            item.approvalType.toLowerCase().includes(searchLower)) ||
-          (item.aprovalType &&
-            item.aprovalType.toLowerCase().includes(searchLower)) ||
-          (item.approvalPostion &&
-            item.approvalPostion.toLowerCase().includes(searchLower)) ||
-          (item.approvalName &&
-            item.approvalName.toLowerCase().includes(searchLower)) ||
-          (item.approvalSigner &&
-            item.approvalSigner.toLowerCase().includes(searchLower)) ||
-          (item.signId && item.signId.toLowerCase().includes(searchLower)) ||
-          (item.approvalStatus &&
-            item.approvalStatus.toLowerCase().includes(searchLower))
-        );
-      });
-    }
-
-    // 날짜 필터링
-    if (startDate) {
-      filteredData = filteredData.filter((item) => {
-        if (!item.regDate) return false;
-        const itemDate = new Date(item.regDate);
-        const start = new Date(startDate);
-        return itemDate >= start;
-      });
-    }
-
-    if (endDate) {
-      filteredData = filteredData.filter((item) => {
-        if (!item.regDate) return false;
-        const itemDate = new Date(item.regDate);
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999); // 하루 끝까지 포함
-        return itemDate <= end;
-      });
-    }
-
-    return filteredData;
+    const kw = searchTerm.trim();
+    if (kw) params.append('keyword', kw);
+    if (startDate) params.append('from', startDate);
+    if (endDate) params.append('to', endDate);
+    return params.toString();
   };
 
-  // API URL 매핑
+  // API URL 매핑 (오타 수정)
   const getApiUrl = (tabIndex) => {
     const urlMap = {
-      0: API_URLS.APPROVAL_ALL, // 전체
-      1: API_URLS.APPROVAL_DRAFTING, // 기안중
-      2: API_URLS.APPROVAL_ALL, // 진행중
-      3: API_URLS.APPROVAL_RETURENED, // 반려
+      0: API_URLS.APPROVAL_ALL, // 전체 (서버 페이지네이션)
+      1: API_URLS.APPROVAL_DRAFTING, // 기안중 (서버 페이지네이션)
+      2: API_URLS.APPROVAL_ALL, // 진행중 (전용 API 없다고 가정 → ALL 호출 후 클라필터)
+      3: API_URLS.APPROVAL_RETURNED, // 반려 (오타 수정)
       4: API_URLS.APPROVAL_APPROVED, // 완료
     };
     return urlMap[tabIndex] || API_URLS.APPROVAL_ALL;
   };
 
-  // 데이터 처리 및 필터링
+  // 데이터 전처리: 진행중 탭만 클라 필터 (임시)
   const processData = (data, tabIndex) => {
-    // 페이지네이션 응답 처리
-    if (data && data.content && Array.isArray(data.content)) {
-      data = data.content;
-    } else if (!Array.isArray(data)) {
-      return [];
-    }
+    if (!data) return { items: [], totalPages: 1, totalElements: 0, number: 0 };
 
-    // 진행중 탭에서는 진행중 상태만 필터링
+    // 스프링 Page<T>
+    const content = Array.isArray(data.content)
+      ? data.content
+      : Array.isArray(data)
+      ? data
+      : [];
+    let items = content;
+
+    // 진행중 탭만 임시 필터
     if (tabIndex === 2) {
-      data = data.filter((item) => item.approvalStatus === '진행중');
+      items = content.filter((item) => item.approvalStatus === '진행중');
     }
 
-    return data;
+    return {
+      items,
+      totalPages: typeof data.totalPages === 'number' ? data.totalPages : 1,
+      totalElements:
+        typeof data.totalElements === 'number'
+          ? data.totalElements
+          : items.length,
+      number: typeof data.number === 'number' ? data.number : page - 1,
+    };
   };
 
-  // API 호출 함수
-  const fetchProgressData = async (tabIndex = selectedTab) => {
+  // API 호출: 쿼리스트링 포함
+  const fetchProgressData = async (tabIndex = selectedTab, pageNum = page) => {
     try {
       setLoading(true);
       const apiUrl = getApiUrl(tabIndex);
-      const response = await apiRequest(apiUrl, { method: 'GET' });
+      const qs = buildApiParams(pageNum);
+      const response = await apiRequest(`${apiUrl}?${qs}`, { method: 'GET' });
 
       if (response.ok) {
-        const processedData = processData(response.data, tabIndex);
-        setOriginalData(processedData);
-        setProgressData(applyFilters(processedData));
+        const { items, totalPages, totalElements, number } = processData(
+          response.data,
+          tabIndex
+        );
+        setProgressData(items);
+        setTotalPages(totalPages);
+        setTotalElements(totalElements);
+        setPage((number ?? 0) + 1);
       } else {
-        setOriginalData([]);
         setProgressData([]);
+        setTotalPages(1);
+        setTotalElements(0);
       }
-    } catch (error) {
-      setOriginalData([]);
+    } catch (e) {
       setProgressData([]);
+      setTotalPages(1);
+      setTotalElements(0);
     } finally {
       setLoading(false);
     }
@@ -154,25 +137,32 @@ const ProgressListContent = ({ isMobile = false }) => {
     return tabMap[tabParam] || 0;
   };
 
+  // 탭/파라미터 변화 시: page=1로 리셋 후 호출
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     const tabIndex = tabParam ? getTabIndexFromParam(tabParam) : 0;
     setSelectedTab(tabIndex);
-    fetchProgressData(tabIndex);
+    setPage(1);
+    fetchProgressData(tabIndex, 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  // 검색어나 날짜가 변경될 때마다 필터링 적용
   useEffect(() => {
-    if (originalData.length > 0) {
-      const filteredData = applyFilters(originalData);
-      setProgressData(filteredData);
-    }
-  }, [searchTerm, startDate, endDate, originalData]);
+    // 검색/기간 변경 시 1페이지부터
+    setPage(1);
+    fetchProgressData(selectedTab, 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, startDate, endDate]);
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
-    // 새로운 탭 인덱스를 직접 전달
-    fetchProgressData(newValue);
+    setPage(1);
+    fetchProgressData(newValue, 1);
+  };
+
+  const handlePageChange = (event, value) => {
+    setPage(value);
+    fetchProgressData(selectedTab, value);
   };
 
   // 행 클릭 핸들러
@@ -195,6 +185,14 @@ const ProgressListContent = ({ isMobile = false }) => {
   };
 
   const getStatusColor = (status) => statusColors[status] || '#9E9E9E';
+
+  // 번호 칼럼: 서버 페이지 기준 오프셋 적용
+  const rowNumberBase = (page - 1) * pageSize;
+  const getDisplayNumber = (rowIndex) => {
+    const base = Number.isFinite(rowNumberBase) ? rowNumberBase : 0;
+    const idx = Number.isFinite(rowIndex) ? rowIndex : 0;
+    return base + idx + 1;
+  };
 
   // 상태 칩 컴포넌트
   const StatusChip = ({ status }) => (
@@ -447,7 +445,7 @@ const ProgressListContent = ({ isMobile = false }) => {
                       }}
                     >
                       <TableCell sx={{ minWidth: { xs: '40px', sm: '60px' } }}>
-                        {index + 1}
+                        {getDisplayNumber(index)}
                       </TableCell>
                       <TableCell sx={{ minWidth: { xs: '80px', sm: '100px' } }}>
                         {row.regDate
@@ -525,18 +523,14 @@ const ProgressListContent = ({ isMobile = false }) => {
           </TableContainer>
         </Paper>
 
-        {/* 페이지네이션 */}
+        {/* 페이지네이션: 서버 totalPages 사용 */}
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
           <Pagination
-            count={1}
+            count={totalPages || 1}
             page={page}
-            onChange={(event, value) => setPage(value)}
+            onChange={handlePageChange}
             color="primary"
-            sx={{
-              '& .MuiPaginationItem-root': {
-                fontSize: '14px',
-              },
-            }}
+            sx={{ '& .MuiPaginationItem-root': { fontSize: '14px' } }}
           />
         </Box>
       </Container>
