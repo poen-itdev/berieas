@@ -283,15 +283,15 @@ const ApprovalDetailContent = ({ userInfo }) => {
       seenRejection = true;
     } else {
       if (isRejectedDoc) {
-        // 문서가 반려라면: 반려자=rejected, 이후 라인=cancelled
         if (rejectedBy && signId === rejectedBy) {
           status = 'rejected';
           seenRejection = true;
+        } else if (signDate) {
+          status = 'approved';
         } else {
           status = 'cancelled';
         }
       } else if (signDate) {
-        // 일반 승인 상태
         status = 'approved';
       }
     }

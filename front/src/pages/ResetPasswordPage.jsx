@@ -83,12 +83,8 @@ const ResetPasswordPage = () => {
         }),
       });
 
-      console.log('Response Status:', response.status);
-      console.log('Response OK:', response.ok);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.log('Error Response:', errorText);
         throw new Error('비밀번호 변경에 실패했습니다.');
       }
 

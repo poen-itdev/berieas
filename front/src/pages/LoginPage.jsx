@@ -13,12 +13,6 @@ import {
 import { API_URLS } from '../config/api';
 import '../styles/custom.css';
 
-// 환경 변수 디버깅
-console.log(
-  'VITE_BACKEND_API_BASE_URL:',
-  import.meta.env.VITE_BACKEND_API_BASE_URL
-);
-
 const LoginPage = () => {
   const navigate = useNavigate();
   const [memberId, setMemberId] = useState('');

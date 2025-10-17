@@ -109,14 +109,10 @@ const FormManagementContent = () => {
     try {
       setLoading(true);
 
-      console.log('양식 등록 데이터:', formData);
-
       const response = await apiRequest(API_URLS.FORM_ADD, {
         method: 'POST',
         body: JSON.stringify(formData),
       });
-
-      console.log('양식 등록 응답:', response);
 
       if (response.ok) {
         alert('양식이 등록되었습니다.');

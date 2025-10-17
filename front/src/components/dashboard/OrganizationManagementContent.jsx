@@ -54,7 +54,6 @@ const OrganizationManagementContent = () => {
         setPositions(positionsData);
       } catch (error) {
         console.error('데이터 로드 실패:', error);
-        console.log('백엔드 API 오류로 인해 빈 배열을 사용합니다.');
         setDepartments([]);
         setPositions([]);
       }

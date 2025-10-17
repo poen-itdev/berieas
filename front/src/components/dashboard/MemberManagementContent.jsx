@@ -265,15 +265,6 @@ const MemberManagementContent = () => {
   const handleToggleMemberStatus = async (memberId, currentStatus) => {
     const newStatus = currentStatus === 'Y' ? '비활성화' : '활성화';
 
-    console.log('토글 요청:', {
-      memberId: memberId,
-      currentStatus: currentStatus,
-      newStatus: newStatus,
-      accessToken: localStorage.getItem('accessToken')
-        ? '토큰 존재'
-        : '토큰 없음',
-    });
-
     if (!window.confirm(`정말 이 직원을 ${newStatus}하시겠습니까?`)) {
       return;
     }
