@@ -209,7 +209,7 @@ public class ApprovalService {
                 })
                 .toList();
 
-        return new PageImpl<>(filtered, pageable, filtered.size());
+        return new PageImpl<>(filtered, pageable, approvals.getTotalElements());
     }
 
 
@@ -265,7 +265,7 @@ public class ApprovalService {
                 })
                 .toList();
 
-        return new PageImpl<>(filtered, pageable, filtered.size());
+        return new PageImpl<>(filtered, pageable, approvals.getTotalElements());
     }
 
     // 진행목록(기안중)
@@ -324,7 +324,7 @@ public class ApprovalService {
                 })
                 .toList();
 
-        return new PageImpl<>(filtered, pageable, filtered.size());
+        return new PageImpl<>(filtered, pageable, approvals.getTotalElements());
     }
 
     // 진행목록(반려)
@@ -383,7 +383,7 @@ public class ApprovalService {
                 })
                 .toList();
 
-        return new PageImpl<>(filtered, pageable, filtered.size());
+        return new PageImpl<>(filtered, pageable, approvals.getTotalElements());
     }
 
     // 진행목록(완료)
@@ -442,7 +442,7 @@ public class ApprovalService {
                 })
                 .toList();
 
-        return new PageImpl<>(filtered, pageable, filtered.size());
+        return new PageImpl<>(filtered, pageable, approvals.getTotalElements());
     }
 
     // 첨언

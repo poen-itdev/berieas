@@ -7,6 +7,7 @@ const API_CONFIG = {
     MEMBER_EXIST: '/member/exist',
     MEMBER_JOIN: '/member/join',
     MEMBER_INFO: '/member/info',
+    MEMBER_ACTIVE_MEMBERS: '/member/active-members',
     MEMBER_CHANGE_PASSWORD: '/member/changepassword',
     JWT_REFRESH: '/jwt/refresh',
     MEMBER_SEND_CODE: '/member/send-code',
@@ -32,7 +33,6 @@ const API_CONFIG = {
 
     // 관리자용 직원,직급,부서관리
     MEMBER_MEMBERS: '/admin/members',
-    MEMBER_ACTIVE_MEMBERS: '/admin/active-members',
     MEMBER_RETIRED_MEMBERS: '/admin/retired-members',
     MEMBER_DEACTIVATE: '/admin/deactivate',
     MEMBER_UPDATE: '/admin/update',
