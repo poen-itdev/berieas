@@ -118,10 +118,6 @@ const FindAccountPage = () => {
     setError('');
 
     try {
-      // 인증 요청 데이터
-        codeLength: verificationCode.length,
-      });
-
       const response = await fetch(API_URLS.MEMBER_VERIFY_CODE, {
         method: 'POST',
         headers: {
