@@ -12,7 +12,6 @@ import {
   TableHead,
   TableRow,
   TextField,
-  Button,
   Chip,
   Pagination,
   InputAdornment,
@@ -31,6 +30,7 @@ const ProgressListContent = ({ isMobile = false }) => {
   const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
   const [progressData, setProgressData] = useState([]);
+  const [originalData, setOriginalData] = useState([]); // 원본 데이터 저장
   const [loading, setLoading] = useState(false);
 
   const tabData = [
@@ -41,88 +41,133 @@ const ProgressListContent = ({ isMobile = false }) => {
     { label: '완료' },
   ];
 
-  // API 호출 함수들
+  // 프론트엔드 필터링 함수
+  const applyFilters = (data) => {
+    let filteredData = [...data];
+
+    // 검색어 필터링
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      filteredData = filteredData.filter((item) => {
+        return (
+          (item.approvalTitle &&
+            item.approvalTitle.toLowerCase().includes(searchLower)) ||
+          (item.approvalType &&
+            item.approvalType.toLowerCase().includes(searchLower)) ||
+          (item.aprovalType &&
+            item.aprovalType.toLowerCase().includes(searchLower)) ||
+          (item.approvalPostion &&
+            item.approvalPostion.toLowerCase().includes(searchLower)) ||
+          (item.approvalName &&
+            item.approvalName.toLowerCase().includes(searchLower)) ||
+          (item.approvalSigner &&
+            item.approvalSigner.toLowerCase().includes(searchLower)) ||
+          (item.signId && item.signId.toLowerCase().includes(searchLower)) ||
+          (item.approvalStatus &&
+            item.approvalStatus.toLowerCase().includes(searchLower))
+        );
+      });
+    }
+
+    // 날짜 필터링
+    if (startDate) {
+      filteredData = filteredData.filter((item) => {
+        if (!item.regDate) return false;
+        const itemDate = new Date(item.regDate);
+        const start = new Date(startDate);
+        return itemDate >= start;
+      });
+    }
+
+    if (endDate) {
+      filteredData = filteredData.filter((item) => {
+        if (!item.regDate) return false;
+        const itemDate = new Date(item.regDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // 하루 끝까지 포함
+        return itemDate <= end;
+      });
+    }
+
+    return filteredData;
+  };
+
+  // API URL 매핑
+  const getApiUrl = (tabIndex) => {
+    const urlMap = {
+      0: API_URLS.APPROVAL_ALL, // 전체
+      1: API_URLS.APPROVAL_DRAFTING, // 기안중
+      2: API_URLS.APPROVAL_ALL, // 진행중
+      3: API_URLS.APPROVAL_RETURENED, // 반려
+      4: API_URLS.APPROVAL_APPROVED, // 완료
+    };
+    return urlMap[tabIndex] || API_URLS.APPROVAL_ALL;
+  };
+
+  // 데이터 처리 및 필터링
+  const processData = (data, tabIndex) => {
+    // 페이지네이션 응답 처리
+    if (data && data.content && Array.isArray(data.content)) {
+      data = data.content;
+    } else if (!Array.isArray(data)) {
+      return [];
+    }
+
+    // 진행중 탭에서는 진행중 상태만 필터링
+    if (tabIndex === 2) {
+      data = data.filter((item) => item.approvalStatus === '진행중');
+    }
+
+    return data;
+  };
+
+  // API 호출 함수
   const fetchProgressData = async (tabIndex = selectedTab) => {
     try {
       setLoading(true);
-      let apiUrl;
-
-      // 선택된 탭에 따라 다른 API 호출
-      switch (tabIndex) {
-        case 0: // 전체
-          apiUrl = API_URLS.APPROVAL_ALL;
-          break;
-        case 1: // 기안중
-          apiUrl = API_URLS.APPROVAL_DRAFTING;
-          break;
-        case 2: // 진행중 (내가 관련된 모든 진행중 문서)
-          apiUrl = API_URLS.APPROVAL_ALL;
-          break;
-        case 3: // 반려
-          apiUrl = API_URLS.APPROVAL_RETURENED;
-          break;
-        case 4: // 완료
-          apiUrl = API_URLS.APPROVAL_APPROVED;
-          break;
-        default:
-          apiUrl = API_URLS.APPROVAL_ALL;
-      }
-
-      const response = await apiRequest(apiUrl, {
-        method: 'GET',
-      });
+      const apiUrl = getApiUrl(tabIndex);
+      const response = await apiRequest(apiUrl, { method: 'GET' });
 
       if (response.ok) {
-        let data = response.data;
-
-        // 페이지네이션 응답 처리
-        if (data && data.content && Array.isArray(data.content)) {
-          data = data.content;
-        } else if (!Array.isArray(data)) {
-          setProgressData([]);
-          return;
-        }
-
-        // 진행중 탭에서는 진행중 상태만 필터링
-        if (tabIndex === 2) {
-          data = data.filter((item) => item.approvalStatus === '진행중');
-        }
-
-        setProgressData(data);
+        const processedData = processData(response.data, tabIndex);
+        setOriginalData(processedData);
+        setProgressData(applyFilters(processedData));
       } else {
+        setOriginalData([]);
         setProgressData([]);
       }
     } catch (error) {
+      setOriginalData([]);
       setProgressData([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // 탭 파라미터 매핑
+  const getTabIndexFromParam = (tabParam) => {
+    const tabMap = {
+      all: 0, // 전체
+      inProgress: 2, // 진행중
+      completed: 4, // 완료
+    };
+    return tabMap[tabParam] || 0;
+  };
+
   useEffect(() => {
-    // URL 쿼리 파라미터에서 tab 값을 확인하여 탭 설정
     const tabParam = searchParams.get('tab');
-    if (tabParam) {
-      let tabIndex = 0; // 기본값: 전체
-      switch (tabParam) {
-        case 'all':
-          tabIndex = 0; // 전체
-          break;
-        case 'inProgress':
-          tabIndex = 2; // 진행중
-          break;
-        case 'completed':
-          tabIndex = 4; // 완료
-          break;
-        default:
-          tabIndex = 0;
-      }
-      setSelectedTab(tabIndex);
-      fetchProgressData(tabIndex);
-    } else {
-      fetchProgressData();
-    }
+    const tabIndex = tabParam ? getTabIndexFromParam(tabParam) : 0;
+    setSelectedTab(tabIndex);
+    fetchProgressData(tabIndex);
   }, [searchParams]);
+
+  // 검색어나 날짜가 변경될 때마다 필터링 적용
+  useEffect(() => {
+    if (originalData.length > 0) {
+      const filteredData = applyFilters(originalData);
+      setProgressData(filteredData);
+    }
+  }, [searchTerm, startDate, endDate, originalData]);
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
@@ -141,86 +186,35 @@ const ProgressListContent = ({ isMobile = false }) => {
     }
   };
 
-  const handleSearch = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (searchTerm) params.append('search', searchTerm);
-      if (startDate) params.append('startDate', startDate);
-      if (endDate) params.append('endDate', endDate);
-
-      let apiUrl;
-      switch (selectedTab) {
-        case 0:
-          apiUrl = API_URLS.APPROVAL_ALL;
-          break;
-        case 1:
-          apiUrl = API_URLS.APPROVAL_DRAFTING;
-          break;
-        case 2:
-          apiUrl = API_URLS.APPROVAL_MY_PENDING;
-          break;
-        case 3:
-          apiUrl = API_URLS.APPROVAL_RETURENED;
-          break;
-        case 4:
-          apiUrl = API_URLS.APPROVAL_APPROVED;
-          break;
-        default:
-          apiUrl = API_URLS.APPROVAL_ALL;
-      }
-
-      const response = await apiRequest(`${apiUrl}?${params}`, {
-        method: 'GET',
-      });
-
-      if (response.ok) {
-        const data = response.data;
-        setProgressData(Array.isArray(data) ? data : []);
-      }
-    } catch (error) {
-      console.error('검색 실패:', error);
-      setProgressData([]);
-    } finally {
-      setLoading(false);
-    }
+  // 상태 색상 매핑
+  const statusColors = {
+    기안중: '#F59E0B',
+    진행중: '#3B82F6',
+    완료: '#10B981',
+    반려: '#EF4444',
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case '기안중':
-        return '#F59E0B';
-      case '진행중':
-        return '#3B82F6';
-      case '완료':
-        return '#10B981';
-      case '반려':
-        return '#EF4444';
-      default:
-        return '#9E9E9E';
-    }
-  };
+  const getStatusColor = (status) => statusColors[status] || '#9E9E9E';
 
-  const getStatusChip = (status, statusColor) => {
-    return (
-      <Chip
-        label={status}
-        size="small"
-        sx={{
-          fontWeight: 500,
-          fontSize: { xs: '10px', sm: '12px' },
-          height: { xs: '20px', sm: '24px' },
-          backgroundColor: statusColor,
+  // 상태 칩 컴포넌트
+  const StatusChip = ({ status }) => (
+    <Chip
+      label={status}
+      size="small"
+      sx={{
+        fontWeight: 500,
+        fontSize: { xs: '10px', sm: '12px' },
+        height: { xs: '20px', sm: '24px' },
+        backgroundColor: getStatusColor(status),
+        color: 'white',
+        '& .MuiChip-label': {
           color: 'white',
-          '& .MuiChip-label': {
-            color: 'white',
-            fontSize: { xs: '10px', sm: '12px' },
-            padding: { xs: '0 6px', sm: '0 8px' },
-          },
-        }}
-      />
-    );
-  };
+          fontSize: { xs: '10px', sm: '12px' },
+          padding: { xs: '0 6px', sm: '0 8px' },
+        },
+      }}
+    />
+  );
 
   return (
     <Box sx={{ p: 3, mt: 3 }}>
@@ -355,22 +349,6 @@ const ProgressListContent = ({ isMobile = false }) => {
                 ),
               }}
             />
-            <Button
-              variant="contained"
-              onClick={handleSearch}
-              sx={{
-                bgcolor: '#3275FC',
-                color: 'white',
-                height: '40px',
-                px: 3,
-                fontWeight: 600,
-                '&:hover': {
-                  bgcolor: '#2563EB',
-                },
-              }}
-            >
-              검색
-            </Button>
           </Box>
         </Paper>
 
@@ -537,10 +515,7 @@ const ProgressListContent = ({ isMobile = false }) => {
                         </Typography>
                       </TableCell>
                       <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
-                        {getStatusChip(
-                          row.approvalStatus,
-                          getStatusColor(row.approvalStatus)
-                        )}
+                        <StatusChip status={row.approvalStatus} />
                       </TableCell>
                     </TableRow>
                   ))
