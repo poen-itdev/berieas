@@ -447,7 +447,7 @@ public class ApprovalService {
 
     // 첨언
     @Transactional
-    public void addCommnet(int approvalNo, CommentRequestDto dto, List<MultipartFile> files) {
+    public void addComment(int approvalNo, CommentRequestDto dto, List<MultipartFile> files) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
 
