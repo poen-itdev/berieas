@@ -148,7 +148,7 @@ public class ApprovalController {
 
         try {
             
-            approvalService.addCommnet(approvalNo, dto, files);
+            approvalService.addComment(approvalNo, dto, files);
             return ResponseEntity.ok("첨언 등록 완료");
         } catch (Exception e) {
 
