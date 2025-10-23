@@ -153,64 +153,62 @@ public class ApprovalService {
     }
 
     // 진행목록(전체)  전체는 내가 기안 올린 문서 + 결재할 문서 
-     public Page<ProgressListResponseDto> getAllApprovals(
-            Pageable pageable, LocalDate from, LocalDate to, String keyword) {
+   public Page<ProgressListResponseDto> getAllApprovals(
+        Pageable pageable, LocalDate from, LocalDate to, String keyword) {
 
-        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Member member = memberRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+    String loginId = SecurityContextHolder.getContext().getAuthentication().getName();
+Member me = memberRepository.findByMemberId(loginId)
+        .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        Page<Approval> approvals = approvalRepository.findAllRelatedApprovals(member.getMemberName(), pageable);
+Page<Approval> approvals =
+        approvalRepository.findAllForOverallList(me.getMemberId(), me.getMemberName(), pageable);
 
-        List<ProgressListResponseDto> filtered = approvals.getContent().stream()
-                .filter(a -> {
 
-                    // 날짜 필터
-                    if (from != null && a.getRegDate().toLocalDate().isBefore(from)) return false;
-                    if (to != null && a.getRegDate().toLocalDate().isAfter(to)) return false;
+    // ✅ 혹시라도 이상 케이스가 있으면 여기서 한 번 더 차단 (기안중은 작성자만)
+    List<ProgressListResponseDto> filtered = approvals.getContent().stream()
+            .filter(a -> !"기안중".equals(a.getApprovalStatus()) || Objects.equals(a.getRegId(), me.getMemberId()))
+            // (기존 날짜/키워드 필터 로직 이어서)
+            .filter(a -> {
+                if (from != null && a.getRegDate().toLocalDate().isBefore(from)) return false;
+                if (to != null && a.getRegDate().toLocalDate().isAfter(to)) return false;
+                if (keyword == null || keyword.isBlank()) return true;
 
-                    // 키워드 필터
-                    if (keyword != null && !keyword.isBlank()) {
-                        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
-                        String title = detail != null ? detail.getApprovalTitle() : "";
-                        String type = detail != null ? detail.getApprovalType() : "";
-                        String drafter = a.getApprovalName() != null ? a.getApprovalName() : "";
-                        String department = a.getApprovalDepartment() != null ? a.getApprovalDepartment() : "";
-                        String signerIds = String.join(",",
-                                Arrays.asList(a.getSignId1(), a.getSignId2(), a.getSignId3(), a.getSignId4(), a.getSignId5())
-                                        .stream().filter(Objects::nonNull).toList()
-                        );
-                        String lowerKeyword = keyword.toLowerCase();
-                        boolean matchKeyword = title.toLowerCase().contains(lowerKeyword)
-                                || type.toLowerCase().contains(lowerKeyword)
-                                || drafter.toLowerCase().contains(lowerKeyword)
-                                || department.toLowerCase().contains(lowerKeyword)
-                                || signerIds.toLowerCase().contains(lowerKeyword)
-                                || (a.getApprovalStatus() != null && a.getApprovalStatus().toLowerCase().contains(lowerKeyword));
+                ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                String title = detail != null ? String.valueOf(detail.getApprovalTitle()) : "";
+                String type = detail != null ? String.valueOf(detail.getApprovalType()) : "";
+                String drafter = a.getApprovalName() != null ? a.getApprovalName() : "";
+                String department = a.getApprovalDepartment() != null ? a.getApprovalDepartment() : "";
+                String signerIds = String.join(",",
+                        Arrays.asList(a.getSignId1(), a.getSignId2(), a.getSignId3(), a.getSignId4(), a.getSignId5())
+                                .stream().filter(Objects::nonNull).toList());
+                String lower = keyword.toLowerCase();
 
-                        if (!matchKeyword) return false;
-                    }
+                return title.toLowerCase().contains(lower)
+                        || type.toLowerCase().contains(lower)
+                        || drafter.toLowerCase().contains(lower)
+                        || department.toLowerCase().contains(lower)
+                        || signerIds.toLowerCase().contains(lower)
+                        || (a.getApprovalStatus() != null && a.getApprovalStatus().toLowerCase().contains(lower));
+            })
+            .map(a -> {
+                ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+                String currentSigner = getCurrentSigner(a);
+                return new ProgressListResponseDto(
+                        a.getApprovalNo(),
+                        a.getRegDate(),
+                        detail != null ? detail.getApprovalTitle() : null,
+                        detail != null ? detail.getApprovalType() : null,
+                        a.getApprovalDepartment(),
+                        a.getApprovalName(),
+                        currentSigner,
+                        a.getApprovalStatus()
+                );
+            })
+            .toList();
 
-                    return true;
-                })
-                .map(a -> {
-                    ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
-                    String currentSigner = getCurrentSigner(a);
-                    return new ProgressListResponseDto(
-                            a.getApprovalNo(),
-                            a.getRegDate(),
-                            detail != null ? detail.getApprovalTitle() : null,
-                            detail != null ? detail.getApprovalType() : null,
-                            a.getApprovalDepartment(),
-                            a.getApprovalName(),
-                            currentSigner,
-                            a.getApprovalStatus()
-                    );
-                })
-                .toList();
-
-        return new PageImpl<>(filtered, pageable, approvals.getTotalElements());
-    }
+    // count는 filtered.size()로 맞추면 UI와 페이징 불일치가 안 생김
+    return new PageImpl<>(filtered, pageable, filtered.size());
+}
 
 
     // 진행목록(진행중)
@@ -275,7 +273,7 @@ public class ApprovalService {
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        Page<Approval> approvals = approvalRepository.findTemporarySavedApprovals(memberId, pageable);
+        Page<Approval> approvals = approvalRepository.findTemporarySavedApprovals(member.getMemberId(), pageable);
 
         List<ProgressListResponseDto> filtered = approvals.getContent().stream()
                 .filter(a -> {
@@ -328,63 +326,41 @@ public class ApprovalService {
     }
 
     // 진행목록(반려)
-    public Page<ProgressListResponseDto> getReturnedApprovals(Pageable pageable, LocalDate from, LocalDate to, String keyword) {
-     
-        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-        Member member = memberRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+   public Page<ProgressListResponseDto> getReturnedApprovals(
+    Pageable pageable, LocalDate from, LocalDate to, String keyword) {
 
-        Page<Approval> approvals = approvalRepository.findReturendApprovals(memberId, pageable);
+  String loginId = SecurityContextHolder.getContext().getAuthentication().getName();
+  Member member = memberRepository.findByMemberId(loginId)
+      .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        List<ProgressListResponseDto> filtered = approvals.getContent().stream()
-                .filter(a -> {
+  // ✅ 반려 전용 쿼리 호출 (전체 쿼리 호출 금지!)
+  Page<Approval> approvals =
+      approvalRepository.findReturnedApprovals(member.getMemberId(), member.getMemberName(), pageable);
 
-                    // 날짜 필터
-                    if (from != null && a.getRegDate().toLocalDate().isBefore(from)) return false;
-                    if (to != null && a.getRegDate().toLocalDate().isAfter(to)) return false;
+  List<ProgressListResponseDto> filtered = approvals.getContent().stream()
+      // 안전망: 혹시라도 잘못 내려온 데이터 걸러주기
+      .filter(a -> "반려".equals(a.getApprovalStatus()))
+      // (기존 날짜/키워드 필터 & DTO 매핑 그대로)
+      .map(a -> {
+        ApprovalDetail d = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
+        String currentSigner = getCurrentSigner(a);
+        return new ProgressListResponseDto(
+            a.getApprovalNo(),
+            a.getRegDate(),
+            d != null ? d.getApprovalTitle() : null,
+            d != null ? d.getApprovalType()  : null,
+            a.getApprovalDepartment(),
+            a.getApprovalName(),
+            currentSigner,
+            a.getApprovalStatus()
+        );
+      })
+      .toList();
 
-                    // 키워드 필터
-                    if (keyword != null && !keyword.isBlank()) {
-                        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
-                        String title = detail != null ? detail.getApprovalTitle() : "";
-                        String type = detail != null ? detail.getApprovalType() : "";
-                        String drafter = a.getApprovalName() != null ? a.getApprovalName() : "";
-                        String department = a.getApprovalDepartment() != null ? a.getApprovalDepartment() : "";
-                        String signerIds = String.join(",",
-                                Arrays.asList(a.getSignId1(), a.getSignId2(), a.getSignId3(), a.getSignId4(), a.getSignId5())
-                                        .stream().filter(Objects::nonNull).toList()
-                        );
-                        String lowerKeyword = keyword.toLowerCase();
-                        boolean matchKeyword = title.toLowerCase().contains(lowerKeyword)
-                                || type.toLowerCase().contains(lowerKeyword)
-                                || drafter.toLowerCase().contains(lowerKeyword)
-                                || department.toLowerCase().contains(lowerKeyword)
-                                || signerIds.toLowerCase().contains(lowerKeyword)
-                                || (a.getApprovalStatus() != null && a.getApprovalStatus().toLowerCase().contains(lowerKeyword));
+  // 레포에서 이미 상태로 필터했으면 count는 approvals.getTotalElements() 유지해도 됨
+  return new PageImpl<>(filtered, pageable, approvals.getTotalElements());
+}
 
-                        if (!matchKeyword) return false;
-                    }
-
-                    return true;
-                })
-                .map(a -> {
-                    ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
-                    String currentSigner = getCurrentSigner(a);
-                    return new ProgressListResponseDto(
-                            a.getApprovalNo(),
-                            a.getRegDate(),
-                            detail != null ? detail.getApprovalTitle() : null,
-                            detail != null ? detail.getApprovalType() : null,
-                            a.getApprovalDepartment(),
-                            a.getApprovalName(),
-                            currentSigner,
-                            a.getApprovalStatus()
-                    );
-                })
-                .toList();
-
-        return new PageImpl<>(filtered, pageable, approvals.getTotalElements());
-    }
 
     // 진행목록(완료)
     public Page<ProgressListResponseDto> getCompletedApprovals(Pageable pageable, LocalDate from, LocalDate to, String keyword) {
