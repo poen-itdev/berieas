@@ -328,31 +328,6 @@ const ApprovalDetailContent = ({ userInfo }) => {
     return false;
   };
 
-  // 현재 사용자의 결재 순서 확인
-  const getCurrentUserApprovalOrder = () => {
-    for (let i = 1; i <= 5; i++) {
-      const signId = approvalData[`signId${i}`];
-      if (signId === userInfo?.memberName) {
-        return i;
-      }
-    }
-    return null;
-  };
-
-  // 다음 결재자가 아직 결재하지 않았는지 확인
-  const isNextApproverPending = () => {
-    const currentOrder = getCurrentUserApprovalOrder();
-    if (!currentOrder) return false;
-
-    // 다음 결재자 확인
-    const nextOrder = currentOrder + 1;
-    const nextSignId = approvalData[`signId${nextOrder}`];
-    const nextSignDate = approvalData[`signDate${nextOrder}`];
-
-    // 다음 결재자가 있고 아직 결재하지 않았으면 true
-    return nextSignId && !nextSignDate;
-  };
-
   return (
     <Box sx={{ p: 3, mt: 3 }}>
       <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
@@ -464,7 +439,6 @@ const ApprovalDetailContent = ({ userInfo }) => {
                             </Typography>
                           )}
                           {item.status === 'cancelled' && (
-                            // 반려 이후 결재자는 레이아웃을 유지하면서 날짜 영역만 비움
                             <Box sx={{ height: 18, mt: 0.5 }} />
                           )}
                         </Box>
@@ -723,6 +697,49 @@ const ApprovalDetailContent = ({ userInfo }) => {
               >
                 기안취소
               </Button>
+            ) : null}
+
+            {/* 결재자인 경우 - 승인/반려 버튼 */}
+            {(() => {
+              const isProgressing = approvalData.approvalStatus === '진행중';
+              const isCompleted = approvalData.approvalStatus === '완료';
+              const isRejected = approvalData.approvalStatus === '반려';
+              const isAuthor =
+                approvalData.approvalName === userInfo?.memberName;
+
+              return (
+                isApprover &&
+                isProgressing &&
+                !isCompleted &&
+                !isRejected &&
+                !isAuthor &&
+                !hasCurrentUserApproved()
+              );
+            })() ? (
+              <>
+                <Button
+                  variant="contained"
+                  color="success"
+                  size="large"
+                  startIcon={<CheckCircle />}
+                  onClick={() => handleApproval('approve')}
+                  disabled={submitting}
+                  sx={{ minWidth: 120 }}
+                >
+                  승인
+                </Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  size="large"
+                  startIcon={<Cancel />}
+                  onClick={() => handleApproval('reject')}
+                  disabled={submitting}
+                  sx={{ minWidth: 120 }}
+                >
+                  반려
+                </Button>
+              </>
             ) : null}
           </Box>
         </Paper>

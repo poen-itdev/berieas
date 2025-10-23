@@ -59,6 +59,9 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [isSubmitSuccess, setIsSubmitSuccess] = useState(false);
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState(null);
 
@@ -199,7 +202,6 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
       loadExistingApproval(approvalNo);
       setHasUnsavedChanges(false); // 기존 데이터 로드 시에는 변경사항 없음
     } else if (!approvalNo) {
-      // URL에 approvalNo가 없으면 폼 초기화
       setFormData({
         formNo: '',
         formTitle: '',
@@ -423,18 +425,18 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
     try {
       setLoading(true);
 
-      // 필수 필드 검증
+      // 임시저장 필수 필드 검증 (양식과 제목만)
       if (
         !formData.formNo ||
         formData.formNo.trim() === '' ||
         !formData.approvalTitle ||
         formData.approvalTitle.trim() === ''
       ) {
-        alert(
-          `양식과 제목을 선택해주세요.\n현재 상태: formNo="${formData.formNo}", approvalTitle="${formData.approvalTitle}"`
-        );
+        alert('양식과 제목을 선택해주세요.');
         return false;
       }
+
+      // 임시저장은 결재자 검증 제거
 
       const approvalNo = searchParams.get('approvalNo');
       const formDataToSend = new FormData();
@@ -556,7 +558,6 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
         alert('문서 삭제에 실패했습니다: ' + error.message);
       }
     } else {
-      // 새로 작성 중인 경우 - 내용만 초기화
       setFormData({
         formNo: '',
         formTitle: '',
@@ -590,9 +591,13 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
         !formData.approvalTitle ||
         formData.approvalTitle.trim() === ''
       ) {
-        alert(
-          `양식과 제목을 선택해주세요.\n현재 상태: formNo="${formData.formNo}", approvalTitle="${formData.approvalTitle}"`
-        );
+        alert('양식과 제목을 선택해주세요.');
+        return;
+      }
+
+      // 결재자 필수 검증
+      if (selectedApprovers.length === 0) {
+        alert('결재자를 최소 1명 이상 선택해주세요.');
         return;
       }
 
@@ -631,10 +636,9 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
       });
 
       if (response.ok) {
-        alert('기안서가 제출되었습니다.');
+        setIsSubmitSuccess(true);
+        setShowSuccessDialog(true);
         setHasUnsavedChanges(false);
-        // 저장 후 문서 리스트로 이동
-        navigate('/progress-list');
       } else {
         console.error('제출 실패 상세:', response);
         alert(
@@ -1220,10 +1224,15 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
           open={showSuccessDialog}
           onClose={() => {
             setShowSuccessDialog(false);
+            setIsSubmitSuccess(false);
             navigate('/progress-list');
           }}
-          title="저장 완료"
-          message="저장이 완료되었습니다."
+          title={isSubmitSuccess ? '제출 완료' : '저장 완료'}
+          message={
+            isSubmitSuccess
+              ? '기안서가 제출되었습니다.'
+              : '저장이 완료되었습니다.'
+          }
           buttonText="확인"
         />
       </Container>

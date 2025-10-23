@@ -68,7 +68,7 @@ const ProgressListContent = ({ isMobile = false }) => {
     return urlMap[tabIndex] || API_URLS.APPROVAL_ALL;
   };
 
-  // 데이터 전처리: 진행중 탭만 클라 필터 (임시)
+  // 데이터 전처리
   const processData = (data, tabIndex) => {
     if (!data) return { items: [], totalPages: 1, totalElements: 0, number: 0 };
 
@@ -80,7 +80,7 @@ const ProgressListContent = ({ isMobile = false }) => {
       : [];
     let items = content;
 
-    // 진행중 탭만 임시 필터
+    // 진행중 탭: 진행중 상태 문서만 필터링
     if (tabIndex === 2) {
       items = content.filter((item) => item.approvalStatus === '진행중');
     }
@@ -151,7 +151,6 @@ const ProgressListContent = ({ isMobile = false }) => {
     // 검색/기간 변경 시 1페이지부터
     setPage(1);
     fetchProgressData(selectedTab, 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchTerm, startDate, endDate]);
 
   const handleTabChange = (event, newValue) => {
