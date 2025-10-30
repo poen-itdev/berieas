@@ -287,7 +287,7 @@ public class MemberService implements UserDetailsService{
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         if (!isAdmin) {
             throw new AccessDeniedException("관리자만 수정할 수 있습니다.");
@@ -308,7 +308,7 @@ public class MemberService implements UserDetailsService{
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals("ADMIN"));
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         if (!isAdmin) {
             throw new AccessDeniedException("관리자만 수정할 수 있습니다.");

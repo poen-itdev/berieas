@@ -1,5 +1,7 @@
 package com.poen.berieas.back.domain.member.dto;
 
+import com.poen.berieas.back.domain.member.entity.RoleType;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -33,4 +35,7 @@ public class MemberRequestDto {
 
     @NotBlank(groups = {addGroup.class, updateGroup.class})
     private String memberPosition;
+
+    @NotBlank(groups = {updateGroup.class})
+    private RoleType role;
 }
