@@ -82,5 +82,6 @@ public class Member {
         this.memberName = dto.getMemberName();
         this.memberDepartment = dto.getMemberDepartment();
         this.memberPosition = dto.getMemberPosition();
+        this.role = dto.getRole();
     }
 }
