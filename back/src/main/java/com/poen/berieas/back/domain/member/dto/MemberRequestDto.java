@@ -4,6 +4,7 @@ import com.poen.berieas.back.domain.member.entity.RoleType;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,6 +37,6 @@ public class MemberRequestDto {
     @NotBlank(groups = {addGroup.class, updateGroup.class})
     private String memberPosition;
 
-    @NotBlank(groups = {updateGroup.class})
+    @NotNull(groups = {addGroup.class, updateGroup.class})
     private RoleType role;
 }

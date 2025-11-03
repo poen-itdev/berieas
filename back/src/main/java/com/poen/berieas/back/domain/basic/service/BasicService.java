@@ -30,7 +30,9 @@ public class BasicService {
         return departments.stream()
             .map(department -> new BasicResponseDto(
                     department.getIdx(),
-                    department.getName()))
+                    department.getName(),
+                    department.getCodeKey(),
+                    department.getCodeValue()))
             .collect(Collectors.toList());
     }
 
@@ -77,7 +79,9 @@ public class BasicService {
         return positions.stream()
             .map(position -> new BasicResponseDto(
                 position.getIdx(),
-                position.getName()))
+                position.getName(),
+                position.getCodeKey(),
+                position.getCodeValue()))
             .collect(Collectors.toList());
     }
 

@@ -54,6 +54,7 @@ const MemberManagementContent = () => {
     memberPassword: '',
     memberDepartment: '',
     memberPosition: '',
+    role: 'USER', // 기본값: 일반 사용자
     useYn: 'Y', // 기본값: 활성
   });
 
@@ -62,23 +63,7 @@ const MemberManagementContent = () => {
     fetchMembers();
     fetchDepartments();
     fetchPositions();
-    checkCurrentUserRole(); // 현재 사용자 권한 확인
   }, [selectedTab]);
-
-  // 현재 사용자 권한 확인
-  const checkCurrentUserRole = async () => {
-    try {
-      const response = await apiRequest(API_URLS.MEMBER_INFO, {
-        method: 'GET',
-      });
-
-      if (response.ok) {
-        const userInfo = response.data;
-      }
-    } catch (error) {
-      console.error('사용자 정보 조회 실패:', error);
-    }
-  };
 
   const fetchMembers = async () => {
     try {
@@ -232,10 +217,11 @@ const MemberManagementContent = () => {
       memberId: member.memberId,
       memberName: member.memberName,
       memberEmail: member.memberEmail,
-      memberPassword: '', // 비밀번호는 빈 값으로
+      memberPassword: '',
       memberDepartment: member.memberDepartment,
       memberPosition: member.memberPosition,
-      useYn: member.useYn, // 현재 상태 유지
+      role: member.role || 'USER',
+      useYn: member.useYn,
     });
     setOpenModal(true);
   };
@@ -250,7 +236,8 @@ const MemberManagementContent = () => {
       memberPassword: '',
       memberDepartment: '',
       memberPosition: '',
-      useYn: 'Y', // 기본값: 활성
+      role: 'USER',
+      useYn: 'Y',
     });
   };
 
@@ -284,18 +271,17 @@ const MemberManagementContent = () => {
 
       if (response.ok) {
         alert(`직원이 ${newStatus}되었습니다.`);
-        fetchMembers(); // 목록 새로고침
+        fetchMembers();
       } else {
         let errorMessage = '오류가 발생했습니다.';
 
-        // Response body 복제하여 중복 읽기 방지
         const responseClone = response.clone();
 
         try {
           const errorData = await response.json();
           errorMessage = errorData.message || errorMessage;
         } catch (e) {
-          // JSON 파싱 실패 시 response text 사용
+          console.error(e);
           try {
             errorMessage = await responseClone.text();
           } catch (textError) {
@@ -340,6 +326,7 @@ const MemberManagementContent = () => {
               memberPw: newMember.memberPassword || undefined, // 백엔드 필드명에 맞게 변경
               memberDepartment: newMember.memberDepartment,
               memberPosition: newMember.memberPosition,
+              role: newMember.role,
               useYn: newMember.useYn,
             }),
           }
@@ -360,6 +347,7 @@ const MemberManagementContent = () => {
             memberEmail: newMember.memberEmail,
             memberDepartment: newMember.memberDepartment,
             memberPosition: newMember.memberPosition,
+            role: newMember.role,
           }),
         });
       }
@@ -869,6 +857,24 @@ const MemberManagementContent = () => {
                     </Select>
                   </FormControl>
                 </Grid>
+                <Grid item xs={6}>
+                  <FormControl fullWidth sx={{ mb: 1.5, minWidth: '205px' }}>
+                    <InputLabel>권한</InputLabel>
+                    <Select
+                      fullWidth
+                      value={newMember.role}
+                      onChange={(e) =>
+                        handleInputChange('role', e.target.value)
+                      }
+                      label="권한"
+                      variant="outlined"
+                      sx={{ height: '56px' }}
+                    >
+                      <MenuItem value="USER">일반 사용자</MenuItem>
+                      <MenuItem value="ADMIN">관리자</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
               </Grid>
             </Box>
           </DialogContent>
@@ -911,18 +917,21 @@ const AdminOnlyContent = () => (
       <PageHeader title="회원 관리" fontSize="30px" />
       <Paper sx={{ p: 4, textAlign: 'center', mt: 3 }}>
         <Typography variant="h5" sx={{ color: '#666', fontWeight: 500 }}>
-          관리자페이지 입니다
+          관리자 페이지입니다
         </Typography>
         <Typography variant="body1" sx={{ color: '#999', mt: 1 }}>
-          이 페이지는 관리자 권한이 필요한 페이지입니다.
+          이 페이지는 관리자 권한이 필요합니다.
         </Typography>
       </Paper>
     </Container>
   </Box>
 );
 
-export default () => (
+// props를 받을 수 있도록 명명된 컴포넌트로 export
+const MemberManagementWithPermission = (props) => (
   <PermissionGuard requiredPermission="ADMIN" fallback={<AdminOnlyContent />}>
-    <MemberManagementContent />
+    <MemberManagementContent {...props} />
   </PermissionGuard>
 );
+
+export default MemberManagementWithPermission;
