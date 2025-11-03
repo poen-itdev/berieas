@@ -47,7 +47,7 @@ public class ApprovalSettingController {
 
     // 양식 삭제
     @DeleteMapping(value = "/form/delete/{formNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> deleteFormApi(@PathVariable int formNo) {
+    public ResponseEntity<String> deleteFormApi(@PathVariable(name = "formNo") int formNo) {
 
         try {
             approvalSettingService.deleteForm(formNo);
@@ -60,7 +60,7 @@ public class ApprovalSettingController {
 
     // 양식 조회
     @GetMapping(value = "/form/{formNo}")
-    public ResponseEntity<?> getformApi(@PathVariable int formNo) {
+    public ResponseEntity<?> getformApi(@PathVariable(name = "formNo") int formNo) {
 
         try {
             ApprovalSettingResponseDto form = approvalSettingService.getForm(formNo);

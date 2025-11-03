@@ -295,7 +295,16 @@ public class ApprovalDetailService {
             approvalDetail.getApprovalAttachFile3(),
             approvalDetail.getApprovalAttachFile4(),
             approvalDetail.getApprovalAttachFile5(),
-            approvalDetail.getApprovalDocument()
+            approvalDetail.getApprovalDocument(),
+            approval.getSignRemark1(),
+            approval.getSignRemark2(),
+            approval.getSignRemark3(),
+            approval.getSignRemark4(),
+            approval.getSignRemark5(),
+            approvalDetail.getDrafterRemark(),
+            approvalDetail.getReferenceRemark(),
+            approval.getUpdateDate(),
+            approval.getRegDate()
         );
         return dto;
     }

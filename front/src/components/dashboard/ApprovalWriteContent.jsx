@@ -60,8 +60,6 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isSubmitSuccess, setIsSubmitSuccess] = useState(false);
-  const [isError, setIsError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState(null);
 
@@ -1225,6 +1223,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
           onClose={() => {
             setShowSuccessDialog(false);
             setIsSubmitSuccess(false);
+            setLoading(false);
             navigate('/progress-list');
           }}
           title={isSubmitSuccess ? '제출 완료' : '저장 완료'}

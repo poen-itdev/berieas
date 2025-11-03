@@ -26,7 +26,7 @@ const API_CONFIG = {
     APPROVAL_COMPLETED: '/approval/completed',
     APPROVAL_MY_SUBMITTED: '/approval/mySubmitted',
     APPROVAL_MY_PENDING: '/approval/mypending',
-    APPROVAL_ALL: '/approval/allAprovals',
+    APPROVAL_ALL: '/approval/allApprovals',
     APPROVAL_DRAFTING: '/approval/temporarySavedApprovals',
     APPROVAL_RETURENED: '/approval/returnedApprovals',
     APPROVAL_APPROVED: '/approval/completedApprovals',
@@ -48,6 +48,8 @@ const API_CONFIG = {
     APPROVAL_FILE_DOWNLOAD: '/approvalDetail/file/download',
     APPROVAL_DELETE: '/approvalDetail/delete',
     APPROVAL_CANCEL: '/approvalDetail/cancel',
+    APPROVAL_ADD_COMMENTS: '/approval/addcomments',
+
     APPROVAL_FORMS: '/form/list',
     APPROVAL_FORM_DETAIL: '/form',
     FORM_ADD: '/form/addForm',
@@ -91,7 +93,6 @@ export const API_URLS = {
   DELETE_POSITION: getApiUrl(API_CONFIG.ENDPOINTS.DELETE_POSITION),
 
   APPROVAL_TOTAL: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_TOTAL),
-  APPROVAL_IN_PROGRESS: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_IN_PROGRESS),
   APPROVAL_COMPLETED: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_COMPLETED),
   APPROVAL_MY_SUBMITTED: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_MY_SUBMITTED),
   APPROVAL_MY_PENDING: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_MY_PENDING),
@@ -116,6 +117,8 @@ export const API_URLS = {
   ),
   APPROVAL_DELETE: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_DELETE),
   APPROVAL_CANCEL: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_CANCEL),
+  APPROVAL_ADD_COMMENTS: (approvalNo) =>
+    `${getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_ADD_COMMENTS)}/${approvalNo}`,
   APPROVAL_FORMS: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_FORMS),
   APPROVAL_FORM_DETAIL: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_FORM_DETAIL),
   FORM_ADD: getApiUrl(API_CONFIG.ENDPOINTS.FORM_ADD),

@@ -46,12 +46,63 @@ const ApprovalDetailContent = ({ userInfo }) => {
 
       if (response.ok) {
         setApprovalData(response.data);
+
+        // 첨언 데이터 로드
+        const loadedComments = [];
+        const data = response.data;
+
+        // 결재자 첨언 로드 (signRemark1~5)
+        for (let i = 1; i <= 5; i++) {
+          const remarkField = `signRemark${i}`;
+          const signIdField = `signId${i}`;
+          const signDateField = `signDate${i}`;
+
+          if (data[remarkField] && data[signIdField]) {
+            loadedComments.push({
+              id: `sign${i}`,
+              content: data[remarkField],
+              author: data[signIdField],
+              date: data[signDateField]
+                ? new Date(data[signDateField]).toLocaleString()
+                : '',
+              type: 'signer',
+            });
+          }
+        }
+
+        // 기안자 첨언 로드
+        if (data.drafterRemark) {
+          loadedComments.push({
+            id: 'drafter',
+            content: data.drafterRemark,
+            author: data.approvalName,
+            date: data.updateDate
+              ? new Date(data.updateDate).toLocaleString()
+              : '',
+            type: 'drafter',
+          });
+        }
+
+        // 참조자 첨언 로드
+        if (data.referenceRemark) {
+          loadedComments.push({
+            id: 'reference',
+            content: data.referenceRemark,
+            author: '참조자',
+            date: data.updateDate
+              ? new Date(data.updateDate).toLocaleString()
+              : '',
+            type: 'reference',
+          });
+        }
+
+        setComments(loadedComments);
       } else {
         alert(`기안서를 불러올 수 없습니다.\n${response.data || ''}`);
         navigate('/progress-list');
       }
     } catch (error) {
-      alert('기안서를 불러올 수 없습니다.');
+      console.error('[loadApprovalDetail] failed:', error);
       navigate('/progress-list');
     } finally {
       setLoading(false);
@@ -130,7 +181,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
   };
 
   // 첨언 등록
-  const handleCommentSubmit = () => {
+  const handleCommentSubmit = async () => {
     if (!comment.trim()) return;
 
     // 현재 사용자가 이미 첨언을 작성했는지 확인
@@ -145,15 +196,45 @@ const ApprovalDetailContent = ({ userInfo }) => {
       return;
     }
 
-    const newComment = {
-      id: Date.now(), // 임시 ID
-      content: comment.trim(),
-      author: userInfo?.memberName || '현재 사용자',
-      date: new Date().toLocaleString(),
-    };
+    try {
+      const formData = new FormData();
+      const dto = { comment: comment.trim() };
 
-    setComments([...comments, newComment]);
-    setComment('');
+      formData.append(
+        'dto',
+        new Blob([JSON.stringify(dto)], { type: 'application/json' })
+      );
+
+      const response = await apiRequest(
+        API_URLS.APPROVAL_ADD_COMMENTS(approvalNo),
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+
+      if (response.ok) {
+        alert('첨언이 등록되었습니다.');
+
+        // 새 첨언 객체 생성 - 올바른 형태로
+        const newComment = {
+          id: `comment-${Date.now()}`,
+          content: comment.trim(),
+          author: userInfo?.memberName || '익명',
+          date: new Date().toLocaleString(),
+          type: 'new',
+        };
+
+        setComments((prev) => [...prev, newComment]); // UI 즉시 반영
+        setComment(''); // 입력창 초기화
+      } else {
+        alert('첨언 등록 실패');
+        console.error('서버 응답:', response);
+      }
+    } catch (err) {
+      console.error('첨언 등록 중 오류 발생:', err);
+      alert('서버 오류가 발생했습니다.');
+    }
   };
 
   // 첨언 수정

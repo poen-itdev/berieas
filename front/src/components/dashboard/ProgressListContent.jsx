@@ -43,16 +43,22 @@ const ProgressListContent = ({ isMobile = false }) => {
     { label: '완료' },
   ];
 
-  // API 파라미터 생성 함수 (pageNum 인자 사용)
-  const buildApiParams = (pageNum) => {
+  // API 파라미터 생성 함수 (객체 인자)
+  const buildApiParams = ({
+    pageNum = page,
+    pageSize: size = pageSize,
+    from = startDate,
+    to = endDate,
+    keyword = searchTerm,
+  } = {}) => {
     const params = new URLSearchParams();
-    params.append('page', String((pageNum ?? page) - 1)); // Spring page index = 0-based
-    params.append('size', String(pageSize));
-
-    const kw = searchTerm.trim();
-    if (kw) params.append('keyword', kw);
-    if (startDate) params.append('from', startDate);
-    if (endDate) params.append('to', endDate);
+    const zeroBased = Math.max(0, Number(pageNum) - 1 || 0); // 방어적 변환
+    params.set('page', String(zeroBased)); // 0-based
+    params.set('size', String(Number(size) || 15));
+    const kw = (keyword ?? '').trim();
+    if (kw) params.set('keyword', kw);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
     return params.toString();
   };
 
@@ -96,12 +102,18 @@ const ProgressListContent = ({ isMobile = false }) => {
     };
   };
 
-  // API 호출: 쿼리스트링 포함
   const fetchProgressData = async (tabIndex = selectedTab, pageNum = page) => {
     try {
       setLoading(true);
       const apiUrl = getApiUrl(tabIndex);
-      const qs = buildApiParams(pageNum);
+      const qs = buildApiParams({
+        pageNum,
+        pageSize,
+        from: startDate,
+        to: endDate,
+        keyword: searchTerm,
+      });
+
       const response = await apiRequest(`${apiUrl}?${qs}`, { method: 'GET' });
 
       if (response.ok) {
@@ -119,6 +131,7 @@ const ProgressListContent = ({ isMobile = false }) => {
         setTotalElements(0);
       }
     } catch (e) {
+      console.error('데이터 로드 실패:', e);
       setProgressData([]);
       setTotalPages(1);
       setTotalElements(0);
@@ -126,7 +139,6 @@ const ProgressListContent = ({ isMobile = false }) => {
       setLoading(false);
     }
   };
-
   // 탭 파라미터 매핑
   const getTabIndexFromParam = (tabParam) => {
     const tabMap = {
@@ -144,7 +156,6 @@ const ProgressListContent = ({ isMobile = false }) => {
     setSelectedTab(tabIndex);
     setPage(1);
     fetchProgressData(tabIndex, 1);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   useEffect(() => {
