@@ -245,7 +245,8 @@ public class MemberService implements UserDetailsService{
                     member.getMemberPosition(),
                     member.getMemberId(),
                     member.getMemberEmail(),
-                    member.getUseYn()
+                    member.getUseYn(),
+                    member.getRole()
         )).collect(Collectors.toList());
     }
 
@@ -261,7 +262,8 @@ public class MemberService implements UserDetailsService{
                     activeMember.getMemberPosition(),
                     activeMember.getMemberId(),
                     activeMember.getMemberEmail(),
-                    activeMember.getUseYn()
+                    activeMember.getUseYn(),
+                    activeMember.getRole()
                 )).collect(Collectors.toList());
     }
 
@@ -277,7 +279,8 @@ public class MemberService implements UserDetailsService{
                     retiredMember.getMemberPosition(),
                     retiredMember.getMemberId(),
                     retiredMember.getMemberEmail(),
-                    retiredMember.getUseYn()
+                    retiredMember.getUseYn(),
+                    retiredMember.getRole()
                 )).collect(Collectors.toList());
     }
 

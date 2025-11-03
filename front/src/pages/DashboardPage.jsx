@@ -125,7 +125,7 @@ const DashboardPage = () => {
       case 'progress-list':
         return <ProgressListContent isMobile={isMobile} />;
       case 'member-management':
-        return <MemberManagementContent />;
+        return <MemberManagementContent userInfo={userInfo} />;
       case 'organization-management':
         return <OrganizationManagementContent />;
       case 'form-management':

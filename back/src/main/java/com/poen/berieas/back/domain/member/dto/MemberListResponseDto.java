@@ -1,5 +1,6 @@
 package com.poen.berieas.back.domain.member.dto;
 
+import com.poen.berieas.back.domain.member.entity.RoleType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -13,4 +14,5 @@ public class MemberListResponseDto {
     private String memberId;
     private String memberEmail;
     private String useYn;
+    private RoleType role;
 }
