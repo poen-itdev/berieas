@@ -75,12 +75,12 @@ public class ApprovalController {
     }
 
     // 진행목록(전체)
-    @GetMapping(value = "/approval/allAprovals")
+    @GetMapping(value = "/approval/allApprovals", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Page<ProgressListResponseDto>> getAllApprovalsApi(
         @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-        @RequestParam(required = false) String keyword
+        @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+        @RequestParam(name = "keyword", required = false) String keyword
     ) {
 
         Page<ProgressListResponseDto> approvals = approvalService.getAllApprovals(pageable, from, to, keyword);
@@ -88,12 +88,12 @@ public class ApprovalController {
     }
 
     // 진행목록(진행중)
-    @GetMapping(value = "/approval/inProgressApprovals")
+    @GetMapping(value = "/approval/inProgressApprovals", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Page<MyApprovalResponseDto>> getInprogressApprovalsApi(
         @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-        @RequestParam(required = false) String keyword
+        @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+        @RequestParam(name = "keyword", required = false) String keyword
     ) {
         
         Page<MyApprovalResponseDto> mySubmittedDocs = approvalService.getInProgressApprovals(pageable, from, to, keyword);
@@ -101,12 +101,12 @@ public class ApprovalController {
     }
 
     // 진행목록(기안중)
-    @GetMapping(value = "/approval/temporarySavedApprovals")
+    @GetMapping(value = "/approval/temporarySavedApprovals", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Page<ProgressListResponseDto>> getTemporarySavedApprovalsApi(
         @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-        @RequestParam(required = false) String keyword
+        @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+        @RequestParam(name = "keyword", required = false) String keyword
     ) {
 
         Page<ProgressListResponseDto> approvals = approvalService.getTemporarySavedApprovals(pageable, from, to, keyword);
@@ -114,12 +114,12 @@ public class ApprovalController {
     }
 
     // 진행목록(반려)
-    @GetMapping(value = "/approval/returnedApprovals")
+    @GetMapping(value = "/approval/returnedApprovals", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Page<ProgressListResponseDto>> getReturnedApprovalsApi(
         @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable,
-         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-        @RequestParam(required = false) String keyword
+        @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+        @RequestParam(name = "keyword", required = false) String keyword
     ) {
 
         Page<ProgressListResponseDto> approvals = approvalService.getReturnedApprovals(pageable, from, to, keyword);
@@ -127,12 +127,12 @@ public class ApprovalController {
     }
 
     // 진행목록(결재)
-    @GetMapping(value = "/approval/completedApprovals")
+    @GetMapping(value = "/approval/completedApprovals", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Page<ProgressListResponseDto>> getCompletedApprovalsApi(
         @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable,
-         @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
-        @RequestParam(required = false) String keyword
+        @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+        @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+        @RequestParam(name = "keyword", required = false) String keyword
     ) {
 
         Page<ProgressListResponseDto> approvals = approvalService.getCompletedApprovals(pageable, from, to, keyword);
@@ -140,11 +140,11 @@ public class ApprovalController {
     }
 
     // 첨언
-    @PostMapping(value = "/approval/addcomments/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/approval/addcomments/{approvalNo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> addCommentsApi(
-            @PathVariable int approvalNo, 
-            CommentRequestDto dto,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+            @PathVariable(name = "approvalNo") int approvalNo, 
+            @RequestPart(name = "dto") CommentRequestDto dto,
+            @RequestPart(name = "files", required = false) List<MultipartFile> files) {
 
         try {
             
@@ -157,11 +157,11 @@ public class ApprovalController {
     }
 
     // 결재자 첨언
-    @PostMapping(value = "/approval/comments/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(value = "/approval/comments/{approvalNo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> commentsApi(
-            @PathVariable int approvalNo, 
-            CommentRequestDto dto,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files) {
+            @PathVariable(name = "approvalNo") int approvalNo, 
+            @RequestPart(name = "dto") CommentRequestDto dto,
+            @RequestPart(name = "files", required = false) List<MultipartFile> files) {
 
         try {
             
@@ -176,7 +176,7 @@ public class ApprovalController {
     // 본인 첨언
     @PostMapping(value = "/approval/updateComments/{approvalNo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<String> updateCommentsApi(
-            @PathVariable int approvalNo,
+            @PathVariable(name = "approvalNo") int approvalNo,
             @RequestPart(value = "files", required = false) List<MultipartFile> files
     ) {
         
@@ -192,7 +192,7 @@ public class ApprovalController {
 
     // 승인
     @PostMapping(value = "/approval/doApproval/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> doApprovalApi(@PathVariable int approvalNo) {
+    public ResponseEntity<String> doApprovalApi(@PathVariable(name = "approvalNo") int approvalNo) {
 
         approvalService.doApproval(approvalNo);
         return ResponseEntity.ok("승인 완료");
@@ -200,7 +200,7 @@ public class ApprovalController {
 
     // 반려
     @PostMapping(value = "/approval/doReject/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> doRejectApi(@PathVariable int approvalNo) {
+    public ResponseEntity<String> doRejectApi(@PathVariable(name = "approvalNo") int approvalNo) {
 
         approvalService.doReject(approvalNo);
         return ResponseEntity.ok("반려 완료");

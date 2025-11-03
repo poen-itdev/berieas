@@ -35,4 +35,14 @@ public class ApprovalResponseDto {
     private String approvalAttachFile5;
     
     private String approvalDocument;
+
+    private String signRemark1;
+    private String signRemark2;
+    private String signRemark3;
+    private String signRemark4;
+    private String signRemark5;
+    private String drafterRemark;
+    private String referenceRemark;
+    private LocalDateTime updateDate;
+    private LocalDateTime regDate;  
 }

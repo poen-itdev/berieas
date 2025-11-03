@@ -111,7 +111,7 @@ public class MemberController {
 
     // 전체 회원 리스트
     @GetMapping(value = "/admin/members")
-    public ResponseEntity<List<MemberListResponseDto>> getAllMembersApi(@RequestParam(required = false) String keyword) {
+    public ResponseEntity<List<MemberListResponseDto>> getAllMembersApi(@RequestParam(name = "keyword", required = false) String keyword) {
 
         List<MemberListResponseDto> members = memberService.getAllMembers(keyword);
         return ResponseEntity.ok(members);
@@ -136,7 +136,7 @@ public class MemberController {
     // 멤버 수정
     @PutMapping(value = "/admin/update/{memberId}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> updateMemberApi(
-        @PathVariable String memberId,
+        @PathVariable(name = "memberId") String memberId,
         @Validated(MemberRequestDto.updateGroup.class) @RequestBody MemberRequestDto dto
     ) {
 
@@ -146,7 +146,7 @@ public class MemberController {
 
     // 멤버 비활성화
     @PostMapping(value = "/admin/deactivate/{memberId}")
-    public ResponseEntity<String> deactivateMemberApi(@PathVariable String memberId) {
+    public ResponseEntity<String> deactivateMemberApi(@PathVariable(name = "memberId") String memberId) {
 
         memberService.deactivateMember(memberId);
         return ResponseEntity.ok("변경되었습니다.");

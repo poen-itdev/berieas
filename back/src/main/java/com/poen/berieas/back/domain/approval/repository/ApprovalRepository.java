@@ -39,7 +39,7 @@ public interface ApprovalRepository extends JpaRepository<Approval, Integer>{
 select a from Approval a
 where
       ( a.approvalId = :memberId )   
-   or ( a.approvalStatus <> '기안중' and    
+   or ( a.approvalStatus <> '기안중' and (   
             a.nextId = :memberName
          or a.signId1 = :memberName
          or a.signId2 = :memberName 
@@ -47,7 +47,7 @@ where
          or a.signId4 = :memberName
          or a.signId5 = :memberName
          or a.referenceId like concat('%', :memberName, '%')
-      )
+      ))
 order by a.regDate desc
 """)
 Page<Approval> findAllForOverallList(

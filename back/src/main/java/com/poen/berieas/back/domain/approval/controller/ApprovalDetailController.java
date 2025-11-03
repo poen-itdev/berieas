@@ -74,7 +74,7 @@ public class ApprovalDetailController {
 
     // 기안서 가져오기
     @GetMapping(value = "/approvalDetail/getDraft/{approvalNo}")
-    public ResponseEntity<?> getDraftApi(@PathVariable int approvalNo) {
+    public ResponseEntity<?> getDraftApi(@PathVariable(name = "approvalNo") int approvalNo) {
         
         try {
             ApprovalResponseDto dto = approvalDetailService.getDraft(approvalNo);
@@ -88,8 +88,8 @@ public class ApprovalDetailController {
     // 파일 다운로드
     @GetMapping("/approvalDetail/file/download/{approvalNo}/{file}")
     public ResponseEntity<Resource> downloadFile(
-            @PathVariable int approvalNo,
-            @PathVariable String file) throws IOException {
+            @PathVariable(name = "approvalNo") int approvalNo,
+            @PathVariable(name = "file") String file) throws IOException {
 
         Resource resource = approvalDetailService.loadFile(approvalNo, file);
         Path path = resource.getFile().toPath();
@@ -107,8 +107,8 @@ public class ApprovalDetailController {
     // 파일 삭제
     @DeleteMapping("/approvalDetail/file/delete/{approvalNo}/{file}")
     public ResponseEntity<String> deleteFile(
-            @PathVariable int approvalNo,
-            @PathVariable String file) {
+            @PathVariable(name = "approvalNo") int approvalNo,
+            @PathVariable(name = "file") String file) {
 
         try {
             approvalDetailService.deleteFile(approvalNo, file);
@@ -122,7 +122,7 @@ public class ApprovalDetailController {
 
     // 기안서 삭제
     @DeleteMapping(value = "/approvalDetail/delete/{approvalNo}")
-    public ResponseEntity<String> deleteApproval(@PathVariable int approvalNo) {
+    public ResponseEntity<String> deleteApproval(@PathVariable(name = "approvalNo") int approvalNo) {
         try {
             approvalDetailService.deleteApproval(approvalNo);
             return ResponseEntity.ok("기안서 삭제 완료");
@@ -135,7 +135,7 @@ public class ApprovalDetailController {
 
     // 기안취소 (진행중 -> 기안중으로 되돌리기)
     @PostMapping("/approvalDetail/cancel/{approvalNo}")
-    public ResponseEntity<String> cancelApproval(@PathVariable int approvalNo) {
+    public ResponseEntity<String> cancelApproval(@PathVariable(name = "approvalNo") int approvalNo) {
         try {
             approvalDetailService.cancelApproval(approvalNo);
             return ResponseEntity.ok("기안이 취소되었습니다.");
