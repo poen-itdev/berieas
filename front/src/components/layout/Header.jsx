@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   AppBar,
   Toolbar,
@@ -12,13 +12,14 @@ import {
 } from '@mui/material';
 import { Logout as LogoutIcon, Menu as MenuIcon } from '@mui/icons-material';
 import { useUserInfo } from '../../hooks/useUserInfo';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const Header = ({ onLogout, onMenuClick, isMobile = false }) => {
-  const [language, setLanguage] = useState('ko');
+  const { language, changeLanguage } = useLanguage();
   const { userInfo: headerUserInfo, loading } = useUserInfo();
 
   const handleLanguageChange = (event) => {
-    setLanguage(event.target.value);
+    changeLanguage(event.target.value);
   };
 
   const handleLogout = () => {
@@ -144,7 +145,7 @@ const Header = ({ onLogout, onMenuClick, isMobile = false }) => {
                 },
               }}
             >
-              로그아웃
+              {language === 'ko' ? '로그아웃' : 'Logout'}
             </Link>
           )}
         </Box>

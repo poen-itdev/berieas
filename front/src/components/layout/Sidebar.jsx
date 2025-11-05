@@ -17,8 +17,10 @@ import {
   Business,
 } from '@mui/icons-material';
 import SaveConfirmDialog from '../common/SaveConfirmDialog';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -27,14 +29,22 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
   const [pendingNavigation, setPendingNavigation] = useState(null);
 
   const menuItems = [
-    { text: '대시보드', path: '/dashboard' },
-    { text: '진행목록', path: '/progress-list' },
-    { text: '양식관리', path: '/form-management' },
+    { text: t('dashboard'), path: '/dashboard' },
+    { text: t('progressList'), path: '/progress-list' },
+    { text: t('formManagement'), path: '/form-management' },
   ];
 
   const memberSubMenuItems = [
-    { text: '회원관리', path: '/member-management', icon: <People /> },
-    { text: '조직관리', path: '/organization-management', icon: <Business /> },
+    {
+      text: t('memberManagement'),
+      path: '/member-management',
+      icon: <People />,
+    },
+    {
+      text: t('organizationManagement'),
+      path: '/organization-management',
+      icon: <Business />,
+    },
   ];
 
   // 현재 활성화된 메뉴 확인
@@ -136,7 +146,7 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
           }}
           onClick={handleCreateNewDraft}
         >
-          기안작성
+          {t('createDraft')}
         </Button>
       </Box>
 
@@ -190,7 +200,7 @@ const Sidebar = ({ onMenuClick, onSaveBeforeNew }) => {
           onClick={() => setMemberMenuOpen(!memberMenuOpen)}
         >
           <ListItemText
-            primary="회원관리"
+            primary={t('memberManagement')}
             primaryTypographyProps={{
               fontSize: '0.9rem',
               fontWeight: 500,

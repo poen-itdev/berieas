@@ -435,8 +435,26 @@ Page<Approval> approvals =
             .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
 
         boolean isDrafter = memberId.equals(approval.getApprovalId()); // 기안자
-        boolean isSigner = member.getMemberName().equals(approval.getNextId()); // 결재자
-        boolean referencer = member.getMemberName().equals(approval.getReferenceId()); // 참조자
+        
+        // 결재자 확인 - 결재라인 전체(signId1~5) 확인
+        String memberName = member.getMemberName();
+        boolean isSigner = memberName.equals(approval.getSignId1()) ||
+                          memberName.equals(approval.getSignId2()) ||
+                          memberName.equals(approval.getSignId3()) ||
+                          memberName.equals(approval.getSignId4()) ||
+                          memberName.equals(approval.getSignId5());
+        
+        // 참조자 확인 - referenceId는 쉼표로 구분된 여러 사람일 수 있음
+        boolean referencer = false;
+        if (approval.getReferenceId() != null && !approval.getReferenceId().isEmpty()) {
+            String[] referenceIds = approval.getReferenceId().split(",");
+            for (String refId : referenceIds) {
+                if (memberName.equals(refId.trim())) {
+                    referencer = true;
+                    break;
+                }
+            }
+        }
 
         if (!isDrafter && !isSigner && !referencer) {
             throw new IllegalArgumentException("첨언 권한이 없습니다.");
@@ -444,8 +462,6 @@ Page<Approval> approvals =
 
         // ----- 댓글 저장 -----
         if(isSigner) {
-
-            String memberName = member.getMemberName();
 
             if (memberName.equals(approval.getSignId1())) approval.setSignRemark1(dto.getComment());
             else if (memberName.equals(approval.getSignId2())) approval.setSignRemark2(dto.getComment());

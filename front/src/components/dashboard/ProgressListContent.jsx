@@ -20,9 +20,11 @@ import { Search, CalendarToday } from '@mui/icons-material';
 import PageHeader from '../common/PageHeader';
 import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const ProgressListContent = ({ isMobile = false }) => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const [selectedTab, setSelectedTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,11 +38,11 @@ const ProgressListContent = ({ isMobile = false }) => {
   const [loading, setLoading] = useState(false);
 
   const tabData = [
-    { label: '전체' },
-    { label: '기안중' },
-    { label: '진행중' },
-    { label: '반려' },
-    { label: '완료' },
+    { label: t('all') },
+    { label: t('drafting') },
+    { label: t('inProgress') },
+    { label: t('returned') },
+    { label: t('completed') },
   ];
 
   // API 파라미터 생성 함수 (객체 인자)
@@ -131,7 +133,6 @@ const ProgressListContent = ({ isMobile = false }) => {
         setTotalElements(0);
       }
     } catch (e) {
-      console.error('데이터 로드 실패:', e);
       setProgressData([]);
       setTotalPages(1);
       setTotalElements(0);
@@ -149,22 +150,33 @@ const ProgressListContent = ({ isMobile = false }) => {
     return tabMap[tabParam] || 0;
   };
 
+  // 현재 탭 인덱스를 ref로 저장 (state 업데이트 지연 문제 해결)
+  const currentTabIndexRef = React.useRef(0);
+  const isFirstMount = React.useRef(true);
+
   // 탭/파라미터 변화 시: page=1로 리셋 후 호출
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     const tabIndex = tabParam ? getTabIndexFromParam(tabParam) : 0;
+    currentTabIndexRef.current = tabIndex; // ref에 즉시 저장
     setSelectedTab(tabIndex);
     setPage(1);
     fetchProgressData(tabIndex, 1);
   }, [searchParams]);
 
   useEffect(() => {
-    // 검색/기간 변경 시 1페이지부터
+    // 첫 마운트 시에는 실행하지 않음 (searchParams useEffect에서 이미 실행됨)
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    // 검색/기간 변경 시 1페이지부터 (ref 사용으로 최신 탭 인덱스 보장)
     setPage(1);
-    fetchProgressData(selectedTab, 1);
+    fetchProgressData(currentTabIndexRef.current, 1);
   }, [searchTerm, startDate, endDate]);
 
   const handleTabChange = (event, newValue) => {
+    currentTabIndexRef.current = newValue; // ref도 업데이트
     setSelectedTab(newValue);
     setPage(1);
     fetchProgressData(newValue, 1);
@@ -172,7 +184,7 @@ const ProgressListContent = ({ isMobile = false }) => {
 
   const handlePageChange = (event, value) => {
     setPage(value);
-    fetchProgressData(selectedTab, value);
+    fetchProgressData(currentTabIndexRef.current, value);
   };
 
   // 행 클릭 핸들러
@@ -227,7 +239,7 @@ const ProgressListContent = ({ isMobile = false }) => {
   return (
     <Box sx={{ p: 3, mt: 3 }}>
       <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
-        <PageHeader title="진행 목록" fontSize="30px" />
+        <PageHeader title={t('progressListTitle')} fontSize="30px" />
 
         {/* 탭 섹션 */}
         <Paper sx={{ mb: 3, borderRadius: 2, p: 0, overflow: 'hidden' }}>
@@ -291,7 +303,7 @@ const ProgressListContent = ({ isMobile = false }) => {
             variant="h6"
             sx={{ mb: 2, display: 'flex', fontWeight: 600 }}
           >
-            조회 조건
+            {t('searchCondition')}
           </Typography>
           <Box
             sx={{
@@ -302,7 +314,7 @@ const ProgressListContent = ({ isMobile = false }) => {
             }}
           >
             <TextField
-              placeholder="검색어를 입력해 주세요"
+              placeholder={t('enterSearchKeyword')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               sx={{
@@ -394,16 +406,16 @@ const ProgressListContent = ({ isMobile = false }) => {
               <TableHead>
                 <TableRow sx={{ bgcolor: '#F8F9FA' }}>
                   <TableCell sx={{ minWidth: { xs: '40px', sm: '60px' } }}>
-                    번호
+                    {t('number')}
                   </TableCell>
                   <TableCell sx={{ minWidth: { xs: '80px', sm: '100px' } }}>
-                    기안일자
+                    {t('draftDate')}
                   </TableCell>
                   <TableCell sx={{ minWidth: { xs: '120px', sm: '200px' } }}>
-                    제목
+                    {t('title')}
                   </TableCell>
                   <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
-                    구분
+                    {t('category')}
                   </TableCell>
                   <TableCell
                     sx={{
@@ -411,10 +423,10 @@ const ProgressListContent = ({ isMobile = false }) => {
                       minWidth: '80px',
                     }}
                   >
-                    부서명
+                    {t('departmentName')}
                   </TableCell>
                   <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
-                    기안자
+                    {t('drafter')}
                   </TableCell>
                   <TableCell
                     sx={{
@@ -422,10 +434,10 @@ const ProgressListContent = ({ isMobile = false }) => {
                       minWidth: '80px',
                     }}
                   >
-                    결재자
+                    {t('approver')}
                   </TableCell>
                   <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
-                    진행상태
+                    {t('progressStatus')}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -433,13 +445,13 @@ const ProgressListContent = ({ isMobile = false }) => {
                 {loading ? (
                   <TableRow>
                     <TableCell colSpan={8} sx={{ textAlign: 'center', py: 4 }}>
-                      <Typography>로딩 중...</Typography>
+                      <Typography>{t('loading')}</Typography>
                     </TableCell>
                   </TableRow>
                 ) : progressData.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} sx={{ textAlign: 'center', py: 4 }}>
-                      <Typography>데이터가 없습니다.</Typography>
+                      <Typography>{t('noData')}</Typography>
                     </TableCell>
                   </TableRow>
                 ) : (
