@@ -12,8 +12,11 @@ import {
   Chip,
 } from '@mui/material';
 import { Description } from '@mui/icons-material';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const ApprovalDocumentList = ({ documents, onDocumentClick }) => {
+  const { t } = useLanguage();
+
   const getStatusColor = (status) => {
     switch (status) {
       case '결재 대기':
@@ -37,7 +40,7 @@ const ApprovalDocumentList = ({ documents, onDocumentClick }) => {
     <Card sx={{ borderRadius: 2, boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
       <CardContent sx={{ p: 3 }}>
         <Typography variant="h6" sx={{ mb: 3, fontWeight: 600, color: '#333' }}>
-          결재할 문서
+          {t('documentsToApprove')}
         </Typography>
         <List>
           {documents.map((doc, index) => (

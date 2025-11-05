@@ -71,30 +71,16 @@ Page<Approval> findAllForOverallList(
             """)
     Page<Approval> findTemporarySavedApprovals(@Param("memberId") String memberId, Pageable pageable);
 
-    // 진행목록(반려)
-@Query("""
-  select a from Approval a
-  where a.approvalStatus = '반려'
-    and (
-      a.approvalId = :memberId
-      or a.nextId   = :memberName
-      or a.signId1  = :memberName
-      or a.signId2  = :memberName
-      or a.signId3  = :memberName
-      or a.signId4  = :memberName
-      or a.signId5  = :memberName
-      or a.referenceId like concat('%', :memberName, '%')
-    )
-  order by a.regDate desc
-""")
-Page<Approval> findReturnedApprovals(
-  @Param("memberId") String memberId,
-  @Param("memberName") String memberName,
-  Pageable pageable
-);
+    // 진행목록(반려) - 내가 기안한 반려 문서만
+    @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStatus = '반려' order by a.regDate desc")
+    Page<Approval> findReturnedApprovals(
+      @Param("memberId") String memberId,
+      @Param("memberName") String memberName,
+      Pageable pageable
+    );
 
-    // 진행목록(완료)
-    @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStatus = '완료'")
+    // 진행목록(완료) - 내가 기안한 완료 문서만
+    @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStatus = '완료' order by a.regDate desc")
     Page<Approval> findCompletedApprovals(@Param("memberId") String memberId, @Param("memberName") String memberName, Pageable pageable);
 
     Optional<Approval> findByApprovalNo(int approvalNo);

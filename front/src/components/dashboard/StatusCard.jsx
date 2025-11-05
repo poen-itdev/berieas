@@ -1,22 +1,25 @@
 import React from 'react';
 import { Box, Typography, Grid, Card, CardContent } from '@mui/material';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const StatusCard = ({ statusData }) => {
+  const { t } = useLanguage();
+
   const statusItems = [
     {
-      label: '승인요청',
+      label: t('approvalRequest'),
       value: statusData.approvalRequest,
       bgColor: '#fff3e0',
       textColor: '#f57c00',
     },
     {
-      label: '진행중',
+      label: t('inProgress'),
       value: statusData.inProgress,
       bgColor: '#e3f2fd',
       textColor: '#1976d2',
     },
     {
-      label: '완료',
+      label: t('completed'),
       value: statusData.completed,
       bgColor: '#e8f5e8',
       textColor: '#388e3c',
@@ -32,7 +35,7 @@ const StatusCard = ({ statusData }) => {
           variant="h6"
           sx={{ mb: 2, fontWeight: 500, fontSize: 16, textAlign: 'left' }}
         >
-          나의 현황
+          {t('myStatus')}
         </Typography>
         <Grid container spacing={3}>
           {statusItems.map((item, index) => (

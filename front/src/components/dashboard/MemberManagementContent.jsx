@@ -34,15 +34,17 @@ import { Add, Search } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 import PermissionGuard from '../common/PermissionGuard';
+import { useLanguage, getLocalizedName } from '../../contexts/LanguageContext';
 
 const MemberManagementContent = () => {
+  const { language } = useLanguage(); // 다국어 지원
   const [selectedTab, setSelectedTab] = useState(0); // 0: 전체, 1: 활성, 2: 비활성
   const [searchTerm, setSearchTerm] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('전체');
   const [memberList, setMemberList] = useState([]);
-  const [departments, setDepartments] = useState(['전체']);
-  const [positions, setPositions] = useState([]);
+  const [departmentsData, setDepartmentsData] = useState([]); // 전체 부서 객체 저장
+  const [positionsData, setPositionsData] = useState([]); // 전체 직급 객체 저장
 
   // 직원 등록/수정 모달 상태
   const [openModal, setOpenModal] = useState(false);
@@ -103,8 +105,7 @@ const MemberManagementContent = () => {
 
       if (response.ok) {
         const data = Array.isArray(response.data) ? response.data : [];
-        const departmentNames = data.map((dept) => dept.name);
-        setDepartments(['전체', ...departmentNames]);
+        setDepartmentsData(data); // 전체 객체 저장
       }
     } catch (error) {
       console.error('부서 목록 조회 실패:', error);
@@ -118,8 +119,7 @@ const MemberManagementContent = () => {
 
       if (response.ok) {
         const data = Array.isArray(response.data) ? response.data : [];
-        const positionNames = data.map((pos) => pos.name);
-        setPositions(positionNames);
+        setPositionsData(data); // 전체 객체 저장
       }
     } catch (error) {
       console.error('직급 목록 조회 실패:', error);
@@ -375,7 +375,7 @@ const MemberManagementContent = () => {
   return (
     <Box sx={{ p: 3, mt: 4 }}>
       <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
-        {/* 제목 그룹 */}
+        {/* 제목 */}
         <PageHeader
           title="회원관리"
           description="조직현황 확인 및 직원 검색/등록 가능"
@@ -427,17 +427,36 @@ const MemberManagementContent = () => {
                 },
               }}
             >
-              {departments.map((department) => (
+              {/* 전체 항목 */}
+              <ListItem disablePadding sx={{ minHeight: '40px' }}>
+                <ListItemButton
+                  selected={selectedDepartment === '전체'}
+                  onClick={() => handleDepartmentSelect('전체')}
+                  sx={{
+                    borderRadius: 1,
+                    minHeight: '40px',
+                    '&.Mui-selected': {
+                      bgcolor: '#e3f2fd',
+                      color: '#3275FC',
+                    },
+                  }}
+                >
+                  <ListItemText primary={language === 'ko' ? '전체' : 'All'} />
+                </ListItemButton>
+              </ListItem>
+
+              {/* 부서 목록 */}
+              {departmentsData.map((dept) => (
                 <ListItem
-                  key={department}
+                  key={dept.idx}
                   disablePadding
                   sx={{
                     minHeight: '40px',
                   }}
                 >
                   <ListItemButton
-                    selected={selectedDepartment === department}
-                    onClick={() => handleDepartmentSelect(department)}
+                    selected={selectedDepartment === dept.name}
+                    onClick={() => handleDepartmentSelect(dept.name)}
                     sx={{
                       borderRadius: 1,
                       minHeight: '40px',
@@ -447,7 +466,7 @@ const MemberManagementContent = () => {
                       },
                     }}
                   >
-                    <ListItemText primary={department} />
+                    <ListItemText primary={getLocalizedName(dept, language)} />
                   </ListItemButton>
                 </ListItem>
               ))}
@@ -826,13 +845,11 @@ const MemberManagementContent = () => {
                       variant="outlined"
                       sx={{ height: '56px' }}
                     >
-                      {departments
-                        .filter((dept) => dept !== '전체')
-                        .map((dept) => (
-                          <MenuItem key={dept} value={dept}>
-                            {dept}
-                          </MenuItem>
-                        ))}
+                      {departmentsData.map((dept) => (
+                        <MenuItem key={dept.idx} value={dept.name}>
+                          {getLocalizedName(dept, language)}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -849,9 +866,9 @@ const MemberManagementContent = () => {
                       variant="outlined"
                       sx={{ height: '56px' }}
                     >
-                      {positions.map((pos) => (
-                        <MenuItem key={pos} value={pos}>
-                          {pos}
+                      {positionsData.map((pos) => (
+                        <MenuItem key={pos.idx} value={pos.name}>
+                          {getLocalizedName(pos, language)}
                         </MenuItem>
                       ))}
                     </Select>

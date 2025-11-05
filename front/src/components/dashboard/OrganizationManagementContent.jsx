@@ -17,8 +17,10 @@ import { API_URLS } from '../../config/api';
 import PageHeader from '../common/PageHeader';
 import { apiRequest } from '../../utils/apiHelper';
 import PermissionGuard from '../common/PermissionGuard';
+import { useLanguage, getLocalizedName } from '../../contexts/LanguageContext';
 
 const OrganizationManagementContent = () => {
+  const { language } = useLanguage(); // 다국어 지원
   const [departments, setDepartments] = useState([]);
   const [positions, setPositions] = useState([]);
   const [newDepartment, setNewDepartment] = useState('');
@@ -319,7 +321,7 @@ const OrganizationManagementContent = () => {
   return (
     <Box sx={{ p: 3, mt: 4 }}>
       <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
-        {/* 제목 그룹 */}
+        {/* 제목 */}
         <PageHeader
           title="조직관리"
           description="조직(부서)와 직급 정보를 등록/수정 가능"
@@ -470,7 +472,13 @@ const OrganizationManagementContent = () => {
                         </Box>
                       ) : (
                         <>
-                          <ListItemText primary={dept.name || dept} />
+                          <ListItemText
+                            primary={
+                              dept.name
+                                ? getLocalizedName(dept, language)
+                                : dept
+                            }
+                          />
                           <Box sx={{ display: 'flex', gap: 1 }}>
                             <IconButton
                               size="small"
@@ -624,7 +632,11 @@ const OrganizationManagementContent = () => {
                         </Box>
                       ) : (
                         <>
-                          <ListItemText primary={pos.name || pos} />
+                          <ListItemText
+                            primary={
+                              pos.name ? getLocalizedName(pos, language) : pos
+                            }
+                          />
                           <Box sx={{ display: 'flex', gap: 1 }}>
                             <IconButton
                               size="small"
