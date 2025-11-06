@@ -12,13 +12,18 @@ import {
   Stepper,
   Step,
   StepLabel,
+  Select,
+  MenuItem,
+  FormControl,
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 import { API_URLS } from '../config/api';
+import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/custom.css';
 
 const FindAccountPage = () => {
   const navigate = useNavigate();
+  const { t, language, changeLanguage } = useLanguage();
   const [activeStep, setActiveStep] = useState(0);
   const [email, setEmail] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
@@ -28,6 +33,10 @@ const FindAccountPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [timer, setTimer] = useState(0);
   const [isTimerActive, setIsTimerActive] = useState(false);
+
+  const handleLanguageChange = (event) => {
+    changeLanguage(event.target.value);
+  };
 
   // 타이머 useEffect
   useEffect(() => {
@@ -53,7 +62,7 @@ const FindAccountPage = () => {
 
   const handleSendVerificationCode = async () => {
     if (!email) {
-      setError('이메일을 입력해주세요.');
+      setError(t('findAccountErrorEmail'));
       return;
     }
 
@@ -71,7 +80,7 @@ const FindAccountPage = () => {
 
       if (response.ok) {
         setActiveStep(1);
-        setSuccess('인증 코드가 이메일로 전송되었습니다.');
+        setSuccess(t('findAccountCodeSent'));
         // 인증 코드 입력 필드 초기화
         setVerificationCode('');
         // 기존 에러 메시지 제거
@@ -90,19 +99,19 @@ const FindAccountPage = () => {
             if (emailError) {
               setError(emailError.defaultMessage);
             } else {
-              setError(errorData.message || '인증 코드 전송에 실패했습니다.');
+              setError(errorData.message || t('findAccountCodeSendFailed'));
             }
           } else {
-            setError(errorData.message || '인증 코드 전송에 실패했습니다.');
+            setError(errorData.message || t('findAccountCodeSendFailed'));
           }
         } catch (parseError) {
           // JSON 파싱에 실패한 경우 텍스트로 처리
           const errorText = await response.text();
-          setError(errorText || '인증 코드 전송에 실패했습니다.');
+          setError(errorText || t('findAccountCodeSendFailed'));
         }
       }
     } catch (error) {
-      setError('인증 코드 전송에 실패했습니다. 다시 시도해주세요.');
+      setError(t('findAccountCodeSendFailedRetry'));
     } finally {
       setIsLoading(false);
     }
@@ -110,7 +119,7 @@ const FindAccountPage = () => {
 
   const handleVerifyCode = async () => {
     if (!verificationCode) {
-      setError('인증 코드를 입력해주세요.');
+      setError(t('findAccountErrorCode'));
       return;
     }
 
@@ -131,21 +140,21 @@ const FindAccountPage = () => {
 
       if (response.ok) {
         setActiveStep(2);
-        setSuccess('인증이 완료되었습니다.');
+        setSuccess(t('findAccountVerifySuccess'));
         // 타이머 정리
         setIsTimerActive(false);
         setTimer(0);
       } else {
         try {
           const errorData = await response.json();
-          setError(errorData.message || '인증 코드가 올바르지 않습니다.');
+          setError(errorData.message || t('findAccountVerifyFailed'));
         } catch (parseError) {
           const errorText = await response.text();
-          setError(errorText || '인증 코드가 올바르지 않습니다.');
+          setError(errorText || t('findAccountVerifyFailed'));
         }
       }
     } catch (error) {
-      setError('인증 코드가 올바르지 않습니다. 다시 확인해주세요.');
+      setError(t('findAccountVerifyFailedRetry'));
     } finally {
       setIsLoading(false);
     }
@@ -153,12 +162,12 @@ const FindAccountPage = () => {
 
   const handleResetPassword = async () => {
     if (!newPassword) {
-      setError('새 비밀번호를 입력해주세요.');
+      setError(t('resetPasswordErrorEmpty'));
       return;
     }
 
     if (newPassword.length < 6) {
-      setError('비밀번호는 6자 이상이어야 합니다.');
+      setError(t('resetPasswordErrorLength'));
       return;
     }
 
@@ -178,30 +187,32 @@ const FindAccountPage = () => {
       });
 
       if (response.ok) {
-        setSuccess(
-          '비밀번호가 성공적으로 변경되었습니다. 로그인 페이지로 이동합니다.'
-        );
+        setSuccess(t('findAccountResetSuccess'));
         setTimeout(() => {
           navigate('/login');
         }, 2000);
       } else {
         try {
           const errorData = await response.json();
-          setError(errorData.message || '비밀번호 변경에 실패했습니다.');
+          setError(errorData.message || t('resetPasswordFailed'));
         } catch (parseError) {
           const errorText = await response.text();
-          setError(errorText || '비밀번호 변경에 실패했습니다.');
+          setError(errorText || t('resetPasswordFailed'));
         }
       }
     } catch (error) {
-      setError('비밀번호 변경에 실패했습니다. 다시 시도해주세요.');
+      setError(t('resetPasswordFailedRetry'));
     } finally {
       setIsLoading(false);
     }
   };
 
   const getSteps = () => {
-    return ['이메일 입력', '인증 코드 확인', '새 비밀번호 설정'];
+    return [
+      t('findAccountStepEmail'),
+      t('findAccountStepVerify'),
+      t('findAccountStepPassword'),
+    ];
   };
 
   const renderStepContent = () => {
@@ -210,11 +221,11 @@ const FindAccountPage = () => {
         return (
           <Box>
             <Typography variant="body1" sx={{ mb: 2, color: '#666' }}>
-              이메일을 입력하시면 비밀번호를 재설정할 수 있습니다.
+              {t('findAccountEmailMessage')}
             </Typography>
             <TextField
               fullWidth
-              label="이메일"
+              label={t('memberEmail')}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -227,7 +238,7 @@ const FindAccountPage = () => {
               disabled={isLoading}
               sx={{ py: 1.5 }}
             >
-              {isLoading ? '전송 중...' : '인증 코드 전송'}
+              {isLoading ? t('sending') : t('findAccountSendCode')}
             </Button>
           </Box>
         );
@@ -236,12 +247,12 @@ const FindAccountPage = () => {
         return (
           <Box>
             <Typography variant="body1" sx={{ mb: 2, color: '#666' }}>
-              {email}로 전송된 인증 코드를 입력해주세요.
+              {t('findAccountEnterCode')} {email}
             </Typography>
             <Box sx={{ position: 'relative', mb: 3 }}>
               <TextField
                 fullWidth
-                label="인증 코드 입력"
+                label={t('findAccountCodeLabel')}
                 value={verificationCode}
                 onChange={(e) => setVerificationCode(e.target.value)}
                 disabled={timer === 0}
@@ -271,12 +282,12 @@ const FindAccountPage = () => {
                 disabled={isLoading}
                 sx={{ py: 1.5 }}
               >
-                {isLoading ? '확인 중...' : '인증 코드 확인'}
+                {isLoading ? t('verifying') : t('findAccountVerifyCode')}
               </Button>
             ) : (
               <>
                 <Alert severity="error" sx={{ mb: 2 }}>
-                  인증 시간이 만료되었습니다. 인증코드를 다시 받아주세요.
+                  {t('findAccountTimerExpired')}
                 </Alert>
                 <Button
                   fullWidth
@@ -285,7 +296,7 @@ const FindAccountPage = () => {
                   disabled={isLoading}
                   sx={{ py: 1.5 }}
                 >
-                  {isLoading ? '전송 중...' : '인증코드 다시 보내기'}
+                  {isLoading ? t('sending') : t('findAccountResendCode')}
                 </Button>
               </>
             )}
@@ -296,11 +307,11 @@ const FindAccountPage = () => {
         return (
           <Box>
             <Typography variant="body1" sx={{ mb: 2, color: '#666' }}>
-              새로운 비밀번호를 입력해주세요.
+              {t('resetPasswordMessage')}
             </Typography>
             <TextField
               fullWidth
-              label="새 비밀번호"
+              label={t('newPassword')}
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -313,7 +324,7 @@ const FindAccountPage = () => {
               disabled={isLoading}
               sx={{ py: 1.5 }}
             >
-              {isLoading ? '변경 중...' : '비밀번호 변경'}
+              {isLoading ? t('resetting') : t('findAccountChangePassword')}
             </Button>
           </Box>
         );
@@ -331,8 +342,39 @@ const FindAccountPage = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          position: 'relative',
         }}
       >
+        {/* 언어 선택 - 오른쪽 상단에 고정 */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 20,
+            right: 20,
+          }}
+        >
+          <FormControl size="small">
+            <Select
+              value={language}
+              onChange={handleLanguageChange}
+              sx={{
+                bgcolor: 'white',
+                minWidth: 100,
+                height: 36,
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(0, 0, 0, 0.23)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(0, 0, 0, 0.4)',
+                },
+              }}
+            >
+              <MenuItem value="ko">한국어</MenuItem>
+              <MenuItem value="en">English</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
         <Card
           sx={{
             width: '100%',
@@ -350,7 +392,7 @@ const FindAccountPage = () => {
                 onClick={() => navigate('/login')}
                 sx={{ color: '#666' }}
               >
-                로그인으로 돌아가기
+                {t('backToLogin')}
               </Button>
             </Box>
 
@@ -384,7 +426,7 @@ const FindAccountPage = () => {
                   },
                 }}
               >
-                비밀번호 재설정
+                {t('resetPasswordTitle')}
               </Typography>
 
               {/* 전체 회색 선 */}

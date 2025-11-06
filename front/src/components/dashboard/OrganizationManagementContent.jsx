@@ -18,9 +18,11 @@ import PageHeader from '../common/PageHeader';
 import { apiRequest } from '../../utils/apiHelper';
 import PermissionGuard from '../common/PermissionGuard';
 import { useLanguage, getLocalizedName } from '../../contexts/LanguageContext';
+import SuccessDialog from '../common/SuccessDialog';
+import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
 
 const OrganizationManagementContent = () => {
-  const { language } = useLanguage(); // 다국어 지원
+  const { t, language } = useLanguage(); // 다국어 지원
   const [departments, setDepartments] = useState([]);
   const [positions, setPositions] = useState([]);
   const [newDepartment, setNewDepartment] = useState('');
@@ -31,6 +33,12 @@ const OrganizationManagementContent = () => {
   const [editingPosition, setEditingPosition] = useState(null);
   const [editDepartmentName, setEditDepartmentName] = useState('');
   const [editPositionName, setEditPositionName] = useState('');
+
+  // 다이얼로그 상태 관리
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   // 데이터 로드
   useEffect(() => {
@@ -87,13 +95,15 @@ const OrganizationManagementContent = () => {
           const departmentsData = await departmentsRes.json();
           setDepartments(departmentsData);
           setNewDepartment('');
-          alert('부서가 추가되었습니다.');
+          setSuccessMessage(t('orgDepartmentAdded'));
+          setShowSuccessDialog(true);
         } else {
-          throw new Error('부서 추가 실패');
+          throw new Error(t('orgDepartmentAddFailed'));
         }
       } catch (error) {
         console.error('부서 추가 실패:', error);
-        alert('부서 추가에 실패했습니다.');
+        setSuccessMessage(t('orgDepartmentAddFailed'));
+        setShowSuccessDialog(true);
       }
     }
   };
@@ -121,13 +131,15 @@ const OrganizationManagementContent = () => {
           const positionsData = await positionsRes.json();
           setPositions(positionsData);
           setNewPosition('');
-          alert('직급이 추가되었습니다.');
+          setSuccessMessage(t('orgPositionAdded'));
+          setShowSuccessDialog(true);
         } else {
-          throw new Error('직급 추가 실패');
+          throw new Error(t('orgPositionAddFailed'));
         }
       } catch (error) {
         console.error('직급 추가 실패:', error);
-        alert('직급 추가에 실패했습니다.');
+        setSuccessMessage(t('orgPositionAddFailed'));
+        setShowSuccessDialog(true);
       }
     }
   };
@@ -170,13 +182,15 @@ const OrganizationManagementContent = () => {
           setDepartments(departmentsData);
           setEditingDepartment(null);
           setEditDepartmentName('');
-          alert('부서가 수정되었습니다.');
+          setSuccessMessage(t('orgDepartmentUpdated'));
+          setShowSuccessDialog(true);
         } else {
-          throw new Error('부서 수정 실패');
+          throw new Error(t('orgDepartmentUpdateFailed'));
         }
       } catch (error) {
         console.error('부서 수정 실패:', error);
-        alert('부서 수정에 실패했습니다.');
+        setSuccessMessage(t('orgDepartmentUpdateFailed'));
+        setShowSuccessDialog(true);
       }
     }
   };
@@ -223,13 +237,15 @@ const OrganizationManagementContent = () => {
           setPositions(positionsData);
           setEditingPosition(null);
           setEditPositionName('');
-          alert('직급이 수정되었습니다.');
+          setSuccessMessage(t('orgPositionUpdated'));
+          setShowSuccessDialog(true);
         } else {
-          throw new Error('직급 수정 실패');
+          throw new Error(t('orgPositionUpdateFailed'));
         }
       } catch (error) {
         console.error('직급 수정 실패:', error);
-        alert('직급 수정에 실패했습니다.');
+        setSuccessMessage(t('orgPositionUpdateFailed'));
+        setShowSuccessDialog(true);
       }
     }
   };
@@ -240,81 +256,97 @@ const OrganizationManagementContent = () => {
     setEditPositionName('');
   };
 
-  const handleDeleteDepartment = async (index) => {
-    const department = departments[index];
-    if (
-      window.confirm(
-        `"${department.name || department}" 부서를 삭제하시겠습니까?`
-      )
-    ) {
-      try {
-        const response = await fetch(
-          `${API_URLS.DELETE_DEPARTMENT}/${department.idx || index}`,
-          {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-          }
-        );
+  const handleDeleteDepartment = (index) => {
+    setDeleteTarget({ type: 'department', index });
+    setShowDeleteDialog(true);
+  };
 
-        if (response.ok) {
-          // 성공하면 데이터 다시 로드
-          const departmentsRes = await fetch(API_URLS.DEPARTMENTS, {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-          });
-          const departmentsData = await departmentsRes.json();
-          setDepartments(departmentsData);
-          alert('부서가 삭제되었습니다.');
-        } else {
-          throw new Error('부서 삭제 실패');
+  const confirmDeleteDepartment = async () => {
+    const index = deleteTarget.index;
+    const department = departments[index];
+    setShowDeleteDialog(false);
+    try {
+      const response = await fetch(
+        `${API_URLS.DELETE_DEPARTMENT}/${department.idx || index}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
         }
-      } catch (error) {
-        console.error('부서 삭제 실패:', error);
-        alert('부서 삭제에 실패했습니다.');
+      );
+
+      if (response.ok) {
+        // 성공하면 데이터 다시 로드
+        const departmentsRes = await fetch(API_URLS.DEPARTMENTS, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        });
+        const departmentsData = await departmentsRes.json();
+        setDepartments(departmentsData);
+        setSuccessMessage(t('orgDepartmentDeleted'));
+        setShowSuccessDialog(true);
+      } else {
+        throw new Error(t('orgDepartmentDeleteFailed'));
       }
+    } catch (error) {
+      console.error('부서 삭제 실패:', error);
+      setSuccessMessage(t('orgDepartmentDeleteFailed'));
+      setShowSuccessDialog(true);
     }
   };
 
-  const handleDeletePosition = async (index) => {
-    const position = positions[index];
-    if (
-      window.confirm(`"${position.name || position}" 직급을 삭제하시겠습니까?`)
-    ) {
-      try {
-        const response = await fetch(
-          `${API_URLS.DELETE_POSITION}/${position.idx || index}`,
-          {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-          }
-        );
+  const handleDeletePosition = (index) => {
+    setDeleteTarget({ type: 'position', index });
+    setShowDeleteDialog(true);
+  };
 
-        if (response.ok) {
-          // 성공하면 데이터 다시 로드
-          const positionsRes = await fetch(API_URLS.POSITIONS, {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-          });
-          const positionsData = await positionsRes.json();
-          setPositions(positionsData);
-          alert('직급이 삭제되었습니다.');
-        } else {
-          throw new Error('직급 삭제 실패');
+  const confirmDeletePosition = async () => {
+    const index = deleteTarget.index;
+    const position = positions[index];
+    setShowDeleteDialog(false);
+    try {
+      const response = await fetch(
+        `${API_URLS.DELETE_POSITION}/${position.idx || index}`,
+        {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
         }
-      } catch (error) {
-        console.error('직급 삭제 실패:', error);
-        alert('직급 삭제에 실패했습니다.');
+      );
+
+      if (response.ok) {
+        // 성공하면 데이터 다시 로드
+        const positionsRes = await fetch(API_URLS.POSITIONS, {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+          },
+        });
+        const positionsData = await positionsRes.json();
+        setPositions(positionsData);
+        setSuccessMessage(t('orgPositionDeleted'));
+        setShowSuccessDialog(true);
+      } else {
+        throw new Error(t('orgPositionDeleteFailed'));
       }
+    } catch (error) {
+      console.error('직급 삭제 실패:', error);
+      setSuccessMessage(t('orgPositionDeleteFailed'));
+      setShowSuccessDialog(true);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteTarget?.type === 'department') {
+      confirmDeleteDepartment();
+    } else if (deleteTarget?.type === 'position') {
+      confirmDeletePosition();
     }
   };
 
@@ -323,8 +355,8 @@ const OrganizationManagementContent = () => {
       <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
         {/* 제목 */}
         <PageHeader
-          title="조직관리"
-          description="조직(부서)와 직급 정보를 등록/수정 가능"
+          title={t('organizationManagement')}
+          description={t('orgManagementSubtitle')}
         />
 
         {/* 콘텐츠 영역 */}
@@ -364,7 +396,7 @@ const OrganizationManagementContent = () => {
                   variant="h6"
                   sx={{ mb: 2, fontWeight: 600, fontSize: '18px' }}
                 >
-                  부서추가
+                  {t('orgAddDepartment')}
                 </Typography>
                 <Box
                   sx={{
@@ -378,7 +410,7 @@ const OrganizationManagementContent = () => {
                   <TextField
                     fullWidth
                     size="medium"
-                    placeholder="부서명 입력"
+                    placeholder={t('orgEnterDepartmentName')}
                     value={newDepartment}
                     onChange={(e) => setNewDepartment(e.target.value)}
                     onKeyPress={(e) =>
@@ -407,7 +439,7 @@ const OrganizationManagementContent = () => {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    추가
+                    {t('add')}
                   </Button>
                 </Box>
 
@@ -459,7 +491,7 @@ const OrganizationManagementContent = () => {
                             onClick={handleSaveDepartment}
                             sx={{ bgcolor: '#3275FC', minWidth: '60px' }}
                           >
-                            저장
+                            {t('save')}
                           </Button>
                           <Button
                             size="small"
@@ -467,7 +499,7 @@ const OrganizationManagementContent = () => {
                             onClick={handleCancelEditDepartment}
                             sx={{ minWidth: '60px' }}
                           >
-                            취소
+                            {t('cancel')}
                           </Button>
                         </Box>
                       ) : (
@@ -524,7 +556,7 @@ const OrganizationManagementContent = () => {
                   variant="h6"
                   sx={{ mb: 2, fontWeight: 600, fontSize: '18px' }}
                 >
-                  직급추가
+                  {t('orgAddPosition')}
                 </Typography>
 
                 {/* 직급 추가 */}
@@ -540,7 +572,7 @@ const OrganizationManagementContent = () => {
                   <TextField
                     fullWidth
                     size="medium"
-                    placeholder="직급명 입력"
+                    placeholder={t('orgEnterPositionName')}
                     value={newPosition}
                     onChange={(e) => setNewPosition(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleAddPosition()}
@@ -567,7 +599,7 @@ const OrganizationManagementContent = () => {
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    추가
+                    {t('add')}
                   </Button>
                 </Box>
 
@@ -619,7 +651,7 @@ const OrganizationManagementContent = () => {
                             onClick={handleSavePosition}
                             sx={{ bgcolor: '#3275FC', minWidth: '60px' }}
                           >
-                            저장
+                            {t('save')}
                           </Button>
                           <Button
                             size="small"
@@ -627,7 +659,7 @@ const OrganizationManagementContent = () => {
                             onClick={handleCancelEditPosition}
                             sx={{ minWidth: '60px' }}
                           >
-                            취소
+                            {t('cancel')}
                           </Button>
                         </Box>
                       ) : (
@@ -663,26 +695,46 @@ const OrganizationManagementContent = () => {
           </Grid>
         </Box>
       </Container>
+
+      {/* Success Dialog */}
+      <SuccessDialog
+        open={showSuccessDialog}
+        onClose={() => setShowSuccessDialog(false)}
+        message={successMessage}
+        title={t('confirm')}
+        buttonText={t('confirm')}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleConfirmDelete}
+        isExistingDocument={true}
+      />
     </Box>
   );
 };
 
 // 관리자 권한이 필요한 컴포넌트
-const AdminOnlyContent = () => (
-  <Box sx={{ p: 3, mt: 3 }}>
-    <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
-      <PageHeader title="조직 관리" fontSize="30px" />
-      <Paper sx={{ p: 4, textAlign: 'center', mt: 3 }}>
-        <Typography variant="h5" sx={{ color: '#666', fontWeight: 500 }}>
-          관리자페이지 입니다
-        </Typography>
-        <Typography variant="body1" sx={{ color: '#999', mt: 1 }}>
-          이 페이지는 관리자 권한이 필요한 페이지입니다.
-        </Typography>
-      </Paper>
-    </Container>
-  </Box>
-);
+const AdminOnlyContent = () => {
+  const { t } = useLanguage();
+  return (
+    <Box sx={{ p: 3, mt: 3 }}>
+      <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
+        <PageHeader title={t('organizationManagement')} fontSize="30px" />
+        <Paper sx={{ p: 4, textAlign: 'center', mt: 3 }}>
+          <Typography variant="h5" sx={{ color: '#666', fontWeight: 500 }}>
+            {t('adminPageOnly')}
+          </Typography>
+          <Typography variant="body1" sx={{ color: '#999', mt: 1 }}>
+            {t('adminPermissionRequired')}
+          </Typography>
+        </Paper>
+      </Container>
+    </Box>
+  );
+};
 
 export default () => (
   <PermissionGuard requiredPermission="ADMIN" fallback={<AdminOnlyContent />}>

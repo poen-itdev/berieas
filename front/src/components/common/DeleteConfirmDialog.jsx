@@ -1,6 +1,7 @@
 import React from 'react';
 import { Dialog, DialogContent, Typography, Button, Box } from '@mui/material';
 import { Close } from '@mui/icons-material';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const DeleteConfirmDialog = ({
   open,
@@ -8,6 +9,7 @@ const DeleteConfirmDialog = ({
   onConfirm,
   isExistingDocument = false,
 }) => {
+  const { t } = useLanguage();
   return (
     <Dialog
       open={open}
@@ -46,10 +48,10 @@ const DeleteConfirmDialog = ({
         </Box>
 
         <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-          {isExistingDocument ? '문서 삭제' : '내용 초기화'}
+          {isExistingDocument ? t('deleteDocument') : t('resetContent')}
         </Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>
-          {isExistingDocument ? '삭제하시겠습니까?' : '초기화하시겠습니까?'}
+          {isExistingDocument ? t('confirmDelete') : t('confirmReset')}
         </Typography>
         <Button
           onClick={onConfirm}
@@ -65,7 +67,7 @@ const DeleteConfirmDialog = ({
             mr: 1,
           }}
         >
-          {isExistingDocument ? '삭제' : '초기화'}
+          {isExistingDocument ? t('delete') : t('reset')}
         </Button>
         <Button
           onClick={onClose}
@@ -76,7 +78,7 @@ const DeleteConfirmDialog = ({
             py: 1,
           }}
         >
-          닫기
+          {t('close')}
         </Button>
       </DialogContent>
     </Dialog>

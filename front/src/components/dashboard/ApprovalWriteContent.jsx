@@ -28,8 +28,10 @@ import PageHeader from '../common/PageHeader';
 import SaveConfirmDialog from '../common/SaveConfirmDialog';
 import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
 import SuccessDialog from '../common/SuccessDialog';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -656,7 +658,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
   return (
     <Box sx={{ p: 3, mt: 3 }}>
       <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
-        <PageHeader title="기안서 작성" fontSize="30px" />
+        <PageHeader title={t('createDraft')} fontSize="30px" />
 
         <Grid container spacing={3} alignItems="stretch" wrap="wrap">
           <Grid
@@ -683,14 +685,14 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
               }}
             >
               <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
-                기안서 정보
+                {t('draftInfo')}
               </Typography>
 
               {/* 양식번호 */}
               <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
                 <TextField
                   fullWidth
-                  label="양식번호"
+                  label={t('formNo')}
                   value={formData.formNo}
                   onChange={handleInputChange('formNo')}
                   variant="outlined"
@@ -704,7 +706,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                 />
                 <TextField
                   fullWidth
-                  label="양식제목"
+                  label={t('formTitleLabel')}
                   value={formData.formTitle}
                   onChange={handleInputChange('formTitle')}
                   variant="outlined"
@@ -737,15 +739,15 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                     },
                   }}
                 >
-                  {selectedForm ? selectedForm.title : '양 식 선 택'}
+                  {selectedForm ? selectedForm.title : t('selectForm')}
                 </Button>
               </Box>
 
               <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
                 <TextField
                   fullWidth
-                  label="제목"
-                  placeholder="기안서 제목을 입력하세요"
+                  label={t('titleLabel')}
+                  placeholder={t('enterDraftTitle')}
                   value={formData.approvalTitle}
                   onChange={handleInputChange('approvalTitle')}
                   variant="outlined"
@@ -760,7 +762,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                 <TextField
                   fullWidth
-                  label="일자"
+                  label={t('dateLabel')}
                   type="date"
                   value={new Date().toISOString().split('T')[0]}
                   variant="outlined"
@@ -778,7 +780,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                 {/* 기안자 */}
                 <TextField
                   fullWidth
-                  label="기안자"
+                  label={t('drafterLabel')}
                   value={userInfo?.memberName}
                   variant="outlined"
                   disabled
@@ -830,8 +832,8 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="결재자"
-                      placeholder="결재자 선택 (최대 5명)"
+                      label={t('approverLabel')}
+                      placeholder={t('selectApprovers')}
                       variant="outlined"
                       sx={{
                         '& .MuiOutlinedInput-root': {
@@ -879,8 +881,8 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                   renderInput={(params) => (
                     <TextField
                       {...params}
-                      label="참조자"
-                      placeholder="참조자 선택"
+                      label={t('referrerLabel')}
+                      placeholder={t('selectReferrers')}
                       variant="outlined"
                       sx={{
                         '& .MuiOutlinedInput-root': {
@@ -898,7 +900,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                   variant="subtitle2"
                   sx={{ mb: 1, fontWeight: 600, color: '#666' }}
                 >
-                  첨부파일
+                  {t('attachments')}
                 </Typography>
                 <input
                   type="file"
@@ -928,7 +930,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                     variant="body2"
                     sx={{ color: '#1976d2', fontWeight: 600, mb: 0.5 }}
                   >
-                    파일 선택
+                    {t('selectFile')}
                   </Typography>
                 </Box>
                 {attachedFiles.length > 0 && (
@@ -974,7 +976,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                     },
                   }}
                 >
-                  {loading ? '저장 중...' : '저장'}
+                  {loading ? `${t('save')}...` : t('save')}
                 </Button>
                 <Button
                   fullWidth
@@ -993,7 +995,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                     },
                   }}
                 >
-                  임시저장
+                  {t('temporarySave')}
                 </Button>
                 <Button
                   fullWidth
@@ -1011,7 +1013,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                     },
                   }}
                 >
-                  {searchParams.get('approvalNo') ? '삭제' : '초기화'}
+                  {searchParams.get('approvalNo') ? t('delete') : t('reset')}
                 </Button>
               </Box>
             </Paper>
@@ -1049,7 +1051,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                   backgroundColor: '#f8f9fa',
                 }}
               >
-                내용
+                {t('content')}
               </Typography>
               <Box sx={{ p: 2, height: 'calc(100% - 56px)' }}>
                 <TextField
@@ -1063,7 +1065,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                       approvalDocument: e.target.value,
                     })
                   }
-                  placeholder="내용을 입력하세요"
+                  placeholder={t('enterContent')}
                   sx={{
                     '& .MuiOutlinedInput-root': {
                       height: '100%',
@@ -1099,11 +1101,10 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
               component="div"
               sx={{ fontWeight: 600, fontSize: '1.25rem' }}
             >
-              양식 선택
+              {t('selectFormTitle')}
             </Typography>
             <Typography variant="body2" sx={{ color: '#666', mt: 1 }}>
-              사용할 양식을 선택하세요. 선택한 양식의 내용이 에디터에
-              로드됩니다.
+              {t('selectFormDescription')}
             </Typography>
           </DialogTitle>
 
@@ -1111,7 +1112,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
             {/* 검색 */}
             <TextField
               fullWidth
-              placeholder="검색어를 입력하세요"
+              placeholder={t('enterSearchTerm')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               sx={{
@@ -1129,11 +1130,11 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
               <Table>
                 <TableHead>
                   <TableRow>
-                    <TableCell>순번</TableCell>
-                    <TableCell>양식번호</TableCell>
-                    <TableCell>양식제목</TableCell>
-                    <TableCell>구분</TableCell>
-                    <TableCell>선택</TableCell>
+                    <TableCell>{t('sequenceNo')}</TableCell>
+                    <TableCell>{t('formNo')}</TableCell>
+                    <TableCell>{t('formTitleLabel')}</TableCell>
+                    <TableCell>{t('formType')}</TableCell>
+                    <TableCell>{t('select')}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -1164,7 +1165,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                             '&:hover': { backgroundColor: '#1565c0' },
                           }}
                         >
-                          선택
+                          {t('select')}
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -1197,7 +1198,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                 },
               }}
             >
-              닫기
+              {t('cancel')}
             </Button>
           </DialogActions>
         </Dialog>
@@ -1226,13 +1227,9 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
             setLoading(false);
             navigate('/progress-list');
           }}
-          title={isSubmitSuccess ? '제출 완료' : '저장 완료'}
-          message={
-            isSubmitSuccess
-              ? '기안서가 제출되었습니다.'
-              : '저장이 완료되었습니다.'
-          }
-          buttonText="확인"
+          title={isSubmitSuccess ? t('submitCompleted') : t('saveCompleted')}
+          message={isSubmitSuccess ? t('draftSubmitted') : t('saveSuccess')}
+          buttonText={t('confirm')}
         />
       </Container>
     </Box>

@@ -15,13 +15,19 @@ import {
   Chip,
   Divider,
   Container,
+  Dialog,
+  DialogContent,
 } from '@mui/material';
 import { Download, CheckCircle, Cancel } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 import PageHeader from '../common/PageHeader';
+import { useLanguage } from '../../contexts/LanguageContext';
+import SuccessDialog from '../common/SuccessDialog';
+import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
 
 const ApprovalDetailContent = ({ userInfo }) => {
+  const { t, formatDate } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [approvalData, setApprovalData] = useState(null);
@@ -30,6 +36,12 @@ const ApprovalDetailContent = ({ userInfo }) => {
   const [submitting, setSubmitting] = useState(false);
   const [comments, setComments] = useState([]); // 등록된 첨언 목록
   const [editingComment, setEditingComment] = useState(null); // 수정 중인 첨언 ID
+
+  // 다이얼로그 상태
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showDeleteCommentDialog, setShowDeleteCommentDialog] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState(null);
 
   const approvalNo = searchParams.get('approvalNo');
 
@@ -88,7 +100,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
           loadedComments.push({
             id: 'reference',
             content: data.referenceRemark,
-            author: '참조자',
+            author: t('referrerLabel'),
             date: data.updateDate
               ? new Date(data.updateDate).toLocaleString()
               : '',
@@ -190,9 +202,8 @@ const ApprovalDetailContent = ({ userInfo }) => {
     );
 
     if (existingComment) {
-      alert(
-        '이미 첨언을 작성하셨습니다. 각 결재자당 1개의 첨언만 작성할 수 있습니다.'
-      );
+      setSuccessMessage(t('alreadyCommented'));
+      setShowSuccessDialog(true);
       return;
     }
 
@@ -214,8 +225,6 @@ const ApprovalDetailContent = ({ userInfo }) => {
       );
 
       if (response.ok) {
-        alert('첨언이 등록되었습니다.');
-
         // 새 첨언 객체 생성 - 올바른 형태로
         const newComment = {
           id: `comment-${Date.now()}`,
@@ -227,13 +236,17 @@ const ApprovalDetailContent = ({ userInfo }) => {
 
         setComments((prev) => [...prev, newComment]); // UI 즉시 반영
         setComment(''); // 입력창 초기화
+        setSuccessMessage(t('commentRegistered'));
+        setShowSuccessDialog(true);
       } else {
-        alert('첨언 등록 실패');
+        setSuccessMessage(t('commentRegistrationFailed'));
+        setShowSuccessDialog(true);
         console.error('서버 응답:', response);
       }
     } catch (err) {
       console.error('첨언 등록 중 오류 발생:', err);
-      alert('서버 오류가 발생했습니다.');
+      setSuccessMessage(t('serverError'));
+      setShowSuccessDialog(true);
     }
   };
 
@@ -259,12 +272,24 @@ const ApprovalDetailContent = ({ userInfo }) => {
     );
     setComment('');
     setEditingComment(null);
+    setSuccessMessage(t('commentRegistered'));
+    setShowSuccessDialog(true);
   };
 
-  // 첨언 삭제
+  // 첨언 삭제 확인 다이얼로그 열기
   const handleCommentDelete = (commentId) => {
-    if (window.confirm('첨언을 삭제하시겠습니까?')) {
-      setComments(comments.filter((c) => c.id !== commentId));
+    setCommentToDelete(commentId);
+    setShowDeleteCommentDialog(true);
+  };
+
+  // 첨언 삭제 확인
+  const handleConfirmDeleteComment = () => {
+    if (commentToDelete) {
+      setComments(comments.filter((c) => c.id !== commentToDelete));
+      setShowDeleteCommentDialog(false);
+      setCommentToDelete(null);
+      setSuccessMessage(t('commentDeleted'));
+      setShowSuccessDialog(true);
     }
   };
 
@@ -296,7 +321,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
   // 기안자 (실제 기안자 이름과 직급)
   if (approvalData.approvalName) {
     approvalLine.push({
-      title: '기안자',
+      title: t('drafterLabel'),
       name: approvalData.approvalName,
       date: approvalData.startDate || new Date().toISOString().split('T')[0], // 기안일이 없으면 현재 날짜
       status: 'draft',
@@ -381,7 +406,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
     }
 
     approvalLine.push({
-      title: '결재자',
+      title: t('approverLabel'),
       name: signId,
       date: signDate,
       status, // 'approved' | 'rejected' | 'pending' | 'cancelled'
@@ -412,7 +437,10 @@ const ApprovalDetailContent = ({ userInfo }) => {
   return (
     <Box sx={{ p: 3, mt: 3 }}>
       <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
-        <PageHeader title="기안서 상세" fontSize={{ xs: '20px', sm: '30px' }} />
+        <PageHeader
+          title={t('approvalDetail')}
+          fontSize={{ xs: '20px', sm: '30px' }}
+        />
 
         <Paper sx={{ p: { xs: 2, sm: 4 }, mt: 3 }}>
           {/* 문서 제목 */}
@@ -489,7 +517,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
                                   color: '#1976d2', // 파란색
                                 }}
                               >
-                                {new Date(item.date).toLocaleDateString()}
+                                {formatDate(item.date)}
                               </Typography>
                             )}
                           {item.date && item.status === 'rejected' && (
@@ -503,7 +531,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
                                 color: '#d32f2f', // 빨간색
                               }}
                             >
-                              {new Date(item.date).toLocaleDateString()}/반려
+                              {formatDate(item.date)}/반려
                             </Typography>
                           )}
                           {!item.date && item.status === 'pending' && (
@@ -516,7 +544,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
                                 mt: 0.5,
                               }}
                             >
-                              대기
+                              {t('waiting')}
                             </Typography>
                           )}
                           {item.status === 'cancelled' && (
@@ -537,7 +565,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
               variant="body1"
               sx={{ fontWeight: 500, textAlign: 'left' }}
             >
-              기안번호: {approvalNo}
+              {t('approvalNo')}: {approvalNo}
             </Typography>
           </Box>
 
@@ -546,7 +574,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
             <Paper variant="outlined" sx={{ p: 3, minHeight: 200 }}>
               <div
                 dangerouslySetInnerHTML={{
-                  __html: approvalData.approvalDocument || '내용이 없습니다.',
+                  __html: approvalData.approvalDocument || t('noContent'),
                 }}
                 style={{
                   whiteSpace: 'pre-wrap',
@@ -565,7 +593,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
                 variant="h6"
                 sx={{ mb: 2, fontWeight: 600, textAlign: 'left' }}
               >
-                참조자
+                {t('referrerLabel')}
               </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {approvalData.referenceId.split(',').map((name, index) => (
@@ -586,7 +614,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
               variant="h6"
               sx={{ mb: 2, fontWeight: 600, textAlign: 'left' }}
             >
-              첨부파일
+              {t('attachments')}
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               {[
@@ -614,7 +642,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
                       startIcon={<Download />}
                       onClick={() => handleFileDownload(fileName, index)}
                     >
-                      다운로드
+                      {t('download')}
                     </Button>
                   </Box>
                 ))}
@@ -624,7 +652,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
                   color="text.secondary"
                   sx={{ textAlign: 'left' }}
                 >
-                  첨부파일이 없습니다.
+                  {t('noAttachments')}
                 </Typography>
               )}
             </Box>
@@ -634,10 +662,10 @@ const ApprovalDetailContent = ({ userInfo }) => {
           {/* 첨언 */}
           <Box sx={{ mb: 2, textAlign: 'left' }}>
             <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-              첨언 (선택사항)
+              {t('comments')}
             </Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              * 1개의 첨언만 작성할 수 있습니다.
+              * {t('oneCommentOnly')}
             </Typography>
 
             {/* 등록된 첨언 목록 */}
@@ -663,24 +691,27 @@ const ApprovalDetailContent = ({ userInfo }) => {
                         {commentItem.author} • {commentItem.date}
                       </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        onClick={() => handleCommentEdit(commentItem.id)}
-                        disabled={editingComment === commentItem.id}
-                      >
-                        수정
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        color="error"
-                        onClick={() => handleCommentDelete(commentItem.id)}
-                      >
-                        삭제
-                      </Button>
-                    </Box>
+                    {/* 본인이 작성한 첨언만 수정/삭제 가능 */}
+                    {commentItem.author === userInfo?.memberName && (
+                      <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => handleCommentEdit(commentItem.id)}
+                          disabled={editingComment === commentItem.id}
+                        >
+                          {t('edit')}
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          color="error"
+                          onClick={() => handleCommentDelete(commentItem.id)}
+                        >
+                          {t('delete')}
+                        </Button>
+                      </Box>
+                    )}
                   </Paper>
                 ))}
               </Box>
@@ -694,8 +725,8 @@ const ApprovalDetailContent = ({ userInfo }) => {
                 rows={1}
                 placeholder={
                   comments.find((c) => c.author === userInfo?.memberName)
-                    ? '이미 첨언을 작성하셨습니다.'
-                    : '의견을 입력하세요'
+                    ? t('alreadyCommentedPlaceholder')
+                    : t('enterComment')
                 }
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
@@ -715,14 +746,14 @@ const ApprovalDetailContent = ({ userInfo }) => {
                       onClick={handleCommentUpdate}
                       disabled={!comment.trim()}
                     >
-                      수정
+                      {t('edit')}
                     </Button>
                     <Button
                       variant="outlined"
                       sx={{ minWidth: 80, height: '56px' }}
                       onClick={handleCommentCancel}
                     >
-                      취소
+                      {t('cancel')}
                     </Button>
                   </>
                 ) : (
@@ -739,7 +770,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
                         !editingComment)
                     }
                   >
-                    등록
+                    {t('register')}
                   </Button>
                 )}
               </Box>
@@ -776,7 +807,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
                 disabled={submitting}
                 sx={{ minWidth: 120 }}
               >
-                기안취소
+                {t('cancelDraft')}
               </Button>
             ) : null}
 
@@ -807,7 +838,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
                   disabled={submitting}
                   sx={{ minWidth: 120 }}
                 >
-                  승인
+                  {t('approve')}
                 </Button>
                 <Button
                   variant="contained"
@@ -818,12 +849,86 @@ const ApprovalDetailContent = ({ userInfo }) => {
                   disabled={submitting}
                   sx={{ minWidth: 120 }}
                 >
-                  반려
+                  {t('reject')}
                 </Button>
               </>
             ) : null}
           </Box>
         </Paper>
+
+        {/* 첨언 삭제 확인 다이얼로그 */}
+        <Dialog
+          open={showDeleteCommentDialog}
+          onClose={() => setShowDeleteCommentDialog(false)}
+          maxWidth="xs"
+          fullWidth
+        >
+          <DialogContent sx={{ padding: 3, textAlign: 'center' }}>
+            <Box
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                mb: 2,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 60,
+                  height: 60,
+                  borderRadius: '50%',
+                  backgroundColor: '#f44336',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Cancel sx={{ color: 'white', fontSize: 30 }} />
+              </Box>
+            </Box>
+            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+              {t('confirmDeleteComment')}
+            </Typography>
+            <Box
+              sx={{ display: 'flex', gap: 1, justifyContent: 'center', mt: 2 }}
+            >
+              <Button
+                onClick={handleConfirmDeleteComment}
+                variant="contained"
+                sx={{
+                  backgroundColor: '#f44336',
+                  '&:hover': {
+                    backgroundColor: '#d32f2f',
+                  },
+                  borderRadius: 1.5,
+                  px: 4,
+                  py: 1,
+                }}
+              >
+                {t('delete')}
+              </Button>
+              <Button
+                onClick={() => setShowDeleteCommentDialog(false)}
+                variant="outlined"
+                sx={{
+                  borderRadius: 1.5,
+                  px: 4,
+                  py: 1,
+                }}
+              >
+                {t('cancel')}
+              </Button>
+            </Box>
+          </DialogContent>
+        </Dialog>
+
+        {/* 성공 다이얼로그 */}
+        <SuccessDialog
+          open={showSuccessDialog}
+          onClose={() => setShowSuccessDialog(false)}
+          title={t('confirm')}
+          message={successMessage}
+          buttonText={t('confirm')}
+        />
       </Container>
     </Box>
   );
