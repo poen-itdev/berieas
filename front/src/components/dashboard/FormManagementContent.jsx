@@ -389,7 +389,7 @@ const FormManagementContent = () => {
                 label={t('formContent')}
                 placeholder={t('enterFormContent')}
                 multiline
-                rows={{ xs: 6, sm: 10 }}
+                minRows={10}
                 value={formData.formDocument}
                 sx={{
                   '& .MuiInputBase-input': {
