@@ -49,7 +49,29 @@ const LoginPage = () => {
         credentials: 'include',
         body: JSON.stringify({ memberId, memberPw }),
       });
-      if (!response.ok) throw new Error(t('loginFailed'));
+
+      if (!response.ok) {
+        // 백엔드 에러 타입 확인 (JSON 형식)
+        try {
+          const errorData = await response.json();
+          console.log('Login error response:', errorData);
+          if (errorData.errorType) {
+            if (errorData.errorType === 'DEACTIVATED_USER') {
+              setError(t('loginErrorDeactivated'));
+            } else {
+              setError(t('loginErrorInvalid'));
+            }
+            setIsLoading(false);
+            return;
+          }
+        } catch (e) {
+          // JSON 파싱 실패 시 기본 메시지 표시
+          console.error('Error parsing response:', e);
+        }
+        setError(t('loginErrorInvalid'));
+        setIsLoading(false);
+        return;
+      }
 
       const data = await response.json();
       localStorage.setItem('accessToken', data.accessToken);
