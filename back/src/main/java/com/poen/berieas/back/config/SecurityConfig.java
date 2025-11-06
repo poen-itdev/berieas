@@ -25,6 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.poen.berieas.back.domain.jwt.service.JwtService;
 import com.poen.berieas.back.domain.member.entity.RoleType;
+import com.poen.berieas.back.domain.member.repository.MemberRepository;
 import com.poen.berieas.back.filter.JWTFilter;
 import com.poen.berieas.back.filter.LoginFilter;
 import com.poen.berieas.back.handler.RefreshTokenLogoutHandler;
@@ -38,13 +39,15 @@ public class SecurityConfig {
     private final AuthenticationConfiguration authenticationConfiguration;
     private final AuthenticationSuccessHandler loginSuccessHandler;
     private final JwtService jwtService;
+    private final MemberRepository memberRepository;
 
     public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, @Qualifier("LoginSuccessHandler")AuthenticationSuccessHandler loginSuccessHandler,
-        JwtService jwtService) {
+        JwtService jwtService, MemberRepository memberRepository) {
 
         this.authenticationConfiguration = authenticationConfiguration;
         this.loginSuccessHandler = loginSuccessHandler;
         this.jwtService = jwtService;
+        this.memberRepository = memberRepository;
     }
 
     // 커스텀 자체 로그인 필터를 위한 AuthenticationManager Bean 등록
@@ -151,7 +154,7 @@ public class SecurityConfig {
                 .addFilterBefore(new JWTFilter(), LogoutFilter.class);
         
         http
-                .addFilterBefore(new LoginFilter(authenticationManager(authenticationConfiguration), loginSuccessHandler), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new LoginFilter(authenticationManager(authenticationConfiguration), loginSuccessHandler, memberRepository), UsernamePasswordAuthenticationFilter.class);
 
         //=================================== 세션 필터 설정 ===================================//
         http

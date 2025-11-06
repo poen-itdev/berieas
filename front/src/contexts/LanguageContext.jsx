@@ -36,18 +36,11 @@ export const LanguageProvider = ({ children }) => {
     const dateObj = new Date(date);
     if (isNaN(dateObj.getTime())) return '-';
 
-    // 한국어: YYYY-MM-DD, 영어: MM/DD/YYYY
-    if (language === 'ko') {
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    } else {
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      return `${month}/${day}/${year}`;
-    }
+    // 한국어/영어 모두 YYYY-MM-DD 형식
+    const year = dateObj.getFullYear();
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   return (

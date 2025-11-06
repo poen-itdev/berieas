@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dialog, DialogContent, Typography, Button, Box } from '@mui/material';
-import { Close } from '@mui/icons-material';
+import { Close, Check } from '@mui/icons-material';
 import { useLanguage } from '../../contexts/LanguageContext';
 
 const DeleteConfirmDialog = ({
@@ -8,8 +8,21 @@ const DeleteConfirmDialog = ({
   onClose,
   onConfirm,
   isExistingDocument = false,
+  title = null,
+  message = null,
+  confirmText = null,
+  isActivate = false, // 활성화 작업인지 여부
 }) => {
   const { t } = useLanguage();
+
+  // 커스텀 메시지가 있으면 사용, 없으면 기본 메시지
+  const dialogTitle =
+    title || (isExistingDocument ? t('deleteDocument') : t('resetContent'));
+  const dialogMessage =
+    message || (isExistingDocument ? t('confirmDelete') : t('confirmReset'));
+  const dialogConfirmText =
+    confirmText || (isExistingDocument ? t('delete') : t('reset'));
+
   return (
     <Dialog
       open={open}
@@ -24,7 +37,7 @@ const DeleteConfirmDialog = ({
       }}
     >
       <DialogContent sx={{ padding: 3 }}>
-        {/* 빨간색 X 아이콘 */}
+        {/* 아이콘 - 활성화면 초록색 체크, 비활성화면 빨간색 X */}
         <Box
           sx={{
             display: 'flex',
@@ -37,29 +50,33 @@ const DeleteConfirmDialog = ({
               width: 60,
               height: 60,
               borderRadius: '50%',
-              backgroundColor: '#f44336',
+              backgroundColor: isActivate ? '#4caf50' : '#f44336',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
             }}
           >
-            <Close sx={{ color: 'white', fontSize: 30 }} />
+            {isActivate ? (
+              <Check sx={{ color: 'white', fontSize: 30 }} />
+            ) : (
+              <Close sx={{ color: 'white', fontSize: 30 }} />
+            )}
           </Box>
         </Box>
 
         <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-          {isExistingDocument ? t('deleteDocument') : t('resetContent')}
+          {dialogTitle}
         </Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>
-          {isExistingDocument ? t('confirmDelete') : t('confirmReset')}
+          {dialogMessage}
         </Typography>
         <Button
           onClick={onConfirm}
           variant="contained"
           sx={{
-            backgroundColor: '#f44336',
+            backgroundColor: isActivate ? '#4caf50' : '#f44336',
             '&:hover': {
-              backgroundColor: '#d32f2f',
+              backgroundColor: isActivate ? '#45a049' : '#d32f2f',
             },
             borderRadius: 1.5,
             px: 4,
@@ -67,7 +84,7 @@ const DeleteConfirmDialog = ({
             mr: 1,
           }}
         >
-          {isExistingDocument ? t('delete') : t('reset')}
+          {dialogConfirmText}
         </Button>
         <Button
           onClick={onClose}
