@@ -176,7 +176,7 @@ const MemberManagementContent = () => {
     if (useYn === 'Y') {
       return (
         <Chip
-          label={t('활성화')}
+          label={t('activate')}
           size="small"
           variant="outlined"
           sx={{
@@ -194,7 +194,7 @@ const MemberManagementContent = () => {
     } else {
       return (
         <Chip
-          label={t('비활성화')}
+          label={t('deactivate')}
           size="small"
           variant="outlined"
           sx={{
@@ -717,7 +717,7 @@ const MemberManagementContent = () => {
                             variant="outlined"
                             sx={{
                               borderRadius: '4px',
-                              minWidth: { xs: '50px', sm: '60px' },
+                              width: { xs: '60px', sm: '80px' },
                               height: { xs: '28px', sm: '32px' },
                               fontSize: { xs: '11px', sm: '12px' },
                               whiteSpace: 'nowrap',
@@ -732,9 +732,9 @@ const MemberManagementContent = () => {
                             color={member.useYn === 'Y' ? 'warning' : 'success'}
                             sx={{
                               borderRadius: '4px',
-                              minWidth: { xs: '60px', sm: '80px' },
+                              width: { xs: '60px', sm: '80px' },
                               height: { xs: '28px', sm: '32px' },
-                              fontSize: { xs: '10px', sm: '12px' },
+                              fontSize: { xs: '11px', sm: '12px' },
                               whiteSpace: 'nowrap',
                             }}
                             onClick={() =>
@@ -836,6 +836,7 @@ const MemberManagementContent = () => {
                     }
                     variant="outlined"
                     sx={{ mb: 1.5 }}
+                    disabled={isEditMode}
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -964,7 +965,21 @@ const MemberManagementContent = () => {
           open={showStatusConfirmDialog}
           onClose={() => setShowStatusConfirmDialog(false)}
           onConfirm={confirmToggleMemberStatus}
-          isExistingDocument={true}
+          title={
+            statusToggleTarget?.currentStatus === 'Y'
+              ? t('deactivate')
+              : t('activate')
+          }
+          message={
+            statusToggleTarget?.currentStatus === 'Y'
+              ? t('confirmDeactivate')
+              : t('confirmActivate')
+          }
+          confirmText={
+            statusToggleTarget?.currentStatus === 'Y'
+              ? t('deactivate')
+              : t('activate')
+          }
         />
       </Container>
     </Box>

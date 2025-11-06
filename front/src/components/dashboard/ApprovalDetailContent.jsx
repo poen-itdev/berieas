@@ -143,7 +143,8 @@ const ApprovalDetailContent = ({ userInfo }) => {
       });
 
       if (response.ok) {
-        alert(action === 'approve' ? '승인되었습니다.' : '반려되었습니다.');
+        setSuccessMessage(action === 'approve' ? t('approved') : t('rejected'));
+        setShowSuccessDialog(true);
         // 데이터 다시 로드해서 결재라인 업데이트
         await loadApprovalDetail();
         // 잠시 후 진행목록으로 이동
@@ -151,10 +152,12 @@ const ApprovalDetailContent = ({ userInfo }) => {
           navigate('/progress-list');
         }, 1000);
       } else {
-        alert(`처리에 실패했습니다.\n${response.data || ''}`);
+        setSuccessMessage(`${t('approvalFailed')}\n${response.data || ''}`);
+        setShowSuccessDialog(true);
       }
     } catch (error) {
-      alert('처리에 실패했습니다: ' + error.message);
+      setSuccessMessage(`${t('approvalFailed')}: ${error.message}`);
+      setShowSuccessDialog(true);
     } finally {
       setSubmitting(false);
     }

@@ -90,11 +90,17 @@ public class MemberService implements UserDetailsService{
         Member member = memberRepository.findByMemberId(memberId)
                 .orElseThrow(() -> new UsernameNotFoundException(memberId));
 
+        // useYn이 N이면 비활성화된 회원 - 로그인 불가
+        if ("N".equals(member.getUseYn())) {
+            throw new UsernameNotFoundException("비활성화된 회원입니다.");
+        }
+
         System.out.println("===== loadUserByUsername 호출 =====");
         System.out.println("memberId: " + member.getMemberId());
         System.out.println("memberPw (DB): " + member.getMemberPw());
         System.out.println("role: " + member.getRole());
         System.out.println("isFirstLogin: " + member.getIsFirstLogin());
+        System.out.println("useYn: " + member.getUseYn());
 
         boolean matches = passwordEncoder.matches("1234", member.getMemberPw());
         System.out.println("비번 매칭 결과: " + matches);

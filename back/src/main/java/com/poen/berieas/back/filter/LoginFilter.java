@@ -3,8 +3,11 @@ package com.poen.berieas.back.filter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.Optional;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.poen.berieas.back.domain.member.entity.Member;
+import com.poen.berieas.back.domain.member.repository.MemberRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletInputStream;
@@ -13,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationServiceException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -26,6 +30,7 @@ import org.springframework.util.StreamUtils;
 public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
+    private final MemberRepository memberRepository;
 
     public static final String SPRING_SECURITY_FORM_USERNAME_KEY = "memberId";
 
@@ -38,10 +43,11 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private String passwordParameter = SPRING_SECURITY_FORM_PASSWORD_KEY;
 
-    public LoginFilter(AuthenticationManager authenticationManager, AuthenticationSuccessHandler authenticationSuccessHandler) {
+    public LoginFilter(AuthenticationManager authenticationManager, AuthenticationSuccessHandler authenticationSuccessHandler, MemberRepository memberRepository) {
 
         super(DEFAULT_ANT_PATH_REQUEST_MATCHER, authenticationManager);
         this.authenticationSuccessHandler = authenticationSuccessHandler;
+        this.memberRepository = memberRepository;
     }
 
     @Override
@@ -71,8 +77,14 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
         System.out.println("입력한 password: " + password);
 
-        // UsernamePasswordAuthenticationToken authRequest =
-        // new UsernamePasswordAuthenticationToken(username, password);
+        // useYn 체크 - 비활성화된 회원이면 로그인 불가
+        Optional<Member> memberOpt = memberRepository.findByMemberId(username);
+        if (memberOpt.isPresent()) {
+            Member member = memberOpt.get();
+            if ("N".equals(member.getUseYn())) {
+                throw new BadCredentialsException("비활성화된 회원입니다.");
+            }
+        }
 
         UsernamePasswordAuthenticationToken authRequest = UsernamePasswordAuthenticationToken.unauthenticated(username,password);
 
@@ -89,6 +101,34 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
                                             Authentication authResult) throws IOException, ServletException {
 
         authenticationSuccessHandler.onAuthenticationSuccess(request, response, authResult);
+    }
+
+    @Override
+    protected void unsuccessfulAuthentication(HttpServletRequest request, HttpServletResponse response,
+                                             AuthenticationException failed) throws IOException, ServletException {
+        
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        
+        String errorType = "INVALID_CREDENTIALS"; // 기본: 아이디/비밀번호 틀림
+        
+        // 예외 체인을 재귀적으로 탐색하여 "비활성화된 회원" 메시지 찾기
+        Throwable current = failed;
+        int depth = 0;
+        while (current != null && depth < 10) { // 무한 루프 방지
+            String message = current.getMessage();
+            
+            if (message != null && message.contains("비활성화된 회원")) {
+                errorType = "DEACTIVATED_USER"; // 비활성화된 회원
+                break;
+            }
+            current = current.getCause();
+            depth++;
+        }
+        
+        String json = String.format("{\"errorType\":\"%s\"}", errorType);
+        response.getWriter().write(json);
+        response.getWriter().flush();
     }
 }
 

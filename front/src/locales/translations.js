@@ -30,6 +30,8 @@ export const translations = {
     addMember: '직원 등록',
     activate: '활성화',
     deactivate: '비활성화',
+    confirmActivate: '활성화 하시겠습니까?',
+    confirmDeactivate: '비활성화 하시겠습니까?',
     searchPlaceholder: '이름, 아이디, 이메일로 검색',
     memberId: '아이디',
     memberName: '이름',
@@ -183,6 +185,9 @@ export const translations = {
     cancelDraft: '기안취소',
     approve: '승인',
     reject: '반려',
+    approved: '승인되었습니다.',
+    rejected: '반려되었습니다.',
+    approvalFailed: '처리에 실패했습니다.',
     download: '다운로드',
     waiting: '대기',
 
@@ -198,6 +203,7 @@ export const translations = {
     loginErrorEmpty: '아이디와 비밀번호를 입력해주세요.',
     loginFailed: '로그인 실패',
     loginErrorInvalid: '아이디 또는 비밀번호가 틀렸습니다.',
+    loginErrorDeactivated: '비활성화된 회원입니다.',
 
     // 비밀번호 재설정
     backToLogin: '로그인으로 돌아가기',
@@ -306,6 +312,8 @@ export const translations = {
     addMember: 'Add Member',
     activate: 'Activate',
     deactivate: 'Deactivate',
+    confirmActivate: 'Do you want to activate this member?',
+    confirmDeactivate: 'Do you want to deactivate this member?',
     searchPlaceholder: 'Search by name, ID, email',
     memberId: 'Member ID',
     memberName: 'Name',
@@ -459,6 +467,9 @@ export const translations = {
     cancelDraft: 'Cancel Draft',
     approve: 'Approve',
     reject: 'Reject',
+    approved: 'Approved successfully.',
+    rejected: 'Rejected successfully.',
+    approvalFailed: 'Failed to process.',
     download: 'Download',
     waiting: 'Waiting',
 
@@ -475,6 +486,7 @@ export const translations = {
     loginErrorEmpty: 'Please enter your ID and password.',
     loginFailed: 'Login failed',
     loginErrorInvalid: 'Invalid ID or password.',
+    loginErrorDeactivated: 'This account has been deactivated.',
 
     // 비밀번호 재설정
     backToLogin: 'Back to Login',

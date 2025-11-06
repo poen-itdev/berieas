@@ -8,8 +8,20 @@ const DeleteConfirmDialog = ({
   onClose,
   onConfirm,
   isExistingDocument = false,
+  title = null,
+  message = null,
+  confirmText = null,
 }) => {
   const { t } = useLanguage();
+
+  // 커스텀 메시지가 있으면 사용, 없으면 기본 메시지
+  const dialogTitle =
+    title || (isExistingDocument ? t('deleteDocument') : t('resetContent'));
+  const dialogMessage =
+    message || (isExistingDocument ? t('confirmDelete') : t('confirmReset'));
+  const dialogConfirmText =
+    confirmText || (isExistingDocument ? t('delete') : t('reset'));
+
   return (
     <Dialog
       open={open}
@@ -48,10 +60,10 @@ const DeleteConfirmDialog = ({
         </Box>
 
         <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-          {isExistingDocument ? t('deleteDocument') : t('resetContent')}
+          {dialogTitle}
         </Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>
-          {isExistingDocument ? t('confirmDelete') : t('confirmReset')}
+          {dialogMessage}
         </Typography>
         <Button
           onClick={onConfirm}
@@ -67,7 +79,7 @@ const DeleteConfirmDialog = ({
             mr: 1,
           }}
         >
-          {isExistingDocument ? t('delete') : t('reset')}
+          {dialogConfirmText}
         </Button>
         <Button
           onClick={onClose}
