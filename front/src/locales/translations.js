@@ -28,9 +28,7 @@ export const translations = {
     // 회원 관리
     memberList: '회원 목록',
     addMember: '직원 등록',
-    active: '활성',
-    inactive: '비활성',
-    activate: '활성화',
+    Activate: '활성화',
     deactivate: '비활성화',
     searchPlaceholder: '이름, 아이디, 이메일로 검색',
     memberId: '아이디',
@@ -144,11 +142,20 @@ export const translations = {
       '사용할 양식을 선택하세요. 선택한 양식의 내용이 에디터에 로드됩니다.',
     enterSearchTerm: '검색어를 입력하세요',
     sequenceNo: '순번',
+    formType: '구분',
     select: '선택',
     submitCompleted: '제출 완료',
     saveCompleted: '저장 완료',
     draftSubmitted: '기안서가 제출되었습니다.',
     saveSuccess: '저장이 완료되었습니다.',
+    unsavedDraftExists: '임시저장된 문서가 있습니다.',
+    unsavedDraftMessage:
+      '임시저장된 문서가 있습니다. 페이지를 이동하시겠습니까?',
+    doNotSave: '저장 안함',
+    deleteDocument: '문서 삭제',
+    resetContent: '내용 초기화',
+    confirmDelete: '삭제하시겠습니까?',
+    confirmReset: '초기화하시겠습니까?',
 
     // 결재 문서 리스트
     documentsToApprove: '결재할 문서',
@@ -156,6 +163,127 @@ export const translations = {
     // 상태 카드
     myStatus: '나의 현황',
     approvalRequest: '승인요청',
+
+    // 기안서 상세
+    approvalDetail: '기안서 상세',
+    approvalNo: '기안번호',
+    noAttachments: '첨부파일이 없습니다.',
+    comments: '첨언 (선택사항)',
+    oneCommentOnly: '1개의 첨언만 작성할 수 있습니다.',
+    alreadyCommented:
+      '이미 첨언을 작성하셨습니다. 각 결재자당 1개의 첨언만 작성할 수 있습니다.',
+    commentRegistered: '첨언이 등록되었습니다.',
+    commentRegistrationFailed: '첨언 등록 실패',
+    serverError: '서버 오류가 발생했습니다.',
+    confirmDeleteComment: '첨언을 삭제하시겠습니까?',
+    commentDeleted: '첨언이 삭제되었습니다.',
+    alreadyCommentedPlaceholder: '이미 첨언을 작성하셨습니다.',
+    enterComment: '의견을 입력하세요',
+    register: '등록',
+    cancelDraft: '기안취소',
+    approve: '승인',
+    reject: '반려',
+    download: '다운로드',
+    waiting: '대기',
+
+    // 회원 관리 추가
+    memberManagementSubtitle: '조직현황 확인 및 직원 검색/등록 가능',
+    editForm: '직원 정보 편집',
+    registerForm: '직원 정보 등록',
+
+    // 로그인
+    userId: '아이디',
+    signIn: '로그인',
+    signingIn: '로그인 중...',
+    passwordReset: '비밀번호 찾기',
+    loginErrorEmpty: '아이디와 비밀번호를 입력해주세요.',
+    loginFailed: '로그인 실패',
+    loginErrorInvalid: '아이디 또는 비밀번호가 틀렸습니다.',
+
+    // 비밀번호 재설정
+    backToLogin: '로그인으로 돌아가기',
+    resetPasswordTitle: '비밀번호 재설정',
+    resetPasswordMessage: '새로운 비밀번호를 입력해 주세요',
+    resetPasswordHint: '영문 6~12자, 특수문자 1개 포함',
+    enterPassword: '비밀번호 입력',
+    confirmPassword: '비밀번호 재확인',
+    resetting: '변경 중...',
+    resetPasswordErrorEmpty: '새 비밀번호를 입력해주세요.',
+    resetPasswordErrorMismatch: '비밀번호가 일치하지 않습니다.',
+    resetPasswordErrorLength: '비밀번호는 6자 이상이어야 합니다.',
+    resetPasswordErrorFormat: '영문 6~12자, 특수문자 1개를 포함해야 합니다.',
+    resetPasswordFailed: '비밀번호 변경에 실패했습니다.',
+    resetPasswordFailedRetry:
+      '비밀번호 변경에 실패했습니다. 다시 시도해주세요.',
+    resetPasswordSuccess: '비밀번호를 성공적으로 변경하였습니다.',
+    resetPasswordRelogin: '변경된 비밀번호로 재로그인 하시기 바랍니다.',
+    confirm: '확인',
+
+    // 비밀번호 찾기
+    findAccountStepEmail: '이메일 입력',
+    findAccountStepVerify: '인증 코드 확인',
+    findAccountStepPassword: '새 비밀번호 설정',
+    findAccountEmailMessage:
+      '이메일을 입력하시면 비밀번호를 재설정할 수 있습니다.',
+    findAccountSendCode: '인증 코드 전송',
+    sending: '전송 중...',
+    findAccountErrorEmail: '이메일을 입력해주세요.',
+    findAccountCodeSent: '인증 코드가 이메일로 전송되었습니다.',
+    findAccountCodeSendFailed: '인증 코드 전송에 실패했습니다.',
+    findAccountCodeSendFailedRetry:
+      '인증 코드 전송에 실패했습니다. 다시 시도해주세요.',
+    findAccountEnterCode: '로 전송된 인증 코드를 입력해주세요.',
+    findAccountCodeLabel: '인증 코드 입력',
+    findAccountErrorCode: '인증 코드를 입력해주세요.',
+    findAccountVerifyCode: '인증 코드 확인',
+    verifying: '확인 중...',
+    findAccountVerifySuccess: '인증이 완료되었습니다.',
+    findAccountVerifyFailed: '인증 코드가 올바르지 않습니다.',
+    findAccountVerifyFailedRetry:
+      '인증 코드가 올바르지 않습니다. 다시 확인해주세요.',
+    findAccountTimerExpired:
+      '인증 시간이 만료되었습니다. 인증코드를 다시 받아주세요.',
+    findAccountResendCode: '인증코드 다시 보내기',
+    newPassword: '새 비밀번호',
+    findAccountChangePassword: '비밀번호 변경',
+    findAccountResetSuccess:
+      '비밀번호가 성공적으로 변경되었습니다. 로그인 페이지로 이동합니다.',
+
+    // 조직 관리
+    organizationManagement: '조직관리',
+    orgManagementSubtitle: '조직(부서)와 직급 정보를 등록/수정 가능',
+    orgAddDepartment: '부서추가',
+    orgAddPosition: '직급추가',
+    orgEnterDepartmentName: '부서명 입력',
+    orgEnterPositionName: '직급명 입력',
+    add: '추가',
+    orgDepartmentAdded: '부서가 추가되었습니다.',
+    orgDepartmentAddFailed: '부서 추가에 실패했습니다.',
+    orgPositionAdded: '직급이 추가되었습니다.',
+    orgPositionAddFailed: '직급 추가에 실패했습니다.',
+    orgDepartmentUpdated: '부서가 수정되었습니다.',
+    orgDepartmentUpdateFailed: '부서 수정에 실패했습니다.',
+    orgPositionUpdated: '직급이 수정되었습니다.',
+    orgPositionUpdateFailed: '직급 수정에 실패했습니다.',
+    orgConfirmDeleteDepartment: '부서를 삭제하시겠습니까?',
+    orgDepartmentDeleted: '부서가 삭제되었습니다.',
+    orgDepartmentDeleteFailed: '부서 삭제에 실패했습니다.',
+    orgConfirmDeletePosition: '직급을 삭제하시겠습니까?',
+    orgPositionDeleted: '직급이 삭제되었습니다.',
+    orgPositionDeleteFailed: '직급 삭제에 실패했습니다.',
+
+    // 직원 관리 추가
+    memberRegistered: '직원이 등록되었습니다.',
+    memberUpdated: '직원 정보가 수정되었습니다.',
+    memberStatusChanged: '직원이 {status}되었습니다.',
+    register: '등록',
+    update: '수정',
+    failed: '실패',
+    errorOccurred: '오류가 발생했습니다.',
+    errorOccurredDuring: '중 오류가 발생했습니다.',
+
+    // 날짜
+    datePlaceholder: '연도-월-일',
   },
 
   en: {
@@ -183,10 +311,8 @@ export const translations = {
     // 회원 관리
     memberList: 'Member List',
     addMember: 'Add Member',
-    active: 'Active',
-    inactive: 'Inactive',
-    activate: 'Activate',
-    deactivate: 'Deactivate',
+    Activate: 'Activate',
+    Deactivate: 'Deactivate',
     searchPlaceholder: 'Search by name, ID, email',
     memberId: 'Member ID',
     memberName: 'Name',
@@ -299,11 +425,20 @@ export const translations = {
       'Select the form to use. The content of the selected form will be loaded into the editor.',
     enterSearchTerm: 'Enter search term',
     sequenceNo: 'Seq',
+    formType: 'Type',
     select: 'Select',
     submitCompleted: 'Submit Completed',
     saveCompleted: 'Save Completed',
     draftSubmitted: 'Draft has been submitted.',
     saveSuccess: 'Save completed.',
+    unsavedDraftExists: 'Unsaved draft exists',
+    unsavedDraftMessage:
+      'There is an unsaved draft. Do you want to leave this page?',
+    doNotSave: "Don't Save",
+    deleteDocument: 'Delete Document',
+    resetContent: 'Reset Content',
+    confirmDelete: 'Are you sure you want to delete?',
+    confirmReset: 'Are you sure you want to reset?',
 
     // 결재 문서 리스트
     documentsToApprove: 'Documents to Approve',
@@ -311,6 +446,129 @@ export const translations = {
     // 상태 카드
     myStatus: 'My Status',
     approvalRequest: 'Approval Request',
+
+    // 기안서 상세
+    approvalDetail: 'Approval Detail',
+    approvalNo: 'Approval No.',
+    noAttachments: 'No attachments.',
+    comments: 'Comments (Optional)',
+    oneCommentOnly: 'Only 1 comment can be written.',
+    alreadyCommented:
+      'You have already written a comment. Only 1 comment per approver is allowed.',
+    commentRegistered: 'Comment has been registered.',
+    commentRegistrationFailed: 'Comment registration failed',
+    serverError: 'A server error occurred.',
+    confirmDeleteComment: 'Are you sure you want to delete this comment?',
+    commentDeleted: 'Comment has been deleted.',
+    alreadyCommentedPlaceholder: 'You have already written a comment.',
+    enterComment: 'Enter your comment',
+    register: 'Register',
+    cancelDraft: 'Cancel Draft',
+    approve: 'Approve',
+    reject: 'Reject',
+    download: 'Download',
+    waiting: 'Waiting',
+
+    // 회원 관리 추가
+    memberManagementSubtitle:
+      'View organization status and search/register employees',
+    editForm: 'Edit Employee Information',
+    registerForm: 'Register Employee Information',
+
+    // 로그인
+    userId: 'User ID',
+    signIn: 'Sign In',
+    signingIn: 'Signing in...',
+    passwordReset: 'Password Reset',
+    loginErrorEmpty: 'Please enter your ID and password.',
+    loginFailed: 'Login failed',
+    loginErrorInvalid: 'Invalid ID or password.',
+
+    // 비밀번호 재설정
+    backToLogin: 'Back to Login',
+    resetPasswordTitle: 'Reset Password',
+    resetPasswordMessage: 'Please enter your new password',
+    resetPasswordHint: '6-12 characters, including 1 special character',
+    enterPassword: 'Enter Password',
+    confirmPassword: 'Confirm Password',
+    resetting: 'Resetting...',
+    resetPasswordErrorEmpty: 'Please enter a new password.',
+    resetPasswordErrorMismatch: 'Passwords do not match.',
+    resetPasswordErrorLength: 'Password must be at least 6 characters long.',
+    resetPasswordErrorFormat:
+      'Must be 6-12 characters with at least 1 special character.',
+    resetPasswordFailed: 'Failed to change password.',
+    resetPasswordFailedRetry: 'Failed to change password. Please try again.',
+    resetPasswordSuccess: 'Password has been successfully changed.',
+    resetPasswordRelogin: 'Please log in again with your new password.',
+    confirm: 'Confirm',
+
+    // 비밀번호 찾기
+    findAccountStepEmail: 'Enter Email',
+    findAccountStepVerify: 'Verify Code',
+    findAccountStepPassword: 'Set New Password',
+    findAccountEmailMessage: 'Enter your email address to reset your password.',
+    findAccountSendCode: 'Send Verification Code',
+    sending: 'Sending...',
+    findAccountErrorEmail: 'Please enter your email.',
+    findAccountCodeSent: 'Verification code has been sent to your email.',
+    findAccountCodeSendFailed: 'Failed to send verification code.',
+    findAccountCodeSendFailedRetry:
+      'Failed to send verification code. Please try again.',
+    findAccountEnterCode: 'Please enter the verification code sent to',
+    findAccountCodeLabel: 'Enter Verification Code',
+    findAccountErrorCode: 'Please enter the verification code.',
+    findAccountVerifyCode: 'Verify Code',
+    verifying: 'Verifying...',
+    findAccountVerifySuccess: 'Verification completed.',
+    findAccountVerifyFailed: 'Invalid verification code.',
+    findAccountVerifyFailedRetry:
+      'Invalid verification code. Please check again.',
+    findAccountTimerExpired:
+      'Verification time has expired. Please request a new code.',
+    findAccountResendCode: 'Resend Code',
+    newPassword: 'New Password',
+    findAccountChangePassword: 'Change Password',
+    findAccountResetSuccess:
+      'Password has been successfully changed. Redirecting to login page.',
+
+    // 조직 관리
+    organizationManagement: 'Organization Management',
+    orgManagementSubtitle:
+      'Add/edit organization (department) and position information',
+    orgAddDepartment: 'Add Department',
+    orgAddPosition: 'Add Position',
+    orgEnterDepartmentName: 'Enter Department Name',
+    orgEnterPositionName: 'Enter Position Name',
+    add: 'Add',
+    orgDepartmentAdded: 'Department has been added.',
+    orgDepartmentAddFailed: 'Failed to add department.',
+    orgPositionAdded: 'Position has been added.',
+    orgPositionAddFailed: 'Failed to add position.',
+    orgDepartmentUpdated: 'Department has been updated.',
+    orgDepartmentUpdateFailed: 'Failed to update department.',
+    orgPositionUpdated: 'Position has been updated.',
+    orgPositionUpdateFailed: 'Failed to update position.',
+    orgConfirmDeleteDepartment:
+      'Are you sure you want to delete this department?',
+    orgDepartmentDeleted: 'Department has been deleted.',
+    orgDepartmentDeleteFailed: 'Failed to delete department.',
+    orgConfirmDeletePosition: 'Are you sure you want to delete this position?',
+    orgPositionDeleted: 'Position has been deleted.',
+    orgPositionDeleteFailed: 'Failed to delete position.',
+
+    // 직원 관리 추가
+    memberRegistered: 'Employee has been registered.',
+    memberUpdated: 'Employee information has been updated.',
+    memberStatusChanged: 'Employee has been {status}.',
+    register: 'Register',
+    update: 'Update',
+    failed: 'Failed',
+    errorOccurred: 'An error occurred.',
+    errorOccurredDuring: 'An error occurred during the process.',
+
+    // 날짜
+    datePlaceholder: 'YYYY-MM-DD',
   },
 };
 

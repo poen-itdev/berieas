@@ -9,8 +9,7 @@ const LanguageContext = createContext();
  */
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
-    // localStorage에서 언어 설정 로드, 기본값은 'en'
-    return localStorage.getItem('language') || 'en';
+    return 'en';
   });
 
   // 언어 변경 시 localStorage에 저장
@@ -31,9 +30,29 @@ export const LanguageProvider = ({ children }) => {
   // 번역 함수 - 현재 언어에 맞는 텍스트 반환
   const t = (key) => translate(key, language);
 
+  // 날짜 포맷팅 함수
+  const formatDate = (date) => {
+    if (!date) return '-';
+    const dateObj = new Date(date);
+    if (isNaN(dateObj.getTime())) return '-';
+
+    // 한국어: YYYY-MM-DD, 영어: MM/DD/YYYY
+    if (language === 'ko') {
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } else {
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${month}/${day}/${year}`;
+    }
+  };
+
   return (
     <LanguageContext.Provider
-      value={{ language, toggleLanguage, changeLanguage, t }}
+      value={{ language, toggleLanguage, changeLanguage, t, formatDate }}
     >
       {children}
     </LanguageContext.Provider>

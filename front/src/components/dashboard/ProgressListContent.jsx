@@ -24,7 +24,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 const ProgressListContent = ({ isMobile = false }) => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
   const [searchParams] = useSearchParams();
   const [selectedTab, setSelectedTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -333,7 +333,7 @@ const ProgressListContent = ({ isMobile = false }) => {
             />
             <TextField
               type="date"
-              placeholder="연도-월-일"
+              label={t('datePlaceholder')}
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
               sx={{
@@ -341,6 +341,21 @@ const ProgressListContent = ({ isMobile = false }) => {
                 '& .MuiInputBase-root': {
                   height: '40px',
                 },
+                '& input[type="date"]::-webkit-datetime-edit-text': {
+                  display: startDate ? 'inline' : 'none',
+                },
+                '& input[type="date"]::-webkit-datetime-edit-month-field': {
+                  display: startDate ? 'inline' : 'none',
+                },
+                '& input[type="date"]::-webkit-datetime-edit-day-field': {
+                  display: startDate ? 'inline' : 'none',
+                },
+                '& input[type="date"]::-webkit-datetime-edit-year-field': {
+                  display: startDate ? 'inline' : 'none',
+                },
+              }}
+              InputLabelProps={{
+                shrink: true,
               }}
               InputProps={{
                 startAdornment: (
@@ -352,7 +367,7 @@ const ProgressListContent = ({ isMobile = false }) => {
             />
             <TextField
               type="date"
-              placeholder="연도-월-일"
+              label={t('datePlaceholder')}
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
               sx={{
@@ -360,6 +375,21 @@ const ProgressListContent = ({ isMobile = false }) => {
                 '& .MuiInputBase-root': {
                   height: '40px',
                 },
+                '& input[type="date"]::-webkit-datetime-edit-text': {
+                  display: endDate ? 'inline' : 'none',
+                },
+                '& input[type="date"]::-webkit-datetime-edit-month-field': {
+                  display: endDate ? 'inline' : 'none',
+                },
+                '& input[type="date"]::-webkit-datetime-edit-day-field': {
+                  display: endDate ? 'inline' : 'none',
+                },
+                '& input[type="date"]::-webkit-datetime-edit-year-field': {
+                  display: endDate ? 'inline' : 'none',
+                },
+              }}
+              InputLabelProps={{
+                shrink: true,
               }}
               InputProps={{
                 startAdornment: (
@@ -470,9 +500,7 @@ const ProgressListContent = ({ isMobile = false }) => {
                         {getDisplayNumber(index)}
                       </TableCell>
                       <TableCell sx={{ minWidth: { xs: '80px', sm: '100px' } }}>
-                        {row.regDate
-                          ? new Date(row.regDate).toLocaleDateString()
-                          : '-'}
+                        {formatDate(row.regDate)}
                       </TableCell>
                       <TableCell
                         sx={{

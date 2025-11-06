@@ -9,16 +9,25 @@ import {
   Typography,
   Alert,
   Container,
+  Select,
+  MenuItem,
+  FormControl,
 } from '@mui/material';
 import { API_URLS } from '../config/api';
+import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/custom.css';
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { t, language, changeLanguage } = useLanguage();
   const [memberId, setMemberId] = useState('');
   const [memberPw, setMemberPw] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const handleLanguageChange = (event) => {
+    changeLanguage(event.target.value);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,7 +35,7 @@ const LoginPage = () => {
     setIsLoading(true);
 
     if (memberId === '' || memberPw === '') {
-      setError('아이디와 비밀번호를 입력해주세요.');
+      setError(t('loginErrorEmpty'));
       setIsLoading(false);
       return;
     }
@@ -40,7 +49,7 @@ const LoginPage = () => {
         credentials: 'include',
         body: JSON.stringify({ memberId, memberPw }),
       });
-      if (!response.ok) throw new Error('로그인 실패');
+      if (!response.ok) throw new Error(t('loginFailed'));
 
       const data = await response.json();
       localStorage.setItem('accessToken', data.accessToken);
@@ -49,7 +58,7 @@ const LoginPage = () => {
       const isFirst = data.isFirstLogin === true || data.isFirstLogin === 'Y';
       navigate(isFirst ? '/reset-password' : '/dashboard');
     } catch (error) {
-      setError('아이디 또는 비밀번호가 틀렸습니다.');
+      setError(t('loginErrorInvalid'));
     } finally {
       setIsLoading(false);
     }
@@ -63,8 +72,39 @@ const LoginPage = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          position: 'relative',
         }}
       >
+        {/* 언어 선택 - 오른쪽 상단에 고정 */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 20,
+            right: 20,
+          }}
+        >
+          <FormControl size="small">
+            <Select
+              value={language}
+              onChange={handleLanguageChange}
+              sx={{
+                bgcolor: 'white',
+                minWidth: 100,
+                height: 36,
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(0, 0, 0, 0.23)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(0, 0, 0, 0.4)',
+                },
+              }}
+            >
+              <MenuItem value="ko">한국어</MenuItem>
+              <MenuItem value="en">English</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
         <Card
           sx={{
             width: '100%',
@@ -99,7 +139,7 @@ const LoginPage = () => {
                 required
                 fullWidth
                 id="memberId"
-                label="User ID"
+                label={t('userId')}
                 name="memberId"
                 autoComplete="username"
                 autoFocus
@@ -113,7 +153,7 @@ const LoginPage = () => {
                 required
                 fullWidth
                 name="memberPw"
-                label="Password"
+                label={t('password')}
                 type="password"
                 id="memberPw"
                 autoComplete="current-password"
@@ -145,7 +185,7 @@ const LoginPage = () => {
                   },
                 }}
               >
-                {isLoading ? 'sign in...' : 'Sign In'}
+                {isLoading ? t('signingIn') : t('signIn')}
               </Button>
 
               <Box sx={{ textAlign: 'center' }}>
@@ -160,7 +200,7 @@ const LoginPage = () => {
                   }}
                   onClick={() => navigate('/find-account')}
                 >
-                  Password Reset
+                  {t('passwordReset')}
                 </Typography>
               </Box>
             </Box>

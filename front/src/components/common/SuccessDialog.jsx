@@ -5,9 +5,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 const SuccessDialog = ({
   open,
   onClose,
-  title = '성공',
+  title = 'Success',
   message,
-  buttonText = '확인',
+  buttonText = 'OK',
 }) => {
   return (
     <Dialog

@@ -21,7 +21,7 @@ import { useLanguage } from '../../contexts/LanguageContext';
 
 const DashboardContent = ({ userInfo, isMobile = false }) => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, formatDate } = useLanguage();
   const [selectedTab, setSelectedTab] = useState(0);
 
   // 대시보드 카운트 데이터 (백엔드 연동)
@@ -382,9 +382,7 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
                         {doc.signId || doc.approvalId}
                       </TableCell>
                       <TableCell align="center">
-                        {doc.regDate
-                          ? new Date(doc.regDate).toLocaleDateString()
-                          : '-'}
+                        {formatDate(doc.regDate)}
                       </TableCell>
                     </TableRow>
                   )
