@@ -176,7 +176,7 @@ const MemberManagementContent = () => {
     if (useYn === 'Y') {
       return (
         <Chip
-          label={t('active')}
+          label={t('활성화')}
           size="small"
           variant="outlined"
           sx={{
@@ -194,7 +194,7 @@ const MemberManagementContent = () => {
     } else {
       return (
         <Chip
-          label={t('Deactivate')}
+          label={t('비활성화')}
           size="small"
           variant="outlined"
           sx={{
@@ -265,7 +265,7 @@ const MemberManagementContent = () => {
 
   const confirmToggleMemberStatus = async () => {
     const { memberId, currentStatus } = statusToggleTarget;
-    const newStatus = currentStatus === 'Y' ? t('deactivate') : t('activate');
+    const newStatus = currentStatus === 'Y' ? t('비활성화') : t('활성화');
     setShowStatusConfirmDialog(false);
 
     try {
@@ -508,7 +508,7 @@ const MemberManagementContent = () => {
             <Box sx={{ mb: 3 }}>
               <Tabs value={selectedTab} onChange={handleTabChange}>
                 <Tab label={t('all')} />
-                <Tab label={t('active')} />
+                <Tab label={t('activate')} />
                 <Tab label={t('deactivate')} />
               </Tabs>
             </Box>

@@ -28,7 +28,7 @@ export const translations = {
     // 회원 관리
     memberList: '회원 목록',
     addMember: '직원 등록',
-    Activate: '활성화',
+    activate: '활성화',
     deactivate: '비활성화',
     searchPlaceholder: '이름, 아이디, 이메일로 검색',
     memberId: '아이디',
@@ -188,7 +188,6 @@ export const translations = {
 
     // 회원 관리 추가
     memberManagementSubtitle: '조직현황 확인 및 직원 검색/등록 가능',
-    editForm: '직원 정보 편집',
     registerForm: '직원 정보 등록',
 
     // 로그인
@@ -205,7 +204,6 @@ export const translations = {
     resetPasswordTitle: '비밀번호 재설정',
     resetPasswordMessage: '새로운 비밀번호를 입력해 주세요',
     resetPasswordHint: '영문 6~12자, 특수문자 1개 포함',
-    enterPassword: '비밀번호 입력',
     confirmPassword: '비밀번호 재확인',
     resetting: '변경 중...',
     resetPasswordErrorEmpty: '새 비밀번호를 입력해주세요.',
@@ -217,7 +215,6 @@ export const translations = {
       '비밀번호 변경에 실패했습니다. 다시 시도해주세요.',
     resetPasswordSuccess: '비밀번호를 성공적으로 변경하였습니다.',
     resetPasswordRelogin: '변경된 비밀번호로 재로그인 하시기 바랍니다.',
-    confirm: '확인',
 
     // 비밀번호 찾기
     findAccountStepEmail: '이메일 입력',
@@ -250,13 +247,11 @@ export const translations = {
       '비밀번호가 성공적으로 변경되었습니다. 로그인 페이지로 이동합니다.',
 
     // 조직 관리
-    organizationManagement: '조직관리',
     orgManagementSubtitle: '조직(부서)와 직급 정보를 등록/수정 가능',
     orgAddDepartment: '부서추가',
     orgAddPosition: '직급추가',
     orgEnterDepartmentName: '부서명 입력',
     orgEnterPositionName: '직급명 입력',
-    add: '추가',
     orgDepartmentAdded: '부서가 추가되었습니다.',
     orgDepartmentAddFailed: '부서 추가에 실패했습니다.',
     orgPositionAdded: '직급이 추가되었습니다.',
@@ -276,10 +271,8 @@ export const translations = {
     memberRegistered: '직원이 등록되었습니다.',
     memberUpdated: '직원 정보가 수정되었습니다.',
     memberStatusChanged: '직원이 {status}되었습니다.',
-    register: '등록',
     update: '수정',
     failed: '실패',
-    errorOccurred: '오류가 발생했습니다.',
     errorOccurredDuring: '중 오류가 발생했습니다.',
 
     // 날짜
@@ -311,8 +304,8 @@ export const translations = {
     // 회원 관리
     memberList: 'Member List',
     addMember: 'Add Member',
-    Activate: 'Activate',
-    Deactivate: 'Deactivate',
+    activate: 'Activate',
+    deactivate: 'Deactivate',
     searchPlaceholder: 'Search by name, ID, email',
     memberId: 'Member ID',
     memberName: 'Name',
@@ -472,7 +465,6 @@ export const translations = {
     // 회원 관리 추가
     memberManagementSubtitle:
       'View organization status and search/register employees',
-    editForm: 'Edit Employee Information',
     registerForm: 'Register Employee Information',
 
     // 로그인
@@ -489,7 +481,6 @@ export const translations = {
     resetPasswordTitle: 'Reset Password',
     resetPasswordMessage: 'Please enter your new password',
     resetPasswordHint: '6-12 characters, including 1 special character',
-    enterPassword: 'Enter Password',
     confirmPassword: 'Confirm Password',
     resetting: 'Resetting...',
     resetPasswordErrorEmpty: 'Please enter a new password.',
@@ -501,7 +492,6 @@ export const translations = {
     resetPasswordFailedRetry: 'Failed to change password. Please try again.',
     resetPasswordSuccess: 'Password has been successfully changed.',
     resetPasswordRelogin: 'Please log in again with your new password.',
-    confirm: 'Confirm',
 
     // 비밀번호 찾기
     findAccountStepEmail: 'Enter Email',
@@ -533,14 +523,12 @@ export const translations = {
       'Password has been successfully changed. Redirecting to login page.',
 
     // 조직 관리
-    organizationManagement: 'Organization Management',
     orgManagementSubtitle:
       'Add/edit organization (department) and position information',
     orgAddDepartment: 'Add Department',
     orgAddPosition: 'Add Position',
     orgEnterDepartmentName: 'Enter Department Name',
     orgEnterPositionName: 'Enter Position Name',
-    add: 'Add',
     orgDepartmentAdded: 'Department has been added.',
     orgDepartmentAddFailed: 'Failed to add department.',
     orgPositionAdded: 'Position has been added.',
@@ -561,10 +549,8 @@ export const translations = {
     memberRegistered: 'Employee has been registered.',
     memberUpdated: 'Employee information has been updated.',
     memberStatusChanged: 'Employee has been {status}.',
-    register: 'Register',
     update: 'Update',
     failed: 'Failed',
-    errorOccurred: 'An error occurred.',
     errorOccurredDuring: 'An error occurred during the process.',
 
     // 날짜
