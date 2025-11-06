@@ -719,7 +719,7 @@ const MemberManagementContent = () => {
                               borderRadius: '4px',
                               width: { xs: '60px', sm: '80px' },
                               height: { xs: '28px', sm: '32px' },
-                              fontSize: { xs: '11px', sm: '12px' },
+                              fontSize: { xs: '10px', sm: '11px' },
                               whiteSpace: 'nowrap',
                             }}
                             onClick={() => handleEditMember(member)}
@@ -734,7 +734,7 @@ const MemberManagementContent = () => {
                               borderRadius: '4px',
                               width: { xs: '60px', sm: '80px' },
                               height: { xs: '28px', sm: '32px' },
-                              fontSize: { xs: '11px', sm: '12px' },
+                              fontSize: { xs: '10px', sm: '11px' },
                               whiteSpace: 'nowrap',
                             }}
                             onClick={() =>
@@ -965,6 +965,7 @@ const MemberManagementContent = () => {
           open={showStatusConfirmDialog}
           onClose={() => setShowStatusConfirmDialog(false)}
           onConfirm={confirmToggleMemberStatus}
+          isActivate={statusToggleTarget?.currentStatus === 'N'}
           title={
             statusToggleTarget?.currentStatus === 'Y'
               ? t('deactivate')
