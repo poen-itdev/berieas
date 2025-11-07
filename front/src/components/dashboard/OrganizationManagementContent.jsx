@@ -12,7 +12,7 @@ import {
   Grid,
   Container,
 } from '@mui/material';
-import { Add, Edit, Delete } from '@mui/icons-material';
+import { Add, Delete } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 import PageHeader from '../common/PageHeader';
 import { apiRequest } from '../../utils/apiHelper';
@@ -27,12 +27,6 @@ const OrganizationManagementContent = () => {
   const [positions, setPositions] = useState([]);
   const [newDepartment, setNewDepartment] = useState('');
   const [newPosition, setNewPosition] = useState('');
-
-  // 편집 상태 관리
-  const [editingDepartment, setEditingDepartment] = useState(null);
-  const [editingPosition, setEditingPosition] = useState(null);
-  const [editDepartmentName, setEditDepartmentName] = useState('');
-  const [editPositionName, setEditPositionName] = useState('');
 
   // 다이얼로그 상태 관리
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -144,118 +138,6 @@ const OrganizationManagementContent = () => {
     }
   };
 
-  // 부서 편집 시작
-  const handleEditDepartment = (index) => {
-    const department = departments[index];
-    setEditingDepartment(index);
-    setEditDepartmentName(department.name || department);
-  };
-
-  // 부서 편집 저장
-  const handleSaveDepartment = async () => {
-    if (editDepartmentName.trim()) {
-      try {
-        const department = departments[editingDepartment];
-        const response = await fetch(
-          `${API_URLS.UPDATE_DEPARTMENT}/${
-            department.idx || editingDepartment
-          }`,
-          {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-            body: JSON.stringify({ name: editDepartmentName.trim() }),
-          }
-        );
-
-        if (response.ok) {
-          // 성공하면 데이터 다시 로드
-          const departmentsRes = await fetch(API_URLS.DEPARTMENTS, {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-          });
-          const departmentsData = await departmentsRes.json();
-          setDepartments(departmentsData);
-          setEditingDepartment(null);
-          setEditDepartmentName('');
-          setSuccessMessage(t('orgDepartmentUpdated'));
-          setShowSuccessDialog(true);
-        } else {
-          throw new Error(t('orgDepartmentUpdateFailed'));
-        }
-      } catch (error) {
-        console.error('부서 수정 실패:', error);
-        setSuccessMessage(t('orgDepartmentUpdateFailed'));
-        setShowSuccessDialog(true);
-      }
-    }
-  };
-
-  // 부서 편집 취소
-  const handleCancelEditDepartment = () => {
-    setEditingDepartment(null);
-    setEditDepartmentName('');
-  };
-
-  // 직급 편집 시작
-  const handleEditPosition = (index) => {
-    const position = positions[index];
-    setEditingPosition(index);
-    setEditPositionName(position.name || position);
-  };
-
-  // 직급 편집 저장
-  const handleSavePosition = async () => {
-    if (editPositionName.trim()) {
-      try {
-        const position = positions[editingPosition];
-        const response = await fetch(
-          `${API_URLS.UPDATE_POSITION}/${position.idx || editingPosition}`,
-          {
-            method: 'PUT',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-            body: JSON.stringify({ name: editPositionName.trim() }),
-          }
-        );
-
-        if (response.ok) {
-          // 성공하면 데이터 다시 로드
-          const positionsRes = await fetch(API_URLS.POSITIONS, {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-            },
-          });
-          const positionsData = await positionsRes.json();
-          setPositions(positionsData);
-          setEditingPosition(null);
-          setEditPositionName('');
-          setSuccessMessage(t('orgPositionUpdated'));
-          setShowSuccessDialog(true);
-        } else {
-          throw new Error(t('orgPositionUpdateFailed'));
-        }
-      } catch (error) {
-        console.error('직급 수정 실패:', error);
-        setSuccessMessage(t('orgPositionUpdateFailed'));
-        setShowSuccessDialog(true);
-      }
-    }
-  };
-
-  // 직급 편집 취소
-  const handleCancelEditPosition = () => {
-    setEditingPosition(null);
-    setEditPositionName('');
-  };
-
   const handleDeleteDepartment = (index) => {
     setDeleteTarget({ type: 'department', index });
     setShowDeleteDialog(true);
@@ -266,31 +148,48 @@ const OrganizationManagementContent = () => {
     const department = departments[index];
     setShowDeleteDialog(false);
     try {
-      const response = await fetch(
-        `${API_URLS.DELETE_DEPARTMENT}/${department.idx || index}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        }
+      // idx가 명시적으로 존재하는지 확인 (0도 유효한 값)
+      const idx =
+        department?.idx !== null && department?.idx !== undefined
+          ? department.idx
+          : department?.id !== null && department?.id !== undefined
+          ? department.id
+          : null;
+
+      if (idx === null || idx === undefined) {
+        console.error('부서 idx가 없습니다:', department);
+        setSuccessMessage('부서 정보를 찾을 수 없습니다.');
+        setShowSuccessDialog(true);
+        return;
+      }
+
+      console.log('부서 삭제 시도:', { idx, department });
+      const response = await apiRequest(
+        `${API_URLS.DELETE_DEPARTMENT}/${idx}`,
+        { method: 'DELETE' }
       );
 
+      console.log('부서 삭제 응답:', response);
       if (response.ok) {
         // 성공하면 데이터 다시 로드
-        const departmentsRes = await fetch(API_URLS.DEPARTMENTS, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
+        const departmentsRes = await apiRequest(API_URLS.DEPARTMENTS, {
+          method: 'GET',
         });
-        const departmentsData = await departmentsRes.json();
-        setDepartments(departmentsData);
-        setSuccessMessage(t('orgDepartmentDeleted'));
-        setShowSuccessDialog(true);
+        if (departmentsRes.ok) {
+          setDepartments(
+            Array.isArray(departmentsRes.data) ? departmentsRes.data : []
+          );
+          setSuccessMessage(t('orgDepartmentDeleted'));
+          setShowSuccessDialog(true);
+        }
       } else {
-        throw new Error(t('orgDepartmentDeleteFailed'));
+        const errorMsg =
+          response.data?.message ||
+          response.data ||
+          t('orgDepartmentDeleteFailed');
+        console.error('부서 삭제 실패:', response.status, errorMsg);
+        setSuccessMessage(errorMsg);
+        setShowSuccessDialog(true);
       }
     } catch (error) {
       console.error('부서 삭제 실패:', error);
@@ -309,31 +208,47 @@ const OrganizationManagementContent = () => {
     const position = positions[index];
     setShowDeleteDialog(false);
     try {
-      const response = await fetch(
-        `${API_URLS.DELETE_POSITION}/${position.idx || index}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
-        }
-      );
+      // idx가 명시적으로 존재하는지 확인 (0도 유효한 값)
+      const idx =
+        position?.idx !== null && position?.idx !== undefined
+          ? position.idx
+          : position?.id !== null && position?.id !== undefined
+          ? position.id
+          : null;
 
+      if (idx === null || idx === undefined) {
+        console.error('직급 idx가 없습니다:', position);
+        setSuccessMessage('직급 정보를 찾을 수 없습니다.');
+        setShowSuccessDialog(true);
+        return;
+      }
+
+      console.log('직급 삭제 시도:', { idx, position });
+      const response = await apiRequest(`${API_URLS.DELETE_POSITION}/${idx}`, {
+        method: 'DELETE',
+      });
+
+      console.log('직급 삭제 응답:', response);
       if (response.ok) {
         // 성공하면 데이터 다시 로드
-        const positionsRes = await fetch(API_URLS.POSITIONS, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-          },
+        const positionsRes = await apiRequest(API_URLS.POSITIONS, {
+          method: 'GET',
         });
-        const positionsData = await positionsRes.json();
-        setPositions(positionsData);
-        setSuccessMessage(t('orgPositionDeleted'));
-        setShowSuccessDialog(true);
+        if (positionsRes.ok) {
+          setPositions(
+            Array.isArray(positionsRes.data) ? positionsRes.data : []
+          );
+          setSuccessMessage(t('orgPositionDeleted'));
+          setShowSuccessDialog(true);
+        }
       } else {
-        throw new Error(t('orgPositionDeleteFailed'));
+        const errorMsg =
+          response.data?.message ||
+          response.data ||
+          t('orgPositionDeleteFailed');
+        console.error('직급 삭제 실패:', response.status, errorMsg);
+        setSuccessMessage(errorMsg);
+        setShowSuccessDialog(true);
       }
     } catch (error) {
       console.error('직급 삭제 실패:', error);
@@ -465,70 +380,20 @@ const OrganizationManagementContent = () => {
                         '&:hover': { bgcolor: '#f5f5f5' },
                       }}
                     >
-                      {editingDepartment === index ? (
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            width: '100%',
-                          }}
+                      <ListItemText
+                        primary={
+                          dept.name ? getLocalizedName(dept, language) : dept
+                        }
+                      />
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteDepartment(index)}
+                          sx={{ color: '#f44336' }}
                         >
-                          <TextField
-                            value={editDepartmentName}
-                            onChange={(e) =>
-                              setEditDepartmentName(e.target.value)
-                            }
-                            size="small"
-                            sx={{ flexGrow: 1 }}
-                            onKeyPress={(e) =>
-                              e.key === 'Enter' && handleSaveDepartment()
-                            }
-                          />
-                          <Button
-                            size="small"
-                            variant="contained"
-                            onClick={handleSaveDepartment}
-                            sx={{ bgcolor: '#3275FC', minWidth: '60px' }}
-                          >
-                            {t('save')}
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={handleCancelEditDepartment}
-                            sx={{ minWidth: '60px' }}
-                          >
-                            {t('cancel')}
-                          </Button>
-                        </Box>
-                      ) : (
-                        <>
-                          <ListItemText
-                            primary={
-                              dept.name
-                                ? getLocalizedName(dept, language)
-                                : dept
-                            }
-                          />
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <IconButton
-                              size="small"
-                              sx={{ color: '#666' }}
-                              onClick={() => handleEditDepartment(index)}
-                            >
-                              <Edit fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDeleteDepartment(index)}
-                              sx={{ color: '#f44336' }}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Box>
-                        </>
-                      )}
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Box>
                     </ListItem>
                   ))}
                 </List>
@@ -625,68 +490,20 @@ const OrganizationManagementContent = () => {
                         '&:hover': { bgcolor: '#f5f5f5' },
                       }}
                     >
-                      {editingPosition === index ? (
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            width: '100%',
-                          }}
+                      <ListItemText
+                        primary={
+                          pos.name ? getLocalizedName(pos, language) : pos
+                        }
+                      />
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeletePosition(index)}
+                          sx={{ color: '#f44336' }}
                         >
-                          <TextField
-                            value={editPositionName}
-                            onChange={(e) =>
-                              setEditPositionName(e.target.value)
-                            }
-                            size="small"
-                            sx={{ flexGrow: 1 }}
-                            onKeyPress={(e) =>
-                              e.key === 'Enter' && handleSavePosition()
-                            }
-                          />
-                          <Button
-                            size="small"
-                            variant="contained"
-                            onClick={handleSavePosition}
-                            sx={{ bgcolor: '#3275FC', minWidth: '60px' }}
-                          >
-                            {t('save')}
-                          </Button>
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            onClick={handleCancelEditPosition}
-                            sx={{ minWidth: '60px' }}
-                          >
-                            {t('cancel')}
-                          </Button>
-                        </Box>
-                      ) : (
-                        <>
-                          <ListItemText
-                            primary={
-                              pos.name ? getLocalizedName(pos, language) : pos
-                            }
-                          />
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <IconButton
-                              size="small"
-                              sx={{ color: '#666' }}
-                              onClick={() => handleEditPosition(index)}
-                            >
-                              <Edit fontSize="small" />
-                            </IconButton>
-                            <IconButton
-                              size="small"
-                              onClick={() => handleDeletePosition(index)}
-                              sx={{ color: '#f44336' }}
-                            >
-                              <Delete fontSize="small" />
-                            </IconButton>
-                          </Box>
-                        </>
-                      )}
+                          <Delete fontSize="small" />
+                        </IconButton>
+                      </Box>
                     </ListItem>
                   ))}
                 </List>
@@ -736,8 +553,10 @@ const AdminOnlyContent = () => {
   );
 };
 
-export default () => (
+const OrganizationManagement = () => (
   <PermissionGuard requiredPermission="ADMIN" fallback={<AdminOnlyContent />}>
     <OrganizationManagementContent />
   </PermissionGuard>
 );
+
+export default OrganizationManagement;
