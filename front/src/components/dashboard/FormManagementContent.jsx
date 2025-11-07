@@ -640,8 +640,10 @@ const AdminOnlyContent = () => {
   );
 };
 
-export default () => (
+const FormManagementWithPermission = () => (
   <PermissionGuard requiredPermission="ADMIN" fallback={<AdminOnlyContent />}>
     <FormManagementContent />
   </PermissionGuard>
 );
+
+export default FormManagementWithPermission;
