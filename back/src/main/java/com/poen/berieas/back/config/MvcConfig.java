@@ -16,4 +16,34 @@ public class MvcConfig implements WebMvcConfigurer {
                 .allowedHeaders("*")
                 .exposedHeaders("Set-Cookie", "Authorization");
     }
+
+    // MessageSource 등록
+    @Bean
+    public MessageSource messageSource() {
+        ReloadableResourceBundleMessageSource messageSource = new ReloadableResourceBundleMessageSource();
+        messageSource.setBasename("classpath:messages/messages");
+        messageSource.setDefaultEncoding("UTF-8");
+        return messageSource;
+    }
+
+    @Bean
+    public LocaleResolver localeResolver() {
+        SessionLocaleResolver resolver = new SessionLocaleResolver();
+        resolver.setDefaultLocale(Locale.KOREAN);
+        return resolver;
+    }
+
+     @Bean
+    public LocaleChangeInterceptor localeChangeInterceptor() {
+        // 요청 파라미터로 언어 변경 허용 (?lang=en)
+        LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
+        interceptor.setParamName("lang");  // ?lang=ko, ?lang=en 등으로 설정 가능
+        return interceptor;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(localeChangeInterceptor());
+    }
+
 }
