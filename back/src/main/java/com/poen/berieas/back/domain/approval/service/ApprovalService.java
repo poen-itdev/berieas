@@ -465,28 +465,9 @@ Page<Approval> approvals =
 
         // ===== 파일 업로드 =====
         if (files != null && !files.isEmpty()) {
-            List<String> attachFiles = new ArrayList<>(Arrays.asList(
-                    detail.getApprovalAttachFile1(),
-                    detail.getApprovalAttachFile2(),
-                    detail.getApprovalAttachFile3(),
-                    detail.getApprovalAttachFile4(),
-                    detail.getApprovalAttachFile5()
-            ));
 
             for (MultipartFile file : files) {
                 if (file.isEmpty()) continue;
-
-                int slotIndex = -1;
-                for (int j = 0; j < attachFiles.size(); j++) {
-                    if (attachFiles.get(j) == null) {
-                        slotIndex = j;
-                        break;
-                    }
-                }
-
-                if (slotIndex == -1) {
-                    throw new RuntimeException("첨부파일 최대 개수(5개)를 초과했습니다.");
-                }
 
                 try {
                     // 파일명 중복 방지
@@ -497,21 +478,69 @@ Page<Approval> approvals =
 
                     String info = isDrafter ? "기안자첨언" : (isSigner ? "결재자첨언" : "참조자첨언");
 
-                    switch (slotIndex) {
-                        case 0 -> { detail.setApprovalAttachFile1(savedFileName); detail.setApprovalAttachPath1(uploadDir); detail.setApprovalAttachInfo1(info); }
-                        case 1 -> { detail.setApprovalAttachFile2(savedFileName); detail.setApprovalAttachPath2(uploadDir); detail.setApprovalAttachInfo2(info); }
-                        case 2 -> { detail.setApprovalAttachFile3(savedFileName); detail.setApprovalAttachPath3(uploadDir); detail.setApprovalAttachInfo3(info); }
-                        case 3 -> { detail.setApprovalAttachFile4(savedFileName); detail.setApprovalAttachPath4(uploadDir); detail.setApprovalAttachInfo4(info); }
-                        case 4 -> { detail.setApprovalAttachFile5(savedFileName); detail.setApprovalAttachPath5(uploadDir); detail.setApprovalAttachInfo5(info); }
-                    }
+                    // ===== 기안자 첨언 =====
+                    if (isDrafter) {
+                        List<String> attachFiles = new ArrayList<>(Arrays.asList(
+                                detail.getApprovalAttachFile1(),
+                                detail.getApprovalAttachFile2(),
+                                detail.getApprovalAttachFile3(),
+                                detail.getApprovalAttachFile4(),
+                                detail.getApprovalAttachFile5()
+                        ));
 
-                    attachFiles.set(slotIndex, savedFileName);
+                        // 비어있는 첫 번째 슬롯 탐색
+                        int slotIndex = -1;
+                        for (int j = 0; j < attachFiles.size(); j++) {
+                            if (attachFiles.get(j) == null) {
+                                slotIndex = j;
+                                break;
+                            }
+                        }
+
+                        // 슬롯이 없으면 업로드 불가
+                        if (slotIndex == -1) {
+                            throw new RuntimeException("첨부파일 최대 개수(5개)를 초과했습니다. 기존 파일을 삭제 후 다시 시도하세요.");
+                        }
+
+                        switch (slotIndex) {
+                            case 0 -> { detail.setApprovalAttachFile1(savedFileName); detail.setApprovalAttachPath1(uploadDir); detail.setApprovalAttachInfo1(info); }
+                            case 1 -> { detail.setApprovalAttachFile2(savedFileName); detail.setApprovalAttachPath2(uploadDir); detail.setApprovalAttachInfo2(info); }
+                            case 2 -> { detail.setApprovalAttachFile3(savedFileName); detail.setApprovalAttachPath3(uploadDir); detail.setApprovalAttachInfo3(info); }
+                            case 3 -> { detail.setApprovalAttachFile4(savedFileName); detail.setApprovalAttachPath4(uploadDir); detail.setApprovalAttachInfo4(info); }
+                            case 4 -> { detail.setApprovalAttachFile5(savedFileName); detail.setApprovalAttachPath5(uploadDir); detail.setApprovalAttachInfo5(info); }
+                        }
+
+                    }
+                    // ===== 결재자 첨언 =====
+                    else if (isSigner) {
+
+                        // 이미 첨부파일이 존재하면 예외
+                        if (detail.getSignerAttachFile() != null) {
+                            throw new RuntimeException("결재자는 첨부파일을 1개만 업로드할 수 있습니다.");
+                        }
+
+                        detail.setSignerAttachFile(savedFileName);
+                        detail.setSignerAttachPath(uploadDir);
+                        detail.setSignerAttachInfo(info);
+                    }
+                    // ===== 참조자 첨언 =====
+                    else if (referencer) {
+
+                        if (detail.getReferenceAttachFile() != null) {
+                            throw new RuntimeException("참조자는 첨부파일을 1개만 업로드할 수 있습니다.");
+                        }
+
+                        detail.setReferenceAttachFile(savedFileName);
+                        detail.setReferenceAttachkPath(uploadDir);
+                        detail.setReferenceAttachInfo(info);
+                    }
 
                 } catch (IOException e) {
                     throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);
                 }
             }
         }
+
 
         approval.setUpdateId(memberId);
         approval.setUpdateDate(LocalDateTime.now());

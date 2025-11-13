@@ -44,5 +44,13 @@ public class ApprovalResponseDto {
     private String drafterRemark;
     private String referenceRemark;
     private LocalDateTime updateDate;
-    private LocalDateTime regDate;  
+    private LocalDateTime regDate;
+
+    // 첨언
+    private String signerAttachPath;
+    private String signerAttachfile;
+    private String signerAttachInfo;
+    private String referenceAttachFile;
+    private String referenceAttachPath;
+    private String referenceAttachInfo;
 }

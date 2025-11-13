@@ -304,7 +304,13 @@ public class ApprovalDetailService {
             approvalDetail.getDrafterRemark(),
             approvalDetail.getReferenceRemark(),
             approval.getUpdateDate(),
-            approval.getRegDate()
+            approval.getRegDate(),
+            approvalDetail.getSignerAttachPath(),
+            approvalDetail.getSignerAttachFile(),
+            approvalDetail.getSignerAttachInfo(),
+            approvalDetail.getReferenceAttachFile(),
+            approvalDetail.getReferenceAttachkPath(),
+            approvalDetail.getReferenceAttachInfo()
         );
         return dto;
     }

@@ -43,4 +43,17 @@ public class MvcConfig implements WebMvcConfigurer {
         return resolver;
     }
 
+     @Bean
+    public LocaleChangeInterceptor localeChangeInterceptor() {
+        // 요청 파라미터로 언어 변경 허용 (?lang=en)
+        LocaleChangeInterceptor interceptor = new LocaleChangeInterceptor();
+        interceptor.setParamName("lang");  // ?lang=ko, ?lang=en 등으로 설정 가능
+        return interceptor;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(localeChangeInterceptor());
+    }
+
 }
