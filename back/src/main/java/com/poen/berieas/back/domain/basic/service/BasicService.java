@@ -105,9 +105,9 @@ public class BasicService {
     @Transactional
     public void deletePosition(int idx) {
 
-        Basic postition = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException("해당 부서가 없습니다."));
+        Basic position = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException("해당 직급이 없습니다."));
 
-        basicRepository.delete(postition);
+        basicRepository.delete(position);
     }
 
     // 직급 수정

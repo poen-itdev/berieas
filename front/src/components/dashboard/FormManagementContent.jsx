@@ -21,8 +21,10 @@ import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 import PageHeader from '../common/PageHeader';
 import PermissionGuard from '../common/PermissionGuard';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const FormManagementContent = () => {
+  const { t } = useLanguage();
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -157,7 +159,10 @@ const FormManagementContent = () => {
   return (
     <Box sx={{ p: { xs: 1.5, sm: 3 }, mt: { xs: 1.5, sm: 3 } }}>
       <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
-        <PageHeader title="양식 관리" fontSize={{ xs: '20px', sm: '30px' }} />
+        <PageHeader
+          title={t('formManagementTitle')}
+          fontSize={{ xs: '20px', sm: '30px' }}
+        />
 
         <Paper sx={{ p: { xs: 1.5, sm: 3 }, borderRadius: 2 }}>
           <Box
@@ -177,7 +182,7 @@ const FormManagementContent = () => {
                 fontSize: { xs: '14px', sm: '1.25rem' },
               }}
             >
-              양식 목록 ({forms.length})
+              {t('formList')} ({forms.length})
             </Typography>
             <Button
               variant="contained"
@@ -191,7 +196,7 @@ const FormManagementContent = () => {
                 minWidth: { xs: 'auto', sm: '64px' },
               }}
             >
-              새 양식 만들기
+              {t('createNewForm')}
             </Button>
           </Box>
 
@@ -204,7 +209,7 @@ const FormManagementContent = () => {
                 fontSize: { xs: '12px', sm: '14px' },
               }}
             >
-              로딩 중...
+              {t('loading')}
             </Typography>
           ) : forms.length === 0 ? (
             <Typography
@@ -215,7 +220,7 @@ const FormManagementContent = () => {
                 fontSize: { xs: '12px', sm: '14px' },
               }}
             >
-              등록된 양식이 없습니다.
+              {t('noFormsRegistered')}
             </Typography>
           ) : (
             <List>
@@ -249,7 +254,7 @@ const FormManagementContent = () => {
                       <Box sx={{ flex: 1 }}>
                         <ListItemText
                           primary={form.formTitle}
-                          secondary={`구분: ${form.formType}`}
+                          secondary={`${t('category')}: ${form.formType}`}
                           primaryTypographyProps={{
                             fontWeight: 600,
                             fontSize: { xs: '13px', sm: '1rem' },
@@ -323,7 +328,7 @@ const FormManagementContent = () => {
                 fontSize: { xs: '16px', sm: '1.25rem' },
               }}
             >
-              {selectedForm ? '양식 수정' : '새 양식 만들기'}
+              {selectedForm ? t('editForm') : t('createNewForm')}
             </Typography>
             <Typography
               variant="body2"
@@ -332,7 +337,7 @@ const FormManagementContent = () => {
                 fontSize: { xs: '12px', sm: '14px' },
               }}
             >
-              기안서에 사용할 양식을 등록하세요.
+              {t('registerFormForDraft')}
             </Typography>
           </Box>
           <DialogContent sx={{ p: { xs: 2, sm: 3 }, pt: { xs: 1, sm: 1 } }}>
@@ -345,7 +350,7 @@ const FormManagementContent = () => {
             >
               <TextField
                 fullWidth
-                label="양식 제목"
+                label={t('formTitle')}
                 placeholder="예: [공통] 기안서"
                 value={formData.formTitle}
                 sx={{
@@ -363,7 +368,7 @@ const FormManagementContent = () => {
               />
               <TextField
                 fullWidth
-                label="구분"
+                label={t('category')}
                 placeholder="예: 기안서, 휴가, 출장 등"
                 value={formData.formType}
                 sx={{
@@ -381,10 +386,10 @@ const FormManagementContent = () => {
 
               <TextField
                 fullWidth
-                label="양식 내용"
-                placeholder="양식 내용을 자유롭게 작성해주세요"
+                label={t('formContent')}
+                placeholder={t('enterFormContent')}
                 multiline
-                rows={{ xs: 6, sm: 10 }}
+                minRows={10}
                 value={formData.formDocument}
                 sx={{
                   '& .MuiInputBase-input': {
@@ -422,7 +427,7 @@ const FormManagementContent = () => {
                 '&:hover': { backgroundColor: '#1565c0' },
               }}
             >
-              {loading ? '저장 중...' : '저장'}
+              {loading ? t('saving') : t('save')}
             </Button>
             <Button
               onClick={() => setDialogOpen(false)}
@@ -440,7 +445,7 @@ const FormManagementContent = () => {
                 },
               }}
             >
-              취소
+              {t('cancel')}
             </Button>
           </DialogActions>
         </Dialog>
@@ -474,7 +479,7 @@ const FormManagementContent = () => {
                 fontSize: { xs: '16px', sm: '1.25rem' },
               }}
             >
-              양식 상세
+              {t('formDetail')}
             </Typography>
             <Typography
               variant="body2"
@@ -484,7 +489,7 @@ const FormManagementContent = () => {
                 fontSize: { xs: '12px', sm: '14px' },
               }}
             >
-              등록된 양식 정보를 확인할 수 있습니다.
+              {t('viewFormInfo')}
             </Typography>
           </Box>
           <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
@@ -505,7 +510,7 @@ const FormManagementContent = () => {
                       fontSize: { xs: '12px', sm: '0.875rem' },
                     }}
                   >
-                    양식 번호
+                    {t('formNumber')}
                   </Typography>
                   <Typography
                     variant="body1"
@@ -523,7 +528,7 @@ const FormManagementContent = () => {
                       fontSize: { xs: '12px', sm: '0.875rem' },
                     }}
                   >
-                    양식 제목
+                    {t('formTitle')}
                   </Typography>
                   <Typography
                     variant="body1"
@@ -541,7 +546,7 @@ const FormManagementContent = () => {
                       fontSize: { xs: '12px', sm: '0.875rem' },
                     }}
                   >
-                    구분
+                    {t('category')}
                   </Typography>
                   <Typography
                     variant="body1"
@@ -559,7 +564,7 @@ const FormManagementContent = () => {
                       fontSize: { xs: '12px', sm: '0.875rem' },
                     }}
                   >
-                    양식 내용
+                    {t('formContent')}
                   </Typography>
                   <Paper
                     sx={{
@@ -575,7 +580,7 @@ const FormManagementContent = () => {
                         fontSize: { xs: '12px', sm: '0.875rem' },
                       }}
                     >
-                      {selectedForm.formDocument || '내용 없음'}
+                      {selectedForm.formDocument || t('noContent')}
                     </Typography>
                   </Paper>
                 </Box>
@@ -606,7 +611,7 @@ const FormManagementContent = () => {
                 },
               }}
             >
-              닫기
+              {t('close')}
             </Button>
           </DialogActions>
         </Dialog>
@@ -616,24 +621,29 @@ const FormManagementContent = () => {
 };
 
 // 관리자 권한이 필요한 컴포넌트
-const AdminOnlyContent = () => (
-  <Box sx={{ p: 3, mt: 3 }}>
-    <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
-      <PageHeader title="양식 관리" fontSize="30px" />
-      <Paper sx={{ p: 4, textAlign: 'center', mt: 3 }}>
-        <Typography variant="h5" sx={{ color: '#666', fontWeight: 500 }}>
-          관리자페이지 입니다
-        </Typography>
-        <Typography variant="body1" sx={{ color: '#999', mt: 1 }}>
-          이 페이지는 관리자 권한이 필요한 페이지입니다.
-        </Typography>
-      </Paper>
-    </Container>
-  </Box>
-);
+const AdminOnlyContent = () => {
+  const { t } = useLanguage();
+  return (
+    <Box sx={{ p: 3, mt: 3 }}>
+      <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
+        <PageHeader title={t('formManagementTitle')} fontSize="30px" />
+        <Paper sx={{ p: 4, textAlign: 'center', mt: 3 }}>
+          <Typography variant="h5" sx={{ color: '#666', fontWeight: 500 }}>
+            {t('adminPageOnly')}
+          </Typography>
+          <Typography variant="body1" sx={{ color: '#999', mt: 1 }}>
+            {t('adminPermissionRequired')}
+          </Typography>
+        </Paper>
+      </Container>
+    </Box>
+  );
+};
 
-export default () => (
+const FormManagementWithPermission = () => (
   <PermissionGuard requiredPermission="ADMIN" fallback={<AdminOnlyContent />}>
     <FormManagementContent />
   </PermissionGuard>
 );
+
+export default FormManagementWithPermission;

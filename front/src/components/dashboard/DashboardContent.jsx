@@ -17,9 +17,11 @@ import {
 import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 import PageHeader from '../common/PageHeader';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const DashboardContent = ({ userInfo, isMobile = false }) => {
   const navigate = useNavigate();
+  const { t, formatDate } = useLanguage();
   const [selectedTab, setSelectedTab] = useState(0);
 
   // 대시보드 카운트 데이터 (백엔드 연동)
@@ -169,7 +171,10 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
         )}
 
         {/* 제목 */}
-        <PageHeader title="결재 현황" fontSize={{ xs: '20px', sm: '30px' }} />
+        <PageHeader
+          title={t('approvalStatus')}
+          fontSize={{ xs: '20px', sm: '30px' }}
+        />
 
         {/* 상단 통계 카드 3개 */}
         <Grid
@@ -178,13 +183,17 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
           sx={{ mb: { xs: 3, sm: 5 } }}
         >
           {[
-            { value: statusData.total, label: '전체', status: 'all' },
+            { value: statusData.total, label: t('all'), status: 'all' },
             {
               value: statusData.inProgress,
-              label: '진행중',
+              label: t('inProgress'),
               status: 'inProgress',
             },
-            { value: statusData.completed, label: '완료', status: 'completed' },
+            {
+              value: statusData.completed,
+              label: t('completed'),
+              status: 'completed',
+            },
           ].map((item, idx) => (
             <Grid key={idx} size={{ xs: 12, md: 4 }}>
               <Paper
@@ -251,7 +260,7 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
             <Tab
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  내가 상신한 문서
+                  {t('mySubmittedDocuments')}
                   <Box
                     sx={{
                       bgcolor: '#3275FC',
@@ -274,7 +283,7 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
             <Tab
               label={
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  내가 결재할 문서
+                  {t('myPendingDocuments')}
                   <Box
                     sx={{
                       bgcolor: '#3275FC',
@@ -310,19 +319,19 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
             <TableHead>
               <TableRow sx={{ bgcolor: '#f5f5f5' }}>
                 <TableCell align="center" sx={{ fontWeight: 600 }}>
-                  상태
+                  {t('status')}
                 </TableCell>
                 <TableCell align="center" sx={{ fontWeight: 600 }}>
-                  양식
+                  {t('form')}
                 </TableCell>
                 <TableCell align="center" sx={{ fontWeight: 600 }}>
-                  제목
+                  {t('title')}
                 </TableCell>
                 <TableCell align="center" sx={{ fontWeight: 600 }}>
-                  {selectedTab === 0 ? '결재자' : '기안자'}
+                  {selectedTab === 0 ? t('approver') : t('drafter')}
                 </TableCell>
                 <TableCell align="center" sx={{ fontWeight: 600 }}>
-                  일자
+                  {t('date')}
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -336,7 +345,7 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
                     sx={{ py: 4, color: '#666' }}
                   >
                     <Typography sx={{ fontSize: { xs: '12px', sm: '14px' } }}>
-                      문서가 없습니다.
+                      {t('noDocuments')}
                     </Typography>
                   </TableCell>
                 </TableRow>
@@ -373,9 +382,7 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
                         {doc.signId || doc.approvalId}
                       </TableCell>
                       <TableCell align="center">
-                        {doc.regDate
-                          ? new Date(doc.regDate).toLocaleDateString()
-                          : '-'}
+                        {formatDate(doc.regDate)}
                       </TableCell>
                     </TableRow>
                   )

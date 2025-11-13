@@ -34,15 +34,19 @@ import { Add, Search } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 import PermissionGuard from '../common/PermissionGuard';
+import { useLanguage, getLocalizedName } from '../../contexts/LanguageContext';
+import SuccessDialog from '../common/SuccessDialog';
+import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
 
 const MemberManagementContent = () => {
+  const { t, language } = useLanguage(); // 다국어 지원
   const [selectedTab, setSelectedTab] = useState(0); // 0: 전체, 1: 활성, 2: 비활성
   const [searchTerm, setSearchTerm] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDepartment, setSelectedDepartment] = useState('전체');
   const [memberList, setMemberList] = useState([]);
-  const [departments, setDepartments] = useState(['전체']);
-  const [positions, setPositions] = useState([]);
+  const [departmentsData, setDepartmentsData] = useState([]); // 전체 부서 객체 저장
+  const [positionsData, setPositionsData] = useState([]); // 전체 직급 객체 저장
 
   // 직원 등록/수정 모달 상태
   const [openModal, setOpenModal] = useState(false);
@@ -57,6 +61,12 @@ const MemberManagementContent = () => {
     role: 'USER', // 기본값: 일반 사용자
     useYn: 'Y', // 기본값: 활성
   });
+
+  // 다이얼로그 상태 관리
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [showStatusConfirmDialog, setShowStatusConfirmDialog] = useState(false);
+  const [statusToggleTarget, setStatusToggleTarget] = useState(null);
 
   // 회원 목록 가져오기
   useEffect(() => {
@@ -103,8 +113,7 @@ const MemberManagementContent = () => {
 
       if (response.ok) {
         const data = Array.isArray(response.data) ? response.data : [];
-        const departmentNames = data.map((dept) => dept.name);
-        setDepartments(['전체', ...departmentNames]);
+        setDepartmentsData(data); // 전체 객체 저장
       }
     } catch (error) {
       console.error('부서 목록 조회 실패:', error);
@@ -118,8 +127,7 @@ const MemberManagementContent = () => {
 
       if (response.ok) {
         const data = Array.isArray(response.data) ? response.data : [];
-        const positionNames = data.map((pos) => pos.name);
-        setPositions(positionNames);
+        setPositionsData(data); // 전체 객체 저장
       }
     } catch (error) {
       console.error('직급 목록 조회 실패:', error);
@@ -168,7 +176,7 @@ const MemberManagementContent = () => {
     if (useYn === 'Y') {
       return (
         <Chip
-          label="활성"
+          label={t('activate')}
           size="small"
           variant="outlined"
           sx={{
@@ -186,7 +194,7 @@ const MemberManagementContent = () => {
     } else {
       return (
         <Chip
-          label="비활성"
+          label={t('deactivate')}
           size="small"
           variant="outlined"
           sx={{
@@ -250,12 +258,15 @@ const MemberManagementContent = () => {
   };
 
   // 직원 상태 토글 (활성/비활성)
-  const handleToggleMemberStatus = async (memberId, currentStatus) => {
-    const newStatus = currentStatus === 'Y' ? '비활성화' : '활성화';
+  const handleToggleMemberStatus = (memberId, currentStatus) => {
+    setStatusToggleTarget({ memberId, currentStatus });
+    setShowStatusConfirmDialog(true);
+  };
 
-    if (!window.confirm(`정말 이 직원을 ${newStatus}하시겠습니까?`)) {
-      return;
-    }
+  const confirmToggleMemberStatus = async () => {
+    const { memberId, currentStatus } = statusToggleTarget;
+    const newStatus = currentStatus === 'Y' ? t('비활성화') : t('활성화');
+    setShowStatusConfirmDialog(false);
 
     try {
       const response = await fetch(
@@ -270,10 +281,13 @@ const MemberManagementContent = () => {
       );
 
       if (response.ok) {
-        alert(`직원이 ${newStatus}되었습니다.`);
+        setSuccessMessage(
+          t('memberStatusChanged').replace('{status}', newStatus)
+        );
+        setShowSuccessDialog(true);
         fetchMembers();
       } else {
-        let errorMessage = '오류가 발생했습니다.';
+        let errorMessage = t('errorOccurred');
 
         const responseClone = response.clone();
 
@@ -298,11 +312,13 @@ const MemberManagementContent = () => {
           headers: Object.fromEntries(response.headers.entries()),
         });
 
-        alert(`${newStatus} 실패: ${errorMessage}`);
+        setSuccessMessage(`${newStatus} ${t('failed')}: ${errorMessage}`);
+        setShowSuccessDialog(true);
       }
     } catch (error) {
       console.error(`직원 ${newStatus} 실패:`, error);
-      alert(`${newStatus} 중 오류가 발생했습니다.`);
+      setSuccessMessage(`${newStatus} ${t('errorOccurredDuring')}`);
+      setShowSuccessDialog(true);
     }
   };
 
@@ -353,32 +369,39 @@ const MemberManagementContent = () => {
       }
 
       if (response.ok) {
-        alert(
-          isEditMode ? '직원 정보가 수정되었습니다.' : '직원이 등록되었습니다.'
+        setSuccessMessage(
+          isEditMode ? t('memberUpdated') : t('memberRegistered')
         );
+        setShowSuccessDialog(true);
         handleCloseModal();
         fetchMembers();
       } else {
         const errorData = await response.json();
-        alert(
-          `${isEditMode ? '수정' : '등록'} 실패: ${
-            errorData.message || '오류가 발생했습니다.'
+        setSuccessMessage(
+          `${isEditMode ? t('update') : t('register')} ${t('failed')}: ${
+            errorData.message || t('errorOccurred')
           }`
         );
+        setShowSuccessDialog(true);
       }
     } catch (error) {
       console.error(isEditMode ? '직원 수정 실패:' : '직원 등록 실패:', error);
-      alert(`${isEditMode ? '수정' : '등록'} 중 오류가 발생했습니다.`);
+      setSuccessMessage(
+        `${isEditMode ? t('update') : t('register')} ${t(
+          'errorOccurredDuring'
+        )}`
+      );
+      setShowSuccessDialog(true);
     }
   };
 
   return (
     <Box sx={{ p: 3, mt: 4 }}>
       <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
-        {/* 제목 그룹 */}
+        {/* 제목 */}
         <PageHeader
-          title="회원관리"
-          description="조직현황 확인 및 직원 검색/등록 가능"
+          title={t('memberManagement')}
+          description={t('memberManagementSubtitle')}
         />
 
         {/* 콘텐츠 영역 - 반응형 레이아웃 */}
@@ -402,7 +425,7 @@ const MemberManagementContent = () => {
             }}
           >
             <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-              부서
+              {t('department')}
             </Typography>
             <List
               dense
@@ -427,17 +450,36 @@ const MemberManagementContent = () => {
                 },
               }}
             >
-              {departments.map((department) => (
+              {/* 전체 항목 */}
+              <ListItem disablePadding sx={{ minHeight: '40px' }}>
+                <ListItemButton
+                  selected={selectedDepartment === '전체'}
+                  onClick={() => handleDepartmentSelect('전체')}
+                  sx={{
+                    borderRadius: 1,
+                    minHeight: '40px',
+                    '&.Mui-selected': {
+                      bgcolor: '#e3f2fd',
+                      color: '#3275FC',
+                    },
+                  }}
+                >
+                  <ListItemText primary={t('all')} />
+                </ListItemButton>
+              </ListItem>
+
+              {/* 부서 목록 */}
+              {departmentsData.map((dept) => (
                 <ListItem
-                  key={department}
+                  key={dept.idx}
                   disablePadding
                   sx={{
                     minHeight: '40px',
                   }}
                 >
                   <ListItemButton
-                    selected={selectedDepartment === department}
-                    onClick={() => handleDepartmentSelect(department)}
+                    selected={selectedDepartment === dept.name}
+                    onClick={() => handleDepartmentSelect(dept.name)}
                     sx={{
                       borderRadius: 1,
                       minHeight: '40px',
@@ -447,7 +489,7 @@ const MemberManagementContent = () => {
                       },
                     }}
                   >
-                    <ListItemText primary={department} />
+                    <ListItemText primary={getLocalizedName(dept, language)} />
                   </ListItemButton>
                 </ListItem>
               ))}
@@ -465,9 +507,9 @@ const MemberManagementContent = () => {
           >
             <Box sx={{ mb: 3 }}>
               <Tabs value={selectedTab} onChange={handleTabChange}>
-                <Tab label="전체" />
-                <Tab label="활성" />
-                <Tab label="비활성" />
+                <Tab label={t('all')} />
+                <Tab label={t('activate')} />
+                <Tab label={t('deactivate')} />
               </Tabs>
             </Box>
 
@@ -482,7 +524,7 @@ const MemberManagementContent = () => {
               }}
             >
               <TextField
-                placeholder="이름, 아이디, 이메일로 검색"
+                placeholder={t('searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -515,7 +557,7 @@ const MemberManagementContent = () => {
                     flex: { xs: 1, sm: 'none' },
                   }}
                 >
-                  검색
+                  {t('search')}
                 </Button>
                 <Button
                   variant="contained"
@@ -530,7 +572,7 @@ const MemberManagementContent = () => {
                     flex: { xs: 1, sm: 'none' },
                   }}
                 >
-                  직원 등록
+                  {t('addMember')}
                 </Button>
               </Box>
             </Box>
@@ -578,7 +620,7 @@ const MemberManagementContent = () => {
                 <TableHead>
                   <TableRow sx={{ bgcolor: '#f5f5f5' }}>
                     <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
-                      이름
+                      {t('memberName')}
                     </TableCell>
                     <TableCell
                       sx={{
@@ -586,7 +628,7 @@ const MemberManagementContent = () => {
                         minWidth: '80px',
                       }}
                     >
-                      아이디
+                      {t('memberId')}
                     </TableCell>
                     <TableCell
                       sx={{
@@ -594,19 +636,19 @@ const MemberManagementContent = () => {
                         minWidth: '120px',
                       }}
                     >
-                      이메일
+                      {t('memberEmail')}
                     </TableCell>
                     <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
-                      부서
+                      {t('memberDepartment')}
                     </TableCell>
                     <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
-                      직급
+                      {t('memberPosition')}
                     </TableCell>
                     <TableCell sx={{ minWidth: { xs: '50px', sm: '70px' } }}>
-                      상태
+                      {t('memberStatus')}
                     </TableCell>
                     <TableCell sx={{ minWidth: { xs: '60px', sm: '80px' } }}>
-                      관리
+                      {t('edit')}
                     </TableCell>
                   </TableRow>
                 </TableHead>
@@ -675,14 +717,14 @@ const MemberManagementContent = () => {
                             variant="outlined"
                             sx={{
                               borderRadius: '4px',
-                              minWidth: { xs: '50px', sm: '60px' },
+                              width: { xs: '60px', sm: '80px' },
                               height: { xs: '28px', sm: '32px' },
-                              fontSize: { xs: '11px', sm: '12px' },
+                              fontSize: { xs: '10px', sm: '11px' },
                               whiteSpace: 'nowrap',
                             }}
                             onClick={() => handleEditMember(member)}
                           >
-                            수정
+                            {t('edit')}
                           </Button>
                           <Button
                             size="small"
@@ -690,9 +732,9 @@ const MemberManagementContent = () => {
                             color={member.useYn === 'Y' ? 'warning' : 'success'}
                             sx={{
                               borderRadius: '4px',
-                              minWidth: { xs: '60px', sm: '80px' },
+                              width: { xs: '60px', sm: '80px' },
                               height: { xs: '28px', sm: '32px' },
-                              fontSize: { xs: '10px', sm: '12px' },
+                              fontSize: { xs: '10px', sm: '11px' },
                               whiteSpace: 'nowrap',
                             }}
                             onClick={() =>
@@ -702,7 +744,9 @@ const MemberManagementContent = () => {
                               )
                             }
                           >
-                            {member.useYn === 'Y' ? '비활성화' : '활성화'}
+                            {member.useYn === 'Y'
+                              ? t('deactivate')
+                              : t('activate')}
                           </Button>
                         </Box>
                       </TableCell>
@@ -716,7 +760,7 @@ const MemberManagementContent = () => {
             {filteredMembers.length === 0 && (
               <Box sx={{ textAlign: 'center', py: 4 }}>
                 <Typography color="text.secondary">
-                  검색 결과가 없습니다.
+                  {t('noSearchResults')}
                 </Typography>
               </Box>
             )}
@@ -747,7 +791,7 @@ const MemberManagementContent = () => {
             }}
           >
             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              {isEditMode ? '직원 정보 편집' : '직원 정보 등록'}
+              {isEditMode ? t('editForm') : t('registerForm')}
             </Box>
           </DialogTitle>
 
@@ -758,7 +802,7 @@ const MemberManagementContent = () => {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="이름"
+                    label={t('memberName')}
                     value={newMember.memberName}
                     onChange={(e) =>
                       handleInputChange('memberName', e.target.value)
@@ -770,7 +814,7 @@ const MemberManagementContent = () => {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="이메일"
+                    label={t('memberEmail')}
                     type="email"
                     value={newMember.memberEmail}
                     onChange={(e) =>
@@ -785,19 +829,20 @@ const MemberManagementContent = () => {
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="아이디"
+                    label={t('memberId')}
                     value={newMember.memberId}
                     onChange={(e) =>
                       handleInputChange('memberId', e.target.value)
                     }
                     variant="outlined"
                     sx={{ mb: 1.5 }}
+                    disabled={isEditMode}
                   />
                 </Grid>
                 <Grid item xs={6}>
                   <TextField
                     fullWidth
-                    label="비밀번호"
+                    label={t('password')}
                     type="password"
                     value={isEditMode ? '*****' : newMember.memberPassword}
                     onChange={(e) =>
@@ -807,7 +852,9 @@ const MemberManagementContent = () => {
                     sx={{ mb: 1.5 }}
                     disabled={isEditMode}
                     placeholder={
-                      isEditMode ? '기존 비밀번호 유지' : '비밀번호 입력'
+                      isEditMode
+                        ? t('keepExistingPassword')
+                        : t('enterPassword')
                     }
                   />
                 </Grid>
@@ -815,43 +862,20 @@ const MemberManagementContent = () => {
                 {/* 세 번째 행 */}
                 <Grid item xs={6}>
                   <FormControl fullWidth sx={{ mb: 1.5, minWidth: '205px' }}>
-                    <InputLabel>부서</InputLabel>
+                    <InputLabel>{t('department')}</InputLabel>
                     <Select
                       fullWidth
                       value={newMember.memberDepartment}
                       onChange={(e) =>
                         handleInputChange('memberDepartment', e.target.value)
                       }
-                      label="부서"
+                      label={t('department')}
                       variant="outlined"
                       sx={{ height: '56px' }}
                     >
-                      {departments
-                        .filter((dept) => dept !== '전체')
-                        .map((dept) => (
-                          <MenuItem key={dept} value={dept}>
-                            {dept}
-                          </MenuItem>
-                        ))}
-                    </Select>
-                  </FormControl>
-                </Grid>
-                <Grid item xs={6}>
-                  <FormControl fullWidth sx={{ mb: 1.5, minWidth: '205px' }}>
-                    <InputLabel>직급</InputLabel>
-                    <Select
-                      fullWidth
-                      value={newMember.memberPosition}
-                      onChange={(e) =>
-                        handleInputChange('memberPosition', e.target.value)
-                      }
-                      label="직급"
-                      variant="outlined"
-                      sx={{ height: '56px' }}
-                    >
-                      {positions.map((pos) => (
-                        <MenuItem key={pos} value={pos}>
-                          {pos}
+                      {departmentsData.map((dept) => (
+                        <MenuItem key={dept.idx} value={dept.name}>
+                          {getLocalizedName(dept, language)}
                         </MenuItem>
                       ))}
                     </Select>
@@ -859,19 +883,40 @@ const MemberManagementContent = () => {
                 </Grid>
                 <Grid item xs={6}>
                   <FormControl fullWidth sx={{ mb: 1.5, minWidth: '205px' }}>
-                    <InputLabel>권한</InputLabel>
+                    <InputLabel>{t('position')}</InputLabel>
+                    <Select
+                      fullWidth
+                      value={newMember.memberPosition}
+                      onChange={(e) =>
+                        handleInputChange('memberPosition', e.target.value)
+                      }
+                      label={t('position')}
+                      variant="outlined"
+                      sx={{ height: '56px' }}
+                    >
+                      {positionsData.map((pos) => (
+                        <MenuItem key={pos.idx} value={pos.name}>
+                          {getLocalizedName(pos, language)}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={6}>
+                  <FormControl fullWidth sx={{ mb: 1.5, minWidth: '205px' }}>
+                    <InputLabel>{t('memberRole')}</InputLabel>
                     <Select
                       fullWidth
                       value={newMember.role}
                       onChange={(e) =>
                         handleInputChange('role', e.target.value)
                       }
-                      label="권한"
+                      label={t('memberRole')}
                       variant="outlined"
                       sx={{ height: '56px' }}
                     >
-                      <MenuItem value="USER">일반 사용자</MenuItem>
-                      <MenuItem value="ADMIN">관리자</MenuItem>
+                      <MenuItem value="USER">{t('user')}</MenuItem>
+                      <MenuItem value="ADMIN">{t('admin')}</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -890,7 +935,7 @@ const MemberManagementContent = () => {
                 fontSize: '14px',
               }}
             >
-              저장
+              {t('save')}
             </Button>
             <Button
               onClick={handleCloseModal}
@@ -901,31 +946,67 @@ const MemberManagementContent = () => {
                 fontSize: '14px',
               }}
             >
-              닫기
+              {t('close')}
             </Button>
           </DialogActions>
         </Dialog>
+
+        {/* Success Dialog */}
+        <SuccessDialog
+          open={showSuccessDialog}
+          onClose={() => setShowSuccessDialog(false)}
+          message={successMessage}
+          title={t('confirm')}
+          buttonText={t('confirm')}
+        />
+
+        {/* Status Toggle Confirmation Dialog */}
+        <DeleteConfirmDialog
+          open={showStatusConfirmDialog}
+          onClose={() => setShowStatusConfirmDialog(false)}
+          onConfirm={confirmToggleMemberStatus}
+          isActivate={statusToggleTarget?.currentStatus === 'N'}
+          title={
+            statusToggleTarget?.currentStatus === 'Y'
+              ? t('deactivate')
+              : t('activate')
+          }
+          message={
+            statusToggleTarget?.currentStatus === 'Y'
+              ? t('confirmDeactivate')
+              : t('confirmActivate')
+          }
+          confirmText={
+            statusToggleTarget?.currentStatus === 'Y'
+              ? t('deactivate')
+              : t('activate')
+          }
+        />
       </Container>
     </Box>
   );
 };
 
 // 관리자 권한이 필요한 컴포넌트
-const AdminOnlyContent = () => (
-  <Box sx={{ p: 3, mt: 3 }}>
-    <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
-      <PageHeader title="회원 관리" fontSize="30px" />
-      <Paper sx={{ p: 4, textAlign: 'center', mt: 3 }}>
-        <Typography variant="h5" sx={{ color: '#666', fontWeight: 500 }}>
-          관리자 페이지입니다
-        </Typography>
-        <Typography variant="body1" sx={{ color: '#999', mt: 1 }}>
-          이 페이지는 관리자 권한이 필요합니다.
-        </Typography>
-      </Paper>
-    </Container>
-  </Box>
-);
+const AdminOnlyContent = () => {
+  const { t } = useLanguage();
+
+  return (
+    <Box sx={{ p: 3, mt: 3 }}>
+      <Container maxWidth="xl" sx={{ mx: 0, px: 0 }}>
+        <PageHeader title={t('memberManagement')} fontSize="30px" />
+        <Paper sx={{ p: 4, textAlign: 'center', mt: 3 }}>
+          <Typography variant="h5" sx={{ color: '#666', fontWeight: 500 }}>
+            {t('adminPageOnly')}
+          </Typography>
+          <Typography variant="body1" sx={{ color: '#999', mt: 1 }}>
+            {t('adminPermissionRequired')}
+          </Typography>
+        </Paper>
+      </Container>
+    </Box>
+  );
+};
 
 // props를 받을 수 있도록 명명된 컴포넌트로 export
 const MemberManagementWithPermission = (props) => (

@@ -12,20 +12,29 @@ import {
   Typography,
   Alert,
   Container,
+  Select,
+  MenuItem,
+  FormControl,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { ArrowBack } from '@mui/icons-material';
 import { API_URLS } from '../config/api';
+import { useLanguage } from '../contexts/LanguageContext';
 import '../styles/custom.css';
 
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
+  const { t, language, changeLanguage } = useLanguage();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+
+  const handleLanguageChange = (event) => {
+    changeLanguage(event.target.value);
+  };
 
   // Enter 키 이벤트 리스너
   useEffect(() => {
@@ -44,17 +53,17 @@ const ResetPasswordPage = () => {
 
   const handleResetPassword = async () => {
     if (!newPassword || !confirmPassword) {
-      setError('새 비밀번호를 입력해주세요.');
+      setError(t('resetPasswordErrorEmpty'));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('비밀번호가 일치하지 않습니다.');
+      setError(t('resetPasswordErrorMismatch'));
       return;
     }
 
     if (newPassword.length < 6) {
-      setError('비밀번호는 6자 이상이어야 합니다.');
+      setError(t('resetPasswordErrorLength'));
       return;
     }
 
@@ -62,7 +71,7 @@ const ResetPasswordPage = () => {
     const passwordRegex =
       /^(?=.*[a-zA-Z])(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{6,12}$/;
     if (!passwordRegex.test(newPassword)) {
-      setError('영문 6~12자, 특수문자 1개를 포함해야 합니다.');
+      setError(t('resetPasswordErrorFormat'));
       return;
     }
 
@@ -85,7 +94,7 @@ const ResetPasswordPage = () => {
 
       if (!response.ok) {
         const errorText = await response.text();
-        throw new Error('비밀번호 변경에 실패했습니다.');
+        throw new Error(t('resetPasswordFailed'));
       }
 
       setShowSuccessDialog(true);
@@ -94,7 +103,7 @@ const ResetPasswordPage = () => {
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
     } catch (error) {
-      setError('비밀번호 변경에 실패했습니다. 다시 시도해주세요.');
+      setError(t('resetPasswordFailedRetry'));
     } finally {
       setIsLoading(false);
     }
@@ -113,8 +122,39 @@ const ResetPasswordPage = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          position: 'relative',
         }}
       >
+        {/* 언어 선택 - 오른쪽 상단에 고정 */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 20,
+            right: 20,
+          }}
+        >
+          <FormControl size="small">
+            <Select
+              value={language}
+              onChange={handleLanguageChange}
+              sx={{
+                bgcolor: 'white',
+                minWidth: 100,
+                height: 36,
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(0, 0, 0, 0.23)',
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: 'rgba(0, 0, 0, 0.4)',
+                },
+              }}
+            >
+              <MenuItem value="ko">한국어</MenuItem>
+              <MenuItem value="en">English</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
         <Card
           sx={{
             width: '100%',
@@ -132,7 +172,7 @@ const ResetPasswordPage = () => {
                 onClick={() => navigate('/login')}
                 sx={{ color: '#666' }}
               >
-                로그인으로 돌아가기
+                {t('backToLogin')}
               </Button>
             </Box>
 
@@ -166,7 +206,7 @@ const ResetPasswordPage = () => {
                   },
                 }}
               >
-                비밀번호 재설정
+                {t('resetPasswordTitle')}
               </Typography>
 
               {/* 전체 회색 선 */}
@@ -181,11 +221,11 @@ const ResetPasswordPage = () => {
 
             {/* 안내 메시지 */}
             <Typography variant="body1" sx={{ mb: 2, color: '#666' }}>
-              새로운 비밀번호를 입력해 주세요
+              {t('resetPasswordMessage')}
             </Typography>
 
             <Typography variant="body2" sx={{ mb: 3, color: '#999' }}>
-              영문 6~12자, 특수문자 1개 포함
+              {t('resetPasswordHint')}
             </Typography>
 
             {/* 에러 메시지 */}
@@ -205,7 +245,7 @@ const ResetPasswordPage = () => {
             {/* 비밀번호 입력 필드 */}
             <TextField
               fullWidth
-              label="비밀번호 입력"
+              label={t('enterPassword')}
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -214,7 +254,7 @@ const ResetPasswordPage = () => {
 
             <TextField
               fullWidth
-              label="비밀번호 재확인"
+              label={t('confirmPassword')}
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
@@ -237,7 +277,7 @@ const ResetPasswordPage = () => {
                 },
               }}
             >
-              {isLoading ? '변경 중...' : '비밀번호 재설정'}
+              {isLoading ? t('resetting') : t('resetPasswordTitle')}
             </Button>
           </CardContent>
         </Card>
@@ -264,11 +304,9 @@ const ResetPasswordPage = () => {
               }}
             />
           </Box>
-          <Typography variant="body1">
-            비밀번호를 성공적으로 변경하였습니다.
-          </Typography>
+          <Typography variant="body1">{t('resetPasswordSuccess')}</Typography>
           <Typography variant="body1" sx={{ mb: 2 }}>
-            변경된 비밀번호로 재로그인 하시기 바랍니다.
+            {t('resetPasswordRelogin')}
           </Typography>
           <Button
             onClick={handleCloseDialog}
@@ -283,7 +321,7 @@ const ResetPasswordPage = () => {
               py: 1,
             }}
           >
-            확인
+            {t('confirm')}
           </Button>
         </DialogContent>
       </Dialog>

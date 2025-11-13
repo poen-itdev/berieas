@@ -9,8 +9,10 @@ import {
   Box,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
+import { useLanguage } from '../../contexts/LanguageContext';
 
 const SaveConfirmDialog = ({ open, onClose, onConfirm }) => {
+  const { t } = useLanguage();
   return (
     <Dialog
       open={open}
@@ -35,7 +37,7 @@ const SaveConfirmDialog = ({ open, onClose, onConfirm }) => {
         >
           <SaveIcon sx={{ color: '#1976d2', fontSize: 30 }} />
           <Typography variant="h6" sx={{ fontWeight: 600 }}>
-            임시저장된 문서가 있습니다.
+            {t('unsavedDraftExists')}
           </Typography>
         </Box>
       </DialogTitle>
@@ -45,7 +47,7 @@ const SaveConfirmDialog = ({ open, onClose, onConfirm }) => {
           color="text.secondary"
           sx={{ textAlign: 'center' }}
         >
-          임시저장된 문서가 있습니다. 페이지를 이동하시겠습니까?
+          {t('unsavedDraftMessage')}
         </Typography>
       </DialogContent>
       <DialogActions sx={{ px: 3, gap: 1, justifyContent: 'center' }}>
@@ -61,7 +63,7 @@ const SaveConfirmDialog = ({ open, onClose, onConfirm }) => {
             px: 3,
           }}
         >
-          임시 저장
+          {t('temporarySave')}
         </Button>
         <Button
           onClick={() => onConfirm('discard')}
@@ -77,7 +79,7 @@ const SaveConfirmDialog = ({ open, onClose, onConfirm }) => {
             px: 3,
           }}
         >
-          저장 안함
+          {t('doNotSave')}
         </Button>
         <Button
           onClick={() => onConfirm('cancel')}
@@ -87,7 +89,7 @@ const SaveConfirmDialog = ({ open, onClose, onConfirm }) => {
             px: 3,
           }}
         >
-          닫기
+          {t('close')}
         </Button>
       </DialogActions>
     </Dialog>

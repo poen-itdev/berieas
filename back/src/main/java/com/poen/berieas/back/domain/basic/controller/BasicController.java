@@ -41,16 +41,21 @@ public class BasicController {
     }
 
     // 부서 삭제
-    @DeleteMapping(value = "/deleteDepartment/{idx}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> deleteDepartmentApi(@PathVariable int idx) {
-
-        basicService.deleteDepartment(idx);
-        return ResponseEntity.ok("해당 부서가 삭제되었습니다.");
+    @DeleteMapping(value = "/deleteDepartment/{idx}")
+    public ResponseEntity<String> deleteDepartmentApi(@PathVariable("idx") int idx) {
+        try {
+            basicService.deleteDepartment(idx);
+            return ResponseEntity.ok("해당 부서가 삭제되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("부서 삭제 실패: " + e.getMessage());
+        }
     }
 
     // 부서 수정
     @PutMapping(value = "/updateDepartment/{idx}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> updateDepartmentApi(@PathVariable int idx, @RequestBody BasicRequestDto dto) {
+    public ResponseEntity<String> updateDepartmentApi(@PathVariable("idx") int idx, @RequestBody BasicRequestDto dto) {
 
         basicService.updateDepartment(idx, dto);
         return ResponseEntity.ok("해당 부서가 수정되었습니다.");
@@ -73,16 +78,21 @@ public class BasicController {
     }
 
     // 직급 삭제 
-    @DeleteMapping(value = "/deletePosition/{idx}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> deletePosition(@PathVariable int idx) {
-
-        basicService.deletePosition(idx);
-        return ResponseEntity.ok("해당 직급이 삭제되었습니다.");
+    @DeleteMapping(value = "/deletePosition/{idx}")
+    public ResponseEntity<String> deletePosition(@PathVariable("idx") int idx) {
+        try {
+            basicService.deletePosition(idx);
+            return ResponseEntity.ok("해당 직급이 삭제되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("직급 삭제 실패: " + e.getMessage());
+        }
     }
 
     // 직급 수정
     @PutMapping(value = "/updatePosition/{idx}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> updatePositionApi(@PathVariable int idx, @RequestBody BasicRequestDto dto) {
+    public ResponseEntity<String> updatePositionApi(@PathVariable("idx") int idx, @RequestBody BasicRequestDto dto) {
 
         basicService.updatePosition(idx, dto);
         return ResponseEntity.ok("해당 직급이 수정되었습니다.");
