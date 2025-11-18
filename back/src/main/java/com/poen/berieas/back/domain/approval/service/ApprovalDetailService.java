@@ -447,6 +447,11 @@ public class ApprovalDetailService {
             throw new IllegalArgumentException("진행중 상태의 기안서만 취소할 수 있습니다.");
         }
         
+        // 취소 가능 조건 확인: 첫 번째 결재자(signId1)가 결재했으면 취소 불가
+        if (approval.getSignDate1() != null) {
+            throw new IllegalArgumentException("첫 번째 결재자가 결재를 완료하여 취소할 수 없습니다.");
+        }
+        
         // 취소 가능 조건 확인: signId2부터는 아무도 결재하지 않아야 함
         if (approval.getSignDate2() != null || 
             approval.getSignDate3() != null || 
@@ -459,11 +464,6 @@ public class ApprovalDetailService {
         approval.setApprovalStatus("기안중");
         approval.setApprovalEndDate(null);
         approval.setNextId(null);
-        
-        // 첫 번째 결재자의 결재 정보 초기화
-        approval.setSignDate1(null);
-        approval.setSignRemark1(null);
-        approval.setSignEtc1(null);
         
         approval.setUpdateId(memberId);
         approvalRepository.save(approval);
