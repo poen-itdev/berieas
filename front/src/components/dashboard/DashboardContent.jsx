@@ -60,7 +60,8 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
         return 0;
       }
       return data;
-    } catch (_) {
+    } catch (e) {
+      console.error(e);
       const text = await res.text();
       const num = Number(text);
       return Number.isNaN(num) ? 0 : num;
@@ -220,7 +221,7 @@ const DashboardContent = ({ userInfo, isMobile = false }) => {
               >
                 <Typography
                   sx={{
-                    fontSize: { xs: 12, sm: 14 },
+                    fontSize: { xs: 14, sm: 16 },
                     color: '#3275FC',
                   }}
                 >
