@@ -97,6 +97,24 @@ public class ApprovalDetail {
     @Column(name = "drafter_remark")
     private String drafterRemark;
 
+    @Column(name = "signer_attach_path")
+    private String signerAttachPath;
+
+    @Column(name = "signer_attach_file")
+    private String signerAttachFile;
+
+    @Column(name = "signer_attach_info")
+    private String signerAttachInfo;
+
     @Column(name = "reference_remark")
     private String referenceRemark;
+
+    @Column(name = "reference_attach_path")
+    private String referenceAttachkPath;
+
+    @Column(name = "reference_attach_file")
+    private String referenceAttachFile;
+
+    @Column(name = "reference_attach_info")
+    private String referenceAttachInfo;
 }
