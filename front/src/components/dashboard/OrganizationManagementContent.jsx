@@ -19,6 +19,7 @@ import { apiRequest } from '../../utils/apiHelper';
 import PermissionGuard from '../common/PermissionGuard';
 import { useLanguage, getLocalizedName } from '../../contexts/LanguageContext';
 import SuccessDialog from '../common/SuccessDialog';
+import ErrorDialog from '../common/ErrorDialog';
 import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
 
 const OrganizationManagementContent = () => {
@@ -31,6 +32,8 @@ const OrganizationManagementContent = () => {
   // 다이얼로그 상태 관리
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -188,13 +191,13 @@ const OrganizationManagementContent = () => {
           response.data ||
           t('orgDepartmentDeleteFailed');
         console.error('부서 삭제 실패:', response.status, errorMsg);
-        setSuccessMessage(errorMsg);
-        setShowSuccessDialog(true);
+        setErrorMessage(errorMsg);
+        setShowErrorDialog(true);
       }
     } catch (error) {
       console.error('부서 삭제 실패:', error);
-      setSuccessMessage(t('orgDepartmentDeleteFailed'));
-      setShowSuccessDialog(true);
+      setErrorMessage(t('orgDepartmentDeleteFailed'));
+      setShowErrorDialog(true);
     }
   };
 
@@ -247,13 +250,13 @@ const OrganizationManagementContent = () => {
           response.data ||
           t('orgPositionDeleteFailed');
         console.error('직급 삭제 실패:', response.status, errorMsg);
-        setSuccessMessage(errorMsg);
-        setShowSuccessDialog(true);
+        setErrorMessage(errorMsg);
+        setShowErrorDialog(true);
       }
     } catch (error) {
       console.error('직급 삭제 실패:', error);
-      setSuccessMessage(t('orgPositionDeleteFailed'));
-      setShowSuccessDialog(true);
+      setErrorMessage(t('orgPositionDeleteFailed'));
+      setShowErrorDialog(true);
     }
   };
 
@@ -522,12 +525,23 @@ const OrganizationManagementContent = () => {
         buttonText={t('confirm')}
       />
 
+      {/* Error Dialog */}
+      <ErrorDialog
+        open={showErrorDialog}
+        onClose={() => setShowErrorDialog(false)}
+        message={errorMessage}
+        title={t('error')}
+        buttonText={t('confirm')}
+      />
+
       {/* Delete Confirmation Dialog */}
       <DeleteConfirmDialog
         open={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
         onConfirm={handleConfirmDelete}
-        isExistingDocument={true}
+        title=""
+        message={t('confirmDelete')}
+        confirmText={t('delete')}
       />
     </Box>
   );

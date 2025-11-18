@@ -16,10 +16,12 @@ const DeleteConfirmDialog = ({
   const { t } = useLanguage();
 
   // 커스텀 메시지가 있으면 사용, 없으면 기본 메시지
-  const dialogTitle =
-    title || (isExistingDocument ? t('deleteDocument') : t('resetContent'));
+  // 제목은 항상 제거하고 메시지만 표시
+  const dialogTitle = title === null ? '' : title || '';
+  // 기안중일 때는 "삭제하시겠습니까?", 새 문서 작성 중일 때는 "초기화하시겠습니까?"
   const dialogMessage =
     message || (isExistingDocument ? t('confirmDelete') : t('confirmReset'));
+  // 기안중일 때는 "delete", 새 문서 작성 중일 때는 "reset"
   const dialogConfirmText =
     confirmText || (isExistingDocument ? t('delete') : t('reset'));
 
@@ -64,9 +66,11 @@ const DeleteConfirmDialog = ({
           </Box>
         </Box>
 
-        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-          {dialogTitle}
-        </Typography>
+        {dialogTitle && (
+          <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+            {dialogTitle}
+          </Typography>
+        )}
         <Typography variant="body1" sx={{ mb: 2 }}>
           {dialogMessage}
         </Typography>

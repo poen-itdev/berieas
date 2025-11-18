@@ -12,6 +12,7 @@ import com.poen.berieas.back.domain.basic.dto.BasicRequestDto;
 import com.poen.berieas.back.domain.basic.dto.BasicResponseDto;
 import com.poen.berieas.back.domain.basic.entity.Basic;
 import com.poen.berieas.back.domain.basic.repository.BasicRepository;
+import com.poen.berieas.back.domain.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -21,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 public class BasicService {
     
     private final BasicRepository basicRepository;
+    private final MemberRepository memberRepository;
 
     // 부서 리스트 
     public List<BasicResponseDto> getDepartments() {
@@ -57,6 +59,14 @@ public class BasicService {
     public void deleteDepartment(int idx) {
 
         Basic department = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException("해당 부서가 없습니다."));
+
+        // 해당 부서를 사용하는 멤버가 있는지 확인
+        boolean hasMembers = memberRepository.findAll().stream()
+            .anyMatch(member -> department.getName().equals(member.getMemberDepartment()));
+
+        if (hasMembers) {
+            throw new IllegalArgumentException("해당 부서를 사용하는 멤버가 있어 삭제할 수 없습니다.");
+        }
 
         basicRepository.delete(department);
     }
