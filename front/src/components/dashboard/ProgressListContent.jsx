@@ -31,7 +31,7 @@ const ProgressListContent = ({ isMobile = false }) => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(15);
+  const [pageSize] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [totalElements, setTotalElements] = useState(0);
   const [progressData, setProgressData] = useState([]);
@@ -56,7 +56,7 @@ const ProgressListContent = ({ isMobile = false }) => {
     const params = new URLSearchParams();
     const zeroBased = Math.max(0, Number(pageNum) - 1 || 0); // 방어적 변환
     params.set('page', String(zeroBased)); // 0-based
-    params.set('size', String(Number(size) || 15));
+    params.set('size', String(Number(size) || 10));
     const kw = (keyword ?? '').trim();
     if (kw) params.set('keyword', kw);
     if (from) params.set('from', from);
