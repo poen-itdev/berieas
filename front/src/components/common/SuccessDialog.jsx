@@ -8,7 +8,12 @@ const SuccessDialog = ({
   title = 'Success',
   message,
   buttonText = 'OK',
+  isError = false,
 }) => {
+  const iconColor = isError ? '#f44336' : '#4CAF50';
+  const buttonColor = isError ? '#f44336' : '#1976d2';
+  const buttonHoverColor = isError ? '#d32f2f' : '#1565c0';
+
   return (
     <Dialog
       open={open}
@@ -27,7 +32,7 @@ const SuccessDialog = ({
           <CheckCircleIcon
             sx={{
               fontSize: 50,
-              color: '#4CAF50',
+              color: iconColor,
             }}
           />
         </Box>
@@ -41,9 +46,9 @@ const SuccessDialog = ({
           onClick={onClose}
           variant="contained"
           sx={{
-            backgroundColor: '#1976d2',
+            backgroundColor: buttonColor,
             '&:hover': {
-              backgroundColor: '#1565c0',
+              backgroundColor: buttonHoverColor,
             },
             borderRadius: 1.5,
             px: 4,

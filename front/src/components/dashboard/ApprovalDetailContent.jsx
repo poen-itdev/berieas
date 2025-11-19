@@ -40,6 +40,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
   // 다이얼로그 상태
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [isRejectAction, setIsRejectAction] = useState(false);
   const [showDeleteCommentDialog, setShowDeleteCommentDialog] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
 
@@ -143,6 +144,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
       });
 
       if (response.ok) {
+        setIsRejectAction(action === 'reject');
         setSuccessMessage(action === 'approve' ? t('approved') : t('rejected'));
         setShowSuccessDialog(true);
         // 데이터 다시 로드해서 결재라인 업데이트
@@ -152,10 +154,12 @@ const ApprovalDetailContent = ({ userInfo }) => {
           navigate('/progress-list');
         }, 1000);
       } else {
+        setIsRejectAction(false);
         setSuccessMessage(`${t('approvalFailed')}\n${response.data || ''}`);
         setShowSuccessDialog(true);
       }
     } catch (error) {
+      setIsRejectAction(false);
       setSuccessMessage(`${t('approvalFailed')}: ${error.message}`);
       setShowSuccessDialog(true);
     } finally {
@@ -927,10 +931,14 @@ const ApprovalDetailContent = ({ userInfo }) => {
         {/* 성공 다이얼로그 */}
         <SuccessDialog
           open={showSuccessDialog}
-          onClose={() => setShowSuccessDialog(false)}
+          onClose={() => {
+            setShowSuccessDialog(false);
+            setIsRejectAction(false);
+          }}
           title={t('confirm')}
           message={successMessage}
           buttonText={t('confirm')}
+          isError={isRejectAction}
         />
       </Container>
     </Box>
