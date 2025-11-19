@@ -115,7 +115,6 @@ const ApprovalDetailContent = ({ userInfo }) => {
         navigate('/progress-list');
       }
     } catch (error) {
-      console.error('[loadApprovalDetail] failed:', error);
       navigate('/progress-list');
     } finally {
       setLoading(false);
@@ -265,10 +264,8 @@ const ApprovalDetailContent = ({ userInfo }) => {
       } else {
         setSuccessMessage(t('commentRegistrationFailed'));
         setShowSuccessDialog(true);
-        console.error('서버 응답:', response);
       }
     } catch (err) {
-      console.error('첨언 등록 중 오류 발생:', err);
       setSuccessMessage(t('serverError'));
       setShowSuccessDialog(true);
     }
