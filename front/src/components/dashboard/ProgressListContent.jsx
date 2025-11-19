@@ -80,9 +80,6 @@ const ProgressListContent = ({ isMobile = false }) => {
   const processData = (data, tabIndex) => {
     if (!data) return { items: [], totalPages: 1, totalElements: 0, number: 0 };
 
-    // 스프링 Page<T> 응답 구조 확인
-    console.log('[ProgressList] API Response:', data);
-
     // 스프링 Page<T>
     const content = Array.isArray(data.content)
       ? data.content
@@ -115,14 +112,6 @@ const ProgressListContent = ({ isMobile = false }) => {
         ? parseInt(data.number)
         : 0;
 
-    console.log('[ProgressList] Processed:', {
-      itemsCount: items.length,
-      totalElements,
-      totalPages,
-      currentPage: currentPage + 1,
-      pageSize,
-    });
-
     return {
       items,
       totalPages,
@@ -150,12 +139,6 @@ const ProgressListContent = ({ isMobile = false }) => {
           response.data,
           tabIndex
         );
-        console.log('[ProgressList] Setting state:', {
-          itemsCount: items.length,
-          totalPages,
-          totalElements,
-          page: (number ?? 0) + 1,
-        });
         setProgressData(items);
         setTotalPages(totalPages);
         setTotalElements(totalElements);
