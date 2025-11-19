@@ -265,7 +265,7 @@ const MemberManagementContent = () => {
 
   const confirmToggleMemberStatus = async () => {
     const { memberId, currentStatus } = statusToggleTarget;
-    const newStatus = currentStatus === 'Y' ? t('비활성화') : t('활성화');
+    const newStatus = currentStatus === 'Y' ? t('deactivate') : t('activate');
     setShowStatusConfirmDialog(false);
 
     try {
