@@ -17,6 +17,18 @@ public class CustomControllerAdvice {
                 .body("접근 권한이 없습니다.");
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
+        // IllegalArgumentException의 원래 메시지를 반환
+        String message = ex.getMessage();
+        if (message == null || message.isEmpty()) {
+            message = "잘못된 요청입니다.";
+        }
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(message);
+    }
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
         return ResponseEntity

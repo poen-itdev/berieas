@@ -1,6 +1,7 @@
 import React from 'react';
 import { Dialog, DialogContent, Typography, Button, Box } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 const SuccessDialog = ({
   open,
@@ -29,16 +30,27 @@ const SuccessDialog = ({
     >
       <DialogContent sx={{ padding: 3 }}>
         <Box sx={{ mb: 1, mt: 1 }}>
-          <CheckCircleIcon
-            sx={{
-              fontSize: 50,
-              color: iconColor,
-            }}
-          />
+          {isError ? (
+            <CancelIcon
+              sx={{
+                fontSize: 50,
+                color: iconColor,
+              }}
+            />
+          ) : (
+            <CheckCircleIcon
+              sx={{
+                fontSize: 50,
+                color: iconColor,
+              }}
+            />
+          )}
         </Box>
-        <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
-          {title}
-        </Typography>
+        {title && (
+          <Typography variant="h6" sx={{ mb: 1, fontWeight: 600 }}>
+            {title}
+          </Typography>
+        )}
         <Typography variant="body1" sx={{ mb: 2 }}>
           {message}
         </Typography>

@@ -206,20 +206,22 @@ Page<Approval> approvals =
             })
             .toList();
 
-    // count는 filtered.size()로 맞추면 UI와 페이징 불일치가 안 생김
-    return new PageImpl<>(filtered, pageable, filtered.size());
+    // 서버에서 받은 전체 개수 사용 (필터링 전 개수이지만, 실제로는 필터링 후에도 비슷할 것으로 예상)
+    return new PageImpl<>(filtered, pageable, approvals.getTotalElements());
 }
 
 
-    // 진행목록(진행중)
-    public Page<MyApprovalResponseDto> getInProgressApprovals(Pageable pageable, LocalDate from, LocalDate to, String keyword) {
+    // 진행목록(진행중) - 내가 기안한 문서 + 결재할 문서
+    public Page<ProgressListResponseDto> getInProgressApprovals(Pageable pageable, LocalDate from, LocalDate to, String keyword) {
 
         // 로그인한 유저의 memberId 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Member me = memberRepository.findByMemberId(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
-        Page<Approval> approvals = approvalRepository.findInprogressApprovals(memberId, pageable);
+        Page<Approval> approvals = approvalRepository.findInprogressApprovals(me.getMemberId(), me.getMemberName(), pageable);
 
-        List<MyApprovalResponseDto> filtered = approvals.getContent().stream()
+        List<ProgressListResponseDto> filtered = approvals.getContent().stream()
                 .filter(a -> {
                     // 날짜 필터
                     if (from != null && a.getRegDate().toLocalDate().isBefore(from)) return false;
@@ -252,13 +254,15 @@ Page<Approval> approvals =
                 .map(a -> {
                     ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(a.getApprovalNo()).orElse(null);
                     String currentSigner = getCurrentSigner(a);
-                    return new MyApprovalResponseDto(
+                    return new ProgressListResponseDto(
                             a.getApprovalNo(),
-                            a.getApprovalStatus(),
-                            detail != null ? detail.getApprovalType() : null,
+                            a.getRegDate(),
                             detail != null ? detail.getApprovalTitle() : null,
+                            detail != null ? detail.getApprovalType() : null,
+                            a.getApprovalDepartment(),
+                            a.getApprovalName(),
                             currentSigner,
-                            a.getRegDate()
+                            a.getApprovalStatus()
                     );
                 })
                 .toList();
@@ -271,7 +275,7 @@ Page<Approval> approvals =
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
 
         Page<Approval> approvals = approvalRepository.findTemporarySavedApprovals(member.getMemberId(), pageable);
 
@@ -750,7 +754,7 @@ Page<Approval> approvals =
             .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
 
         if (!member.getMemberName().equals(approval.getNextId())) {
-            throw new IllegalArgumentException("현재 결재권자가 아니면 승인할 수 없습니다.");
+            throw new IllegalArgumentException("현재 결재자가 아닙니다.");
         }
 
         // 결재 1
@@ -822,7 +826,7 @@ Page<Approval> approvals =
                 .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
 
         if (!member.getMemberName().equals(approval.getNextId())) {
-            throw new IllegalArgumentException("현재 결재권자가 아니면 반려할 수 없습니다.");
+            throw new IllegalArgumentException("현재 결재자가 아닙니다.");
         }
 
         if (member.getMemberName().equals(approval.getSignId1()) && approval.getSignDate1() == null) {
