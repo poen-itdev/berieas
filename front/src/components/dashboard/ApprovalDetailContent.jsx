@@ -155,7 +155,24 @@ const ApprovalDetailContent = ({ userInfo }) => {
         }, 1000);
       } else {
         setIsRejectAction(false);
-        setSuccessMessage(`${t('approvalFailed')}\n${response.data || ''}`);
+        // 에러 메시지 추출
+        let errorMessage = '';
+        if (typeof response.data === 'string') {
+          errorMessage = response.data;
+        } else if (response.data && typeof response.data === 'object') {
+          errorMessage =
+            response.data.message ||
+            response.data.error ||
+            JSON.stringify(response.data);
+        } else {
+          errorMessage = t('approvalFailed');
+        }
+        // 결재자 관련 에러인지 확인
+        if (errorMessage.includes('현재 결재자가 아닙니다')) {
+          setSuccessMessage(t('notCurrentApprover'));
+        } else {
+          setSuccessMessage(`${t('approvalFailed')}\n${errorMessage}`);
+        }
         setShowSuccessDialog(true);
       }
     } catch (error) {
@@ -935,10 +952,10 @@ const ApprovalDetailContent = ({ userInfo }) => {
             setShowSuccessDialog(false);
             setIsRejectAction(false);
           }}
-          title={t('confirm')}
+          title={successMessage === t('notCurrentApprover') ? '' : t('confirm')}
           message={successMessage}
           buttonText={t('confirm')}
-          isError={isRejectAction}
+          isError={isRejectAction || successMessage === t('notCurrentApprover')}
         />
       </Container>
     </Box>

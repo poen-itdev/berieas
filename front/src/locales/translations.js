@@ -99,6 +99,11 @@ export const translations = {
     progressStatus: '진행상태',
     loading: '로딩 중...',
     noData: '데이터가 없습니다.',
+    // 상태 번역
+    statusDrafting: '기안중',
+    statusInProgress: '진행중',
+    statusCompleted: '완료',
+    statusReturned: '반려',
 
     // 양식 관리
     formManagementTitle: '양식 관리',
@@ -188,6 +193,8 @@ export const translations = {
     approved: '승인되었습니다.',
     rejected: '반려되었습니다.',
     approvalFailed: '처리에 실패했습니다.',
+    notCurrentApprover: '현재 결재자가 아닙니다.',
+    notCurrentApproverForReject: '현재 결재자가 아닙니다.',
     download: '다운로드',
     waiting: '대기',
 
@@ -381,6 +388,11 @@ export const translations = {
     progressStatus: 'Progress Status',
     loading: 'Loading...',
     noData: 'No data available.',
+    // 상태 번역
+    statusDrafting: 'Drafting',
+    statusInProgress: 'In Progress',
+    statusCompleted: 'Completed',
+    statusReturned: 'Returned',
 
     // 양식 관리
     formManagementTitle: 'Form Management',
@@ -470,6 +482,8 @@ export const translations = {
     approved: 'Approved successfully.',
     rejected: 'Rejected successfully.',
     approvalFailed: 'Failed to process.',
+    notCurrentApprover: 'You are not the current approver.',
+    notCurrentApproverForReject: 'You are not the current approver.',
     download: 'Download',
     waiting: 'Waiting',
 
