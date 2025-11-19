@@ -89,15 +89,15 @@ public class ApprovalController {
 
     // 진행목록(진행중)
     @GetMapping(value = "/approval/inProgressApprovals", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Page<MyApprovalResponseDto>> getInprogressApprovalsApi(
+    public ResponseEntity<Page<ProgressListResponseDto>> getInprogressApprovalsApi(
         @PageableDefault(size = 15, sort = "regDate", direction = Sort.Direction.DESC) Pageable pageable,
         @RequestParam(name = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
         @RequestParam(name = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
         @RequestParam(name = "keyword", required = false) String keyword
     ) {
         
-        Page<MyApprovalResponseDto> mySubmittedDocs = approvalService.getInProgressApprovals(pageable, from, to, keyword);
-        return ResponseEntity.ok(mySubmittedDocs);
+        Page<ProgressListResponseDto> approvals = approvalService.getInProgressApprovals(pageable, from, to, keyword);
+        return ResponseEntity.ok(approvals);
     }
 
     // 진행목록(기안중)

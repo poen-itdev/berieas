@@ -64,13 +64,13 @@ const ProgressListContent = ({ isMobile = false }) => {
     return params.toString();
   };
 
-  // API URL 매핑 (오타 수정)
+  // API URL 매핑
   const getApiUrl = (tabIndex) => {
     const urlMap = {
       0: API_URLS.APPROVAL_ALL, // 전체 (서버 페이지네이션)
       1: API_URLS.APPROVAL_DRAFTING, // 기안중 (서버 페이지네이션)
-      2: API_URLS.APPROVAL_ALL, // 진행중 (전용 API 없다고 가정 → ALL 호출 후 클라필터)
-      3: API_URLS.APPROVAL_RETURNED, // 반려 (오타 수정)
+      2: API_URLS.APPROVAL_IN_PROGRESS_LIST, // 진행중 (전용 API 사용)
+      3: API_URLS.APPROVAL_RETURNED, // 반려
       4: API_URLS.APPROVAL_APPROVED, // 완료
     };
     return urlMap[tabIndex] || API_URLS.APPROVAL_ALL;
@@ -80,27 +80,54 @@ const ProgressListContent = ({ isMobile = false }) => {
   const processData = (data, tabIndex) => {
     if (!data) return { items: [], totalPages: 1, totalElements: 0, number: 0 };
 
+    // 스프링 Page<T> 응답 구조 확인
+    console.log('[ProgressList] API Response:', data);
+
     // 스프링 Page<T>
     const content = Array.isArray(data.content)
       ? data.content
       : Array.isArray(data)
       ? data
       : [];
-    let items = content;
 
-    // 진행중 탭: 진행중 상태 문서만 필터링
-    if (tabIndex === 2) {
-      items = content.filter((item) => item.approvalStatus === '진행중');
-    }
+    // 모든 탭이 서버 페이지네이션을 사용하므로 클라이언트 필터링 제거
+    const items = content;
+
+    // totalPages와 totalElements 추출
+    const totalElements =
+      typeof data.totalElements === 'number'
+        ? data.totalElements
+        : typeof data.totalElements === 'string'
+        ? parseInt(data.totalElements)
+        : items.length;
+
+    const totalPages =
+      typeof data.totalPages === 'number'
+        ? data.totalPages
+        : typeof data.totalPages === 'string'
+        ? parseInt(data.totalPages)
+        : Math.ceil(totalElements / pageSize) || 1;
+
+    const currentPage =
+      typeof data.number === 'number'
+        ? data.number
+        : typeof data.number === 'string'
+        ? parseInt(data.number)
+        : 0;
+
+    console.log('[ProgressList] Processed:', {
+      itemsCount: items.length,
+      totalElements,
+      totalPages,
+      currentPage: currentPage + 1,
+      pageSize,
+    });
 
     return {
       items,
-      totalPages: typeof data.totalPages === 'number' ? data.totalPages : 1,
-      totalElements:
-        typeof data.totalElements === 'number'
-          ? data.totalElements
-          : items.length,
-      number: typeof data.number === 'number' ? data.number : page - 1,
+      totalPages,
+      totalElements,
+      number: currentPage,
     };
   };
 
@@ -123,6 +150,12 @@ const ProgressListContent = ({ isMobile = false }) => {
           response.data,
           tabIndex
         );
+        console.log('[ProgressList] Setting state:', {
+          itemsCount: items.length,
+          totalPages,
+          totalElements,
+          page: (number ?? 0) + 1,
+        });
         setProgressData(items);
         setTotalPages(totalPages);
         setTotalElements(totalElements);
@@ -208,6 +241,17 @@ const ProgressListContent = ({ isMobile = false }) => {
 
   const getStatusColor = (status) => statusColors[status] || '#9E9E9E';
 
+  // 상태 번역 함수
+  const getStatusLabel = (status) => {
+    const statusMap = {
+      기안중: t('statusDrafting'),
+      진행중: t('statusInProgress'),
+      완료: t('statusCompleted'),
+      반려: t('statusReturned'),
+    };
+    return statusMap[status] || status;
+  };
+
   // 번호 칼럼: 서버 페이지 기준 오프셋 적용
   const rowNumberBase = (page - 1) * pageSize;
   const getDisplayNumber = (rowIndex) => {
@@ -219,10 +263,10 @@ const ProgressListContent = ({ isMobile = false }) => {
   // 상태 칩 컴포넌트
   const StatusChip = ({ status }) => (
     <Chip
-      label={status}
+      label={getStatusLabel(status)}
       size="small"
       sx={{
-        fontWeight: 500,
+        fontWeight: 400,
         fontSize: { xs: '10px', sm: '12px' },
         height: { xs: '20px', sm: '24px' },
         backgroundColor: getStatusColor(status),
@@ -576,11 +620,13 @@ const ProgressListContent = ({ isMobile = false }) => {
         {/* 페이지네이션: 서버 totalPages 사용 */}
         <Box sx={{ display: 'flex', justifyContent: 'center', mt: 3 }}>
           <Pagination
-            count={totalPages || 1}
+            count={Math.max(1, totalPages)}
             page={page}
             onChange={handlePageChange}
             color="primary"
             sx={{ '& .MuiPaginationItem-root': { fontSize: '14px' } }}
+            showFirstButton
+            showLastButton
           />
         </Box>
       </Container>

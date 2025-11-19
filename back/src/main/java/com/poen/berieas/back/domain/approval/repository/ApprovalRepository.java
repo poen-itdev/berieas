@@ -56,9 +56,28 @@ Page<Approval> findAllForOverallList(
     Pageable pageable
 );
 
-    // 진행목록(진행중)
-    @Query("select a from Approval a where a.approvalId = :approvalId and a.approvalStatus = '진행중'")
-    Page<Approval> findInprogressApprovals(@Param("approvalId") String approvalId, Pageable pageable);
+    // 진행목록(진행중) - 내가 기안한 문서 + 결재할 문서
+    @Query("""
+            select a from Approval a
+            where a.approvalStatus = '진행중'
+            and (
+                  ( a.approvalId = :memberId )   
+               or ( a.nextId = :memberName
+                    or a.signId1 = :memberName
+                    or a.signId2 = :memberName 
+                    or a.signId3 = :memberName
+                    or a.signId4 = :memberName
+                    or a.signId5 = :memberName
+                    or a.referenceId like concat('%', :memberName, '%')
+                  )
+            )
+            order by a.regDate desc
+            """)
+    Page<Approval> findInprogressApprovals(
+        @Param("memberId") String memberId,
+        @Param("memberName") String memberName,
+        Pageable pageable
+    );
 
     // 진행목록(기안중)
 //     @Query("select a from Approval a where a.approvalId = :memberId and a.approvalStartDate is null")
