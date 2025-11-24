@@ -48,7 +48,7 @@ public class ApprovalResponseDto {
 
     // 첨언
     private String signerAttachPath;
-    private String signerAttachfile;
+    private String signerAttachFile;
     private String signerAttachInfo;
     private String referenceAttachFile;
     private String referenceAttachPath;

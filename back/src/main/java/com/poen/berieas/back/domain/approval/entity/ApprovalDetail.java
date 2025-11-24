@@ -110,7 +110,7 @@ public class ApprovalDetail {
     private String referenceRemark;
 
     @Column(name = "reference_attach_path")
-    private String referenceAttachkPath;
+    private String referenceAttachPath;
 
     @Column(name = "reference_attach_file")
     private String referenceAttachFile;
