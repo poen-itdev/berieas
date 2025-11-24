@@ -551,7 +551,7 @@ Page<Approval> approvals =
                         }
 
                         detail.setReferenceAttachFile(savedFileName);
-                        detail.setReferenceAttachkPath(uploadDir);
+                        detail.setReferenceAttachPath(uploadDir);
                         detail.setReferenceAttachInfo(info);
                     }
 

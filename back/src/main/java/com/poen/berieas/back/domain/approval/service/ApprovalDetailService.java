@@ -309,7 +309,7 @@ public class ApprovalDetailService {
             approvalDetail.getSignerAttachFile(),
             approvalDetail.getSignerAttachInfo(),
             approvalDetail.getReferenceAttachFile(),
-            approvalDetail.getReferenceAttachkPath(),
+            approvalDetail.getReferenceAttachPath(),
             approvalDetail.getReferenceAttachInfo()
         );
         return dto;
