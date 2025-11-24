@@ -9,7 +9,12 @@ const LanguageContext = createContext();
  */
 export const LanguageProvider = ({ children }) => {
   const [language, setLanguage] = useState(() => {
-    return 'en';
+    // localStorage에서 저장된 언어 설정 읽기
+    const savedLanguage = localStorage.getItem('language');
+    // 유효한 언어 값이면 사용, 없으면 기본값 'en' 사용
+    return savedLanguage === 'ko' || savedLanguage === 'en'
+      ? savedLanguage
+      : 'en';
   });
 
   // 언어 변경 시 localStorage에 저장
