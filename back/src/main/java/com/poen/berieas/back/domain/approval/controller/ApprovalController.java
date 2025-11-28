@@ -147,46 +147,44 @@ public class ApprovalController {
             @RequestPart(name = "files", required = false) List<MultipartFile> files) {
 
         try {
+            System.out.println("===== 첨언 API 호출 =====");
+            System.out.println("approvalNo: " + approvalNo);
+            System.out.println("comment: " + dto.getComment());
+            System.out.println("files: " + (files != null ? files.size() + "개" : "없음"));
             
             approvalService.addComment(approvalNo, dto, files);
+            System.out.println("===== 첨언 저장 성공 =====");
             return ResponseEntity.ok("첨언 등록 완료");
         } catch (Exception e) {
-
+            System.out.println("===== 첨언 저장 실패 =====");
+            e.printStackTrace();
             return ResponseEntity.internalServerError().body("첨언 실패: " + e.getMessage());
         }
     }
 
-    // 결재자 첨언
-    @PostMapping(value = "/approval/comments/{approvalNo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> commentsApi(
-            @PathVariable(name = "approvalNo") int approvalNo, 
-            @RequestPart(name = "dto") CommentRequestDto dto,
-            @RequestPart(name = "files", required = false) List<MultipartFile> files) {
-
-        try {
-            
-            approvalService.comments(approvalNo, dto, files);
-            return ResponseEntity.ok("첨언 등록 완료");
-        } catch (Exception e) {
-
-            return ResponseEntity.internalServerError().body("첨언 실패: " + e.getMessage());
-        }
-    }
-
-    // 본인 첨언
-    @PostMapping(value = "/approval/updateComments/{approvalNo}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<String> updateCommentsApi(
+    // 첨언 수정
+    @PostMapping(value = "/approval/editcomment/{approvalNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> editCommentApi(
             @PathVariable(name = "approvalNo") int approvalNo,
-            @RequestPart(value = "files", required = false) List<MultipartFile> files
-    ) {
-        
-        try {
-            
-            approvalService.updateComments(approvalNo, files);
-            return ResponseEntity.ok("첨언 등록 완료");
+            @org.springframework.web.bind.annotation.RequestBody CommentRequestDto dto) {
 
+        try {
+            approvalService.updateComment(approvalNo, dto);
+            return ResponseEntity.ok("첨언 수정 완료");
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("첨언 실패: " + e.getMessage());
+            return ResponseEntity.internalServerError().body("첨언 수정 실패: " + e.getMessage());
+        }
+    }
+
+    // 첨언 삭제
+    @PostMapping(value = "/approval/deletecomment/{approvalNo}")
+    public ResponseEntity<String> deleteCommentApi(@PathVariable(name = "approvalNo") int approvalNo) {
+
+        try {
+            approvalService.deleteComment(approvalNo);
+            return ResponseEntity.ok("첨언 삭제 완료");
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body("첨언 삭제 실패: " + e.getMessage());
         }
     }
 

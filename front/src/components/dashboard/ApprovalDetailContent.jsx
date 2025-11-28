@@ -18,7 +18,7 @@ import {
   Dialog,
   DialogContent,
 } from '@mui/material';
-import { Download, CheckCircle, Cancel } from '@mui/icons-material';
+import { Download, CheckCircle, Cancel, AttachFile, Close } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 import PageHeader from '../common/PageHeader';
@@ -36,6 +36,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
   const [submitting, setSubmitting] = useState(false);
   const [comments, setComments] = useState([]); // 등록된 첨언 목록
   const [editingComment, setEditingComment] = useState(null); // 수정 중인 첨언 ID
+  const [commentFiles, setCommentFiles] = useState([]); // 첨언 첨부파일
 
   // 다이얼로그 상태
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -210,14 +211,87 @@ const ApprovalDetailContent = ({ userInfo }) => {
   // 파일 다운로드
   const handleFileDownload = (fileName, fileIndex) => {
     // 백엔드에서 요구하는 필드명으로 변환
-    const fieldName = `approvalAttachFile${fileIndex + 1}`;
+    let fieldName;
+    if (fileIndex === 'signer') {
+      fieldName = 'signerAttachFile';
+    } else if (fileIndex === 'reference') {
+      fieldName = 'referenceAttachFile';
+    } else {
+      fieldName = `approvalAttachFile${fileIndex + 1}`;
+    }
     const downloadUrl = `${API_URLS.APPROVAL_FILE_DOWNLOAD}/${approvalNo}/${fieldName}`;
     window.open(downloadUrl, '_blank');
   };
 
+  // 첨언 파일 선택
+  const handleCommentFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    // 기안자인지 확인
+    const isDrafter = approvalData?.approvalId === userInfo?.memberId;
+    
+    // 결재자인지 확인
+    const isSigner = [
+      approvalData?.signId1,
+      approvalData?.signId2,
+      approvalData?.signId3,
+      approvalData?.signId4,
+      approvalData?.signId5,
+    ].includes(userInfo?.memberName);
+
+    // 기안자: 기안서 첨부파일 + 첨언 첨부파일 합쳐서 최대 5개
+    // 결재자/참조자: 최대 1개
+    if (isDrafter) {
+      // 기안서에 이미 올린 파일 개수
+      const existingFileCount = [
+        approvalData?.approvalAttachFile1,
+        approvalData?.approvalAttachFile2,
+        approvalData?.approvalAttachFile3,
+        approvalData?.approvalAttachFile4,
+        approvalData?.approvalAttachFile5,
+      ].filter(Boolean).length;
+
+      const maxFiles = 5;
+      const currentCount = existingFileCount + commentFiles.length;
+      const availableSlots = maxFiles - currentCount;
+
+      if (availableSlots <= 0) {
+        setSuccessMessage(t('maxFilesExceeded5'));
+        setShowSuccessDialog(true);
+        return;
+      }
+
+      const filesToAdd = files.slice(0, availableSlots);
+      setCommentFiles((prev) => [...prev, ...filesToAdd]);
+    } else {
+      // 결재자/참조자는 1개만 가능
+      const maxFiles = 1;
+      const currentCount = commentFiles.length;
+      const availableSlots = maxFiles - currentCount;
+
+      if (availableSlots <= 0) {
+        setSuccessMessage(t('maxFilesExceeded1'));
+        setShowSuccessDialog(true);
+        return;
+      }
+
+      const filesToAdd = files.slice(0, availableSlots);
+      setCommentFiles((prev) => [...prev, ...filesToAdd]);
+    }
+    
+    // input 초기화 (같은 파일 다시 선택 가능하도록)
+    e.target.value = '';
+  };
+
+  // 첨언 파일 삭제
+  const handleRemoveCommentFile = (index) => {
+    setCommentFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // 첨언 등록
   const handleCommentSubmit = async () => {
-    if (!comment.trim()) return;
+    if (!comment.trim() && commentFiles.length === 0) return;
 
     // 현재 사용자가 이미 첨언을 작성했는지 확인
     const existingComment = comments.find(
@@ -239,6 +313,11 @@ const ApprovalDetailContent = ({ userInfo }) => {
         new Blob([JSON.stringify(dto)], { type: 'application/json' })
       );
 
+      // 첨부파일 추가
+      commentFiles.forEach((file) => {
+        formData.append('files', file);
+      });
+
       const response = await apiRequest(
         API_URLS.APPROVAL_ADD_COMMENTS(approvalNo),
         {
@@ -255,14 +334,16 @@ const ApprovalDetailContent = ({ userInfo }) => {
           author: userInfo?.memberName || '익명',
           date: new Date().toLocaleString(),
           type: 'new',
+          files: commentFiles.map((f) => f.name), // 첨부파일명 표시용
         };
 
         setComments((prev) => [...prev, newComment]); // UI 즉시 반영
         setComment(''); // 입력창 초기화
+        setCommentFiles([]); // 파일 초기화
         setSuccessMessage(t('commentRegistered'));
         setShowSuccessDialog(true);
       } else {
-        setSuccessMessage(t('commentRegistrationFailed'));
+        setSuccessMessage(response.data || t('commentRegistrationFailed'));
         setShowSuccessDialog(true);
       }
     } catch (err) {
@@ -281,20 +362,38 @@ const ApprovalDetailContent = ({ userInfo }) => {
   };
 
   // 첨언 수정 완료
-  const handleCommentUpdate = () => {
+  const handleCommentUpdate = async () => {
     if (!comment.trim() || !editingComment) return;
 
-    setComments(
-      comments.map((c) =>
-        c.id === editingComment
-          ? { ...c, content: comment.trim(), date: new Date().toLocaleString() }
-          : c
-      )
-    );
-    setComment('');
-    setEditingComment(null);
-    setSuccessMessage(t('commentRegistered'));
-    setShowSuccessDialog(true);
+    try {
+      const response = await apiRequest(
+        API_URLS.APPROVAL_EDIT_COMMENT(approvalNo),
+        {
+          method: 'POST',
+          body: JSON.stringify({ comment: comment.trim() }),
+        }
+      );
+
+      if (response.ok) {
+        setComments(
+          comments.map((c) =>
+            c.id === editingComment
+              ? { ...c, content: comment.trim(), date: new Date().toLocaleString() }
+              : c
+          )
+        );
+        setComment('');
+        setEditingComment(null);
+        setSuccessMessage(t('commentRegistered'));
+        setShowSuccessDialog(true);
+      } else {
+        setSuccessMessage(response.data || t('commentRegistrationFailed'));
+        setShowSuccessDialog(true);
+      }
+    } catch (err) {
+      setSuccessMessage(t('serverError'));
+      setShowSuccessDialog(true);
+    }
   };
 
   // 첨언 삭제 확인 다이얼로그 열기
@@ -304,13 +403,32 @@ const ApprovalDetailContent = ({ userInfo }) => {
   };
 
   // 첨언 삭제 확인
-  const handleConfirmDeleteComment = () => {
+  const handleConfirmDeleteComment = async () => {
     if (commentToDelete) {
-      setComments(comments.filter((c) => c.id !== commentToDelete));
-      setShowDeleteCommentDialog(false);
-      setCommentToDelete(null);
-      setSuccessMessage(t('commentDeleted'));
-      setShowSuccessDialog(true);
+      try {
+        const response = await apiRequest(
+          API_URLS.APPROVAL_DELETE_COMMENT(approvalNo),
+          {
+            method: 'POST',
+          }
+        );
+
+        if (response.ok) {
+          setComments(comments.filter((c) => c.id !== commentToDelete));
+          setShowDeleteCommentDialog(false);
+          setCommentToDelete(null);
+          setSuccessMessage(t('commentDeleted'));
+          setShowSuccessDialog(true);
+        } else {
+          setShowDeleteCommentDialog(false);
+          setSuccessMessage(response.data || t('commentRegistrationFailed'));
+          setShowSuccessDialog(true);
+        }
+      } catch (err) {
+        setShowDeleteCommentDialog(false);
+        setSuccessMessage(t('serverError'));
+        setShowSuccessDialog(true);
+      }
     }
   };
 
@@ -638,17 +756,18 @@ const ApprovalDetailContent = ({ userInfo }) => {
               {t('attachments')}
             </Typography>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {/* 기안서 첨부파일 (기안자 첨언 파일 포함) */}
               {[
-                approvalData.approvalAttachFile1,
-                approvalData.approvalAttachFile2,
-                approvalData.approvalAttachFile3,
-                approvalData.approvalAttachFile4,
-                approvalData.approvalAttachFile5,
+                { file: approvalData.approvalAttachFile1, info: approvalData.approvalAttachInfo1, index: 0 },
+                { file: approvalData.approvalAttachFile2, info: approvalData.approvalAttachInfo2, index: 1 },
+                { file: approvalData.approvalAttachFile3, info: approvalData.approvalAttachInfo3, index: 2 },
+                { file: approvalData.approvalAttachFile4, info: approvalData.approvalAttachInfo4, index: 3 },
+                { file: approvalData.approvalAttachFile5, info: approvalData.approvalAttachInfo5, index: 4 },
               ]
-                .filter(Boolean)
-                .map((fileName, index) => (
+                .filter((item) => item.file)
+                .map((item) => (
                   <Box
-                    key={index}
+                    key={item.index}
                     sx={{
                       display: 'flex',
                       alignItems: 'center',
@@ -656,18 +775,77 @@ const ApprovalDetailContent = ({ userInfo }) => {
                       gap: 2,
                     }}
                   >
-                    <Typography variant="body2">{fileName}</Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="body2">{item.file}</Typography>
+                      {item.info && (
+                        <Chip label={item.info} size="small" variant="outlined" color="primary" />
+                      )}
+                    </Box>
                     <Button
                       variant="outlined"
                       size="small"
                       startIcon={<Download />}
-                      onClick={() => handleFileDownload(fileName, index)}
+                      onClick={() => handleFileDownload(item.file, item.index)}
                     >
                       {t('download')}
                     </Button>
                   </Box>
                 ))}
-              {!approvalData.approvalAttachFile1 && (
+              
+              {/* 결재자 첨언 첨부파일 */}
+              {approvalData.signerAttachFile && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 2,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2">{approvalData.signerAttachFile}</Typography>
+                    <Chip label={approvalData.signerAttachInfo || '결재자첨언'} size="small" variant="outlined" color="secondary" />
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Download />}
+                    onClick={() => handleFileDownload(approvalData.signerAttachFile, 'signer')}
+                  >
+                    {t('download')}
+                  </Button>
+                </Box>
+              )}
+              
+              {/* 참조자 첨언 첨부파일 */}
+              {approvalData.referenceAttachFile && (
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 2,
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2">{approvalData.referenceAttachFile}</Typography>
+                    <Chip label={approvalData.referenceAttachInfo || '참조자첨언'} size="small" variant="outlined" color="info" />
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<Download />}
+                    onClick={() => handleFileDownload(approvalData.referenceAttachFile, 'reference')}
+                  >
+                    {t('download')}
+                  </Button>
+                </Box>
+              )}
+              
+              {/* 첨부파일 없음 */}
+              {!approvalData.approvalAttachFile1 && 
+               !approvalData.signerAttachFile && 
+               !approvalData.referenceAttachFile && (
                 <Typography
                   variant="body2"
                   color="text.secondary"
@@ -739,62 +917,113 @@ const ApprovalDetailContent = ({ userInfo }) => {
             )}
 
             {/* 첨언 입력 */}
-            <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-              <TextField
-                fullWidth
-                multiline
-                rows={1}
-                placeholder={
-                  comments.find((c) => c.author === userInfo?.memberName)
-                    ? t('alreadyCommentedPlaceholder')
-                    : t('enterComment')
-                }
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                variant="outlined"
-                disabled={
-                  !!comments.find((c) => c.author === userInfo?.memberName) &&
-                  !editingComment
-                }
-              />
-              <Box sx={{ display: 'flex', gap: 1 }}>
-                {editingComment ? (
-                  <>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={1}
+                  placeholder={
+                    comments.find((c) => c.author === userInfo?.memberName)
+                      ? t('alreadyCommentedPlaceholder')
+                      : t('enterComment')
+                  }
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  variant="outlined"
+                  disabled={
+                    !!comments.find((c) => c.author === userInfo?.memberName) &&
+                    !editingComment
+                  }
+                />
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  {/* 파일 첨부 버튼 */}
+                  <input
+                    type="file"
+                    id="comment-file-input"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={handleCommentFileChange}
+                    disabled={
+                      !!comments.find((c) => c.author === userInfo?.memberName) &&
+                      !editingComment
+                    }
+                  />
+                  <label htmlFor="comment-file-input">
+                    <Button
+                      variant="outlined"
+                      component="span"
+                      sx={{ minWidth: 56, height: '56px', px: 1.5 }}
+                      disabled={
+                        !!comments.find((c) => c.author === userInfo?.memberName) &&
+                        !editingComment
+                      }
+                    >
+                      <AttachFile />
+                    </Button>
+                  </label>
+                  {editingComment ? (
+                    <>
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{ minWidth: 80, height: '56px' }}
+                        onClick={handleCommentUpdate}
+                        disabled={!comment.trim()}
+                      >
+                        {t('edit')}
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        sx={{ minWidth: 80, height: '56px' }}
+                        onClick={handleCommentCancel}
+                      >
+                        {t('cancel')}
+                      </Button>
+                    </>
+                  ) : (
                     <Button
                       variant="contained"
                       color="primary"
-                      sx={{ minWidth: 80, height: '56px' }}
-                      onClick={handleCommentUpdate}
-                      disabled={!comment.trim()}
+                      sx={{ minWidth: 100, height: '56px' }}
+                      onClick={handleCommentSubmit}
+                      disabled={
+                        (!comment.trim() && commentFiles.length === 0) ||
+                        (!!comments.find(
+                          (c) => c.author === userInfo?.memberName
+                        ) &&
+                          !editingComment)
+                      }
                     >
-                      {t('edit')}
+                      {t('register')}
                     </Button>
-                    <Button
-                      variant="outlined"
-                      sx={{ minWidth: 80, height: '56px' }}
-                      onClick={handleCommentCancel}
-                    >
-                      {t('cancel')}
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    sx={{ minWidth: 100, height: '56px' }}
-                    onClick={handleCommentSubmit}
-                    disabled={
-                      !comment.trim() ||
-                      (!!comments.find(
-                        (c) => c.author === userInfo?.memberName
-                      ) &&
-                        !editingComment)
-                    }
-                  >
-                    {t('register')}
-                  </Button>
-                )}
+                  )}
+                </Box>
               </Box>
+
+              {/* 선택된 첨부파일 목록 */}
+              {commentFiles.length > 0 && (
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {commentFiles.map((file, index) => (
+                    <Chip
+                      key={index}
+                      label={file.name}
+                      onDelete={() => handleRemoveCommentFile(index)}
+                      deleteIcon={<Close />}
+                      variant="outlined"
+                      size="small"
+                      sx={{ maxWidth: 250 }}
+                    />
+                  ))}
+                </Box>
+              )}
+
+              {/* 첨부파일 안내 */}
+              <Typography variant="caption" color="text.secondary">
+                * {approvalData?.approvalId === userInfo?.memberId
+                  ? t('drafterFileLimit')
+                  : t('signerFileLimit')}
+              </Typography>
             </Box>
           </Box>
 

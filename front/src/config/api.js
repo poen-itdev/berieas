@@ -50,6 +50,8 @@ const API_CONFIG = {
     APPROVAL_DELETE: '/approvalDetail/delete',
     APPROVAL_CANCEL: '/approvalDetail/cancel',
     APPROVAL_ADD_COMMENTS: '/approval/addcomments',
+    APPROVAL_EDIT_COMMENT: '/approval/editcomment',
+    APPROVAL_DELETE_COMMENT: '/approval/deletecomment',
 
     APPROVAL_FORMS: '/form/list',
     APPROVAL_FORM_DETAIL: '/form',
@@ -123,6 +125,10 @@ export const API_URLS = {
   APPROVAL_CANCEL: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_CANCEL),
   APPROVAL_ADD_COMMENTS: (approvalNo) =>
     `${getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_ADD_COMMENTS)}/${approvalNo}`,
+  APPROVAL_EDIT_COMMENT: (approvalNo) =>
+    `${getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_EDIT_COMMENT)}/${approvalNo}`,
+  APPROVAL_DELETE_COMMENT: (approvalNo) =>
+    `${getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_DELETE_COMMENT)}/${approvalNo}`,
   APPROVAL_FORMS: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_FORMS),
   APPROVAL_FORM_DETAIL: getApiUrl(API_CONFIG.ENDPOINTS.APPROVAL_FORM_DETAIL),
   FORM_ADD: getApiUrl(API_CONFIG.ENDPOINTS.FORM_ADD),
