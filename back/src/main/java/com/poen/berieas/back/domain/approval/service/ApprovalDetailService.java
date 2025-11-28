@@ -328,6 +328,8 @@ public class ApprovalDetailService {
             case "approvalAttachFile3" -> detail.getApprovalAttachPath3() + "/" + detail.getApprovalAttachFile3();
             case "approvalAttachFile4" -> detail.getApprovalAttachPath4() + "/" + detail.getApprovalAttachFile4();
             case "approvalAttachFile5" -> detail.getApprovalAttachPath5() + "/" + detail.getApprovalAttachFile5();
+            case "signerAttachFile" -> detail.getSignerAttachPath() + "/" + detail.getSignerAttachFile();
+            case "referenceAttachFile" -> detail.getReferenceAttachPath() + "/" + detail.getReferenceAttachFile();
             default -> throw new IllegalArgumentException("잘못된 파일 파라미터입니다.");
         };
 

@@ -430,6 +430,7 @@ Page<Approval> approvals =
     public void addComment(int approvalNo, CommentRequestDto dto, List<MultipartFile> files) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+        System.out.println("[첨언] 로그인 memberId: " + memberId);
 
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
@@ -439,14 +440,19 @@ Page<Approval> approvals =
             .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
 
         boolean isDrafter = memberId.equals(approval.getApprovalId()); // 기안자
+        System.out.println("[첨언] isDrafter: " + isDrafter + " (memberId=" + memberId + ", approvalId=" + approval.getApprovalId() + ")");
         
         // 결재자 확인 - 결재라인 전체(signId1~5) 확인
         String memberName = member.getMemberName();
+        System.out.println("[첨언] memberName: " + memberName);
+        System.out.println("[첨언] signId1~5: " + approval.getSignId1() + ", " + approval.getSignId2() + ", " + approval.getSignId3() + ", " + approval.getSignId4() + ", " + approval.getSignId5());
+        
         boolean isSigner = memberName.equals(approval.getSignId1()) ||
                           memberName.equals(approval.getSignId2()) ||
                           memberName.equals(approval.getSignId3()) ||
                           memberName.equals(approval.getSignId4()) ||
                           memberName.equals(approval.getSignId5());
+        System.out.println("[첨언] isSigner: " + isSigner);
         
         // 참조자 확인 - referenceId는 쉼표로 구분된 여러 사람일 수 있음
         boolean referencer = false;
@@ -459,26 +465,28 @@ Page<Approval> approvals =
                 }
             }
         }
+        System.out.println("[첨언] referencer: " + referencer);
 
         if (!isDrafter && !isSigner && !referencer) {
             throw new IllegalArgumentException("첨언 권한이 없습니다.");
         }
 
         // ----- 댓글 저장 -----
+        System.out.println("[첨언] 댓글 저장 시작 - comment: " + dto.getComment());
         if(isSigner) {
-
-            if (memberName.equals(approval.getSignId1())) approval.setSignRemark1(dto.getComment());
-            else if (memberName.equals(approval.getSignId2())) approval.setSignRemark2(dto.getComment());
-            else if (memberName.equals(approval.getSignId3())) approval.setSignRemark3(dto.getComment());
-            else if (memberName.equals(approval.getSignId4())) approval.setSignRemark4(dto.getComment());
-            else if (memberName.equals(approval.getSignId5())) approval.setSignRemark5(dto.getComment());
+            System.out.println("[첨언] 결재자로 댓글 저장");
+            if (memberName.equals(approval.getSignId1())) { approval.setSignRemark1(dto.getComment()); System.out.println("[첨언] signRemark1에 저장"); }
+            else if (memberName.equals(approval.getSignId2())) { approval.setSignRemark2(dto.getComment()); System.out.println("[첨언] signRemark2에 저장"); }
+            else if (memberName.equals(approval.getSignId3())) { approval.setSignRemark3(dto.getComment()); System.out.println("[첨언] signRemark3에 저장"); }
+            else if (memberName.equals(approval.getSignId4())) { approval.setSignRemark4(dto.getComment()); System.out.println("[첨언] signRemark4에 저장"); }
+            else if (memberName.equals(approval.getSignId5())) { approval.setSignRemark5(dto.getComment()); System.out.println("[첨언] signRemark5에 저장"); }
             else throw new IllegalArgumentException("결재자 정보가 일치하지 않습니다.");
 
         } else if (isDrafter) {
-
+            System.out.println("[첨언] 기안자로 댓글 저장 - drafterRemark");
             detail.setDrafterRemark(dto.getComment());
         } else if (referencer) {
-
+            System.out.println("[첨언] 참조자로 댓글 저장 - referenceRemark");
             detail.setReferenceRemark(dto.getComment());
         }
 
@@ -496,7 +504,7 @@ Page<Approval> approvals =
                     Files.createDirectories(savePath.getParent());
                     file.transferTo(savePath.toFile());
 
-                    String info = isDrafter ? "기안자첨언" : (isSigner ? "결재자첨언" : "참조자첨언");
+                    String info = isDrafter ? "기안자첨언" : (isSigner ? memberName + " (결재자)" : memberName + " (참조자)");
 
                     // ===== 기안자 첨언 =====
                     if (isDrafter) {
@@ -567,178 +575,139 @@ Page<Approval> approvals =
         detail.setUpdateId(memberId);
         detail.setUpdateDate(LocalDateTime.now());
 
+        System.out.println("[첨언] DB 저장 시작");
+        approvalRepository.save(approval);
+        System.out.println("[첨언] approval 테이블 저장 완료");
+        approvalDetailRepository.save(detail);
+        System.out.println("[첨언] approval_detail 테이블 저장 완료");
+    }
+
+    // 첨언 수정
+    @Transactional
+    public void updateComment(int approvalNo, CommentRequestDto dto) {
+
+        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+
+        Member member = memberRepository.findByMemberId(memberId)
+            .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+        Approval approval = approvalRepository.findByApprovalNo(approvalNo)
+            .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
+        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approvalNo)
+            .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
+
+        boolean isDrafter = memberId.equals(approval.getApprovalId());
+        String memberName = member.getMemberName();
+        
+        boolean isSigner = memberName.equals(approval.getSignId1()) ||
+                          memberName.equals(approval.getSignId2()) ||
+                          memberName.equals(approval.getSignId3()) ||
+                          memberName.equals(approval.getSignId4()) ||
+                          memberName.equals(approval.getSignId5());
+        
+        boolean referencer = false;
+        if (approval.getReferenceId() != null && !approval.getReferenceId().isEmpty()) {
+            String[] referenceIds = approval.getReferenceId().split(",");
+            for (String refId : referenceIds) {
+                if (memberName.equals(refId.trim())) {
+                    referencer = true;
+                    break;
+                }
+            }
+        }
+
+        if (!isDrafter && !isSigner && !referencer) {
+            throw new IllegalArgumentException("첨언 수정 권한이 없습니다.");
+        }
+
+        // 댓글 수정
+        if(isSigner) {
+            if (memberName.equals(approval.getSignId1())) approval.setSignRemark1(dto.getComment());
+            else if (memberName.equals(approval.getSignId2())) approval.setSignRemark2(dto.getComment());
+            else if (memberName.equals(approval.getSignId3())) approval.setSignRemark3(dto.getComment());
+            else if (memberName.equals(approval.getSignId4())) approval.setSignRemark4(dto.getComment());
+            else if (memberName.equals(approval.getSignId5())) approval.setSignRemark5(dto.getComment());
+            else throw new IllegalArgumentException("결재자 정보가 일치하지 않습니다.");
+        } else if (isDrafter) {
+            detail.setDrafterRemark(dto.getComment());
+        } else if (referencer) {
+            detail.setReferenceRemark(dto.getComment());
+        }
+
+        approval.setUpdateId(memberId);
+        approval.setUpdateDate(LocalDateTime.now());
+        detail.setUpdateId(memberId);
+        detail.setUpdateDate(LocalDateTime.now());
+
         approvalRepository.save(approval);
         approvalDetailRepository.save(detail);
     }
 
-    // 결재자 첨언
+    // 첨언 삭제
     @Transactional
-    public void comments(int approvalNo, CommentRequestDto dto, List<MultipartFile> files) {
+    public void deleteComment(int approvalNo) {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
+
         Member member = memberRepository.findByMemberId(memberId)
             .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
-
         Approval approval = approvalRepository.findByApprovalNo(approvalNo)
             .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
-
         ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approvalNo)
             .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
 
-        // 현재 결재 차례인지 확인
-        if (!member.getMemberName().equals(approval.getNextId())) {
-            throw new IllegalStateException("현재 결재 차례가 아닙니다.");
-        }
-
-        if (member.getMemberName().equals(approval.getSignId1())) {
-
-            approval.setSignRemark1(dto.getComment());
-        } else if (member.getMemberName().equals(approval.getSignId2())) {
-
-            approval.setSignRemark2(dto.getComment());
-        } else if (member.getMemberName().equals(approval.getSignId3())) {
-
-            approval.setSignRemark3(dto.getComment());
-        } else if (member.getMemberName().equals(approval.getSignId4())) {
-
-            approval.setSignRemark4(dto.getComment());
-        } else if (member.getMemberName().equals(approval.getSignId5())) {
-
-            approval.setSignRemark5(dto.getComment());
-        } else {
-
-            throw new IllegalStateException("해당 사용자는 결재자가 아닙니다.");
-        }
-
-        // 파일 업로드 처리 (기안자 첨언 로직 참고)
-        if (files == null || files.isEmpty()) return;
-
-        // 기존 파일 정보 리스트
-        List<String> attachFiles = Arrays.asList(
-                detail.getApprovalAttachFile1(),
-                detail.getApprovalAttachFile2(),
-                detail.getApprovalAttachFile3(),
-                detail.getApprovalAttachFile4(),
-                detail.getApprovalAttachFile5()
-        );
-
-        for (MultipartFile file : files) {
-
-            if (file.isEmpty()) continue;
-
-            // 빈 슬롯 찾기
-            int slotIndex = -1;
-            for (int j = 0; j < attachFiles.size(); j++) {
-                if (attachFiles.get(j) == null) {
-                    slotIndex = j;
-                    break;
-                }
-            }
-
-            if (slotIndex == -1) {
-                throw new RuntimeException("첨부파일 최대 개수(5개)를 초과했습니다.");
-            }
-
-            try {
-                // 파일 저장
-                String savedFileName = file.getOriginalFilename();
-                Path savePath = Paths.get(uploadDir, savedFileName);
-                Files.createDirectories(savePath.getParent());
-                file.transferTo(savePath.toFile());
-
-                // 빈 슬롯에 파일 정보 저장
-                switch (slotIndex) {
-                    case 0 -> { detail.setApprovalAttachFile1(savedFileName); detail.setApprovalAttachPath1(uploadDir); detail.setApprovalAttachInfo1("첨언"); }
-                    case 1 -> { detail.setApprovalAttachFile2(savedFileName); detail.setApprovalAttachPath2(uploadDir); detail.setApprovalAttachInfo2("첨언"); }
-                    case 2 -> { detail.setApprovalAttachFile3(savedFileName); detail.setApprovalAttachPath3(uploadDir); detail.setApprovalAttachInfo3("첨언"); }
-                    case 3 -> { detail.setApprovalAttachFile4(savedFileName); detail.setApprovalAttachPath4(uploadDir); detail.setApprovalAttachInfo4("첨언"); }
-                    case 4 -> { detail.setApprovalAttachFile5(savedFileName); detail.setApprovalAttachPath5(uploadDir); detail.setApprovalAttachInfo5("첨언"); }
-                }
-
-                // attachFiles 리스트 업데이트 (다음 반복에서 빈 슬롯 체크용)
-                attachFiles.set(slotIndex, savedFileName);
-
-            } catch (IOException e) {
-                throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);
-            }
-        }
-
-        approval.setUpdateDate(LocalDateTime.now());
-        detail.setUpdateId(memberId);
-        approvalRepository.save(approval);
-    }
-
-    // 본인 첨언
-    @Transactional
-    public void updateComments(int approvalNo, List<MultipartFile> files) {
-
-        String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
-
-        Approval approval = approvalRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
-
-        ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
-
-        if (!memberId.equals(approval.getApprovalId())) {
-
-            throw new IllegalArgumentException("기안자만 첨언 파일을 추가할 수 있습니다.");
-        }
+        boolean isDrafter = memberId.equals(approval.getApprovalId());
+        String memberName = member.getMemberName();
         
-        if (files == null || files.isEmpty()) return;
-
-        // 기존 파일 정보 리스트
-        List<String> attachFiles = Arrays.asList(
-                detail.getApprovalAttachFile1(),
-                detail.getApprovalAttachFile2(),
-                detail.getApprovalAttachFile3(),
-                detail.getApprovalAttachFile4(),
-                detail.getApprovalAttachFile5()
-        );
-
-        for (MultipartFile file : files) {
-
-            if (file.isEmpty()) continue;
-
-            // 빈 슬롯 찾기
-            int slotIndex = -1;
-            for (int j = 0; j < attachFiles.size(); j++) {
-                if (attachFiles.get(j) == null) {
-                    slotIndex = j;
+        boolean isSigner = memberName.equals(approval.getSignId1()) ||
+                          memberName.equals(approval.getSignId2()) ||
+                          memberName.equals(approval.getSignId3()) ||
+                          memberName.equals(approval.getSignId4()) ||
+                          memberName.equals(approval.getSignId5());
+        
+        boolean referencer = false;
+        if (approval.getReferenceId() != null && !approval.getReferenceId().isEmpty()) {
+            String[] referenceIds = approval.getReferenceId().split(",");
+            for (String refId : referenceIds) {
+                if (memberName.equals(refId.trim())) {
+                    referencer = true;
                     break;
                 }
             }
-
-            if (slotIndex == -1) {
-                throw new RuntimeException("첨부파일 최대 개수(5개)를 초과했습니다.");
-            }
-
-            try {
-                // 파일 저장
-                String savedFileName = file.getOriginalFilename();
-                Path savePath = Paths.get(uploadDir, savedFileName);
-                Files.createDirectories(savePath.getParent());
-                file.transferTo(savePath.toFile());
-
-                // 빈 슬롯에 파일 정보 저장
-                switch (slotIndex) {
-                    case 0 -> { detail.setApprovalAttachFile1(savedFileName); detail.setApprovalAttachPath1(uploadDir); detail.setApprovalAttachInfo1("첨언"); }
-                    case 1 -> { detail.setApprovalAttachFile2(savedFileName); detail.setApprovalAttachPath2(uploadDir); detail.setApprovalAttachInfo2("첨언"); }
-                    case 2 -> { detail.setApprovalAttachFile3(savedFileName); detail.setApprovalAttachPath3(uploadDir); detail.setApprovalAttachInfo3("첨언"); }
-                    case 3 -> { detail.setApprovalAttachFile4(savedFileName); detail.setApprovalAttachPath4(uploadDir); detail.setApprovalAttachInfo4("첨언"); }
-                    case 4 -> { detail.setApprovalAttachFile5(savedFileName); detail.setApprovalAttachPath5(uploadDir); detail.setApprovalAttachInfo5("첨언"); }
-                }
-
-                // attachFiles 리스트 업데이트 (다음 반복에서 빈 슬롯 체크용)
-                attachFiles.set(slotIndex, savedFileName);
-
-            } catch (IOException e) {
-                throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);
-            }
         }
+
+        if (!isDrafter && !isSigner && !referencer) {
+            throw new IllegalArgumentException("첨언 삭제 권한이 없습니다.");
+        }
+
+        // 댓글 삭제 (null로 설정)
+        if(isSigner) {
+            if (memberName.equals(approval.getSignId1())) approval.setSignRemark1(null);
+            else if (memberName.equals(approval.getSignId2())) approval.setSignRemark2(null);
+            else if (memberName.equals(approval.getSignId3())) approval.setSignRemark3(null);
+            else if (memberName.equals(approval.getSignId4())) approval.setSignRemark4(null);
+            else if (memberName.equals(approval.getSignId5())) approval.setSignRemark5(null);
+            else throw new IllegalArgumentException("결재자 정보가 일치하지 않습니다.");
+            
+            // 결재자 첨부파일도 삭제
+            detail.setSignerAttachFile(null);
+            detail.setSignerAttachPath(null);
+            detail.setSignerAttachInfo(null);
+        } else if (isDrafter) {
+            detail.setDrafterRemark(null);
+        } else if (referencer) {
+            detail.setReferenceRemark(null);
+            // 참조자 첨부파일도 삭제
+            detail.setReferenceAttachFile(null);
+            detail.setReferenceAttachPath(null);
+            detail.setReferenceAttachInfo(null);
+        }
+
+        approval.setUpdateId(memberId);
+        approval.setUpdateDate(LocalDateTime.now());
         detail.setUpdateId(memberId);
         detail.setUpdateDate(LocalDateTime.now());
 
+        approvalRepository.save(approval);
         approvalDetailRepository.save(detail);
     }
 
