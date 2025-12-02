@@ -13,13 +13,27 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.web.servlet.i18n.SessionLocaleResolver;
 
+import com.poen.berieas.back.domain.basic.entity.Basic;
+import com.poen.berieas.back.domain.basic.repository.BasicRepository;
+
+import lombok.RequiredArgsConstructor;
+
 @Configuration
+@RequiredArgsConstructor
 public class MvcConfig implements WebMvcConfigurer {
+
+    private final BasicRepository basicRepository;
+
     
     @Override
     public void addCorsMappings(CorsRegistry corsRegistry) {
+
+        String domain = basicRepository.findByTypeAndName("domain", "도메인")
+            .map(Basic::getCode)
+            .orElse("localhost"); // 기본값: localhost
+
         corsRegistry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173")
+                .allowedOrigins("http://localhost", "http://127.0.0.1", "http://" + domain)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowCredentials(true)
                 .allowedHeaders("*")
