@@ -23,6 +23,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.poen.berieas.back.domain.basic.entity.Basic;
+import com.poen.berieas.back.domain.basic.repository.BasicRepository;
 import com.poen.berieas.back.domain.jwt.service.JwtService;
 import com.poen.berieas.back.domain.member.entity.RoleType;
 import com.poen.berieas.back.domain.member.repository.MemberRepository;
@@ -40,14 +42,16 @@ public class SecurityConfig {
     private final AuthenticationSuccessHandler loginSuccessHandler;
     private final JwtService jwtService;
     private final MemberRepository memberRepository;
+    private final BasicRepository basicRepository;
 
     public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, @Qualifier("LoginSuccessHandler")AuthenticationSuccessHandler loginSuccessHandler,
-        JwtService jwtService, MemberRepository memberRepository) {
+        JwtService jwtService, MemberRepository memberRepository, BasicRepository basicRepository) {
 
         this.authenticationConfiguration = authenticationConfiguration;
         this.loginSuccessHandler = loginSuccessHandler;
         this.jwtService = jwtService;
         this.memberRepository = memberRepository;
+        this.basicRepository = basicRepository;
     }
 
     // 커스텀 자체 로그인 필터를 위한 AuthenticationManager Bean 등록
@@ -76,7 +80,21 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        
+        // DB에서 도메인 값 조회
+        String domain = basicRepository.findByTypeAndName("domain", "도메인")
+            .map(Basic::getCode)
+            .orElse("localhost"); // 기본값: localhost
+        
+        System.out.println("===== CORS 설정 =====");
+        System.out.println("DB에서 조회한 domain: " + domain);
+        
+        // 개발용 + 운영용 도메인 설정
+        configuration.setAllowedOrigins(List.of("http://localhost", "http://127.0.0.1", "http://" + domain));
+        
+        System.out.println("허용된 origins: " + configuration.getAllowedOrigins());
+        System.out.println("=====================");
+        
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

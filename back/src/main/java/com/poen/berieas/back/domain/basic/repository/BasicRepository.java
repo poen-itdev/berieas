@@ -19,4 +19,7 @@ public interface BasicRepository extends JpaRepository<Basic, Integer>{
     List<Basic> getPositions();
 
     Optional<Basic> findByIdx(int idx);
+
+    // codeKey로 값 조회 (예: nation)
+    Optional<Basic> findByTypeAndName(String type, String name);
 }
