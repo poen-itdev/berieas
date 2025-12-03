@@ -97,4 +97,11 @@ public class BasicController {
         basicService.updatePosition(idx, dto);
         return ResponseEntity.ok("해당 직급이 수정되었습니다.");
     }
+
+    // 도메인 조회 (Vite 서버 설정용)
+    @GetMapping(value = "/domain")
+    public ResponseEntity<String> getDomainApi() {
+        String domain = basicService.getDomain();
+        return ResponseEntity.ok(domain);
+    }
 }
