@@ -129,4 +129,11 @@ public class BasicService {
         position.setName(dto.getName());
         basicRepository.save(position);
     }
+
+    // 도메인 조회
+    public String getDomain() {
+        return basicRepository.findByTypeAndName("domain", "도메인")
+            .map(Basic::getCode)
+            .orElse("localhost");
+    }
 }
