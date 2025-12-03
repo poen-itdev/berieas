@@ -1,7 +1,18 @@
 // API 설정 파일
+// 현재 접속한 도메인으로 백엔드 URL 자동 설정
+const getBaseUrl = () => {
+  // 환경변수가 있으면 우선 사용
+  if (import.meta.env.VITE_BACKEND_API_BASE_URL) {
+    return import.meta.env.VITE_BACKEND_API_BASE_URL;
+  }
+  // 없으면 현재 접속한 도메인 사용
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  return `${protocol}//${hostname}:8080`;
+};
+
 const API_CONFIG = {
-  BASE_URL:
-    import.meta.env.VITE_BACKEND_API_BASE_URL || 'http://localhost:8080',
+  BASE_URL: getBaseUrl(),
   ENDPOINTS: {
     LOGIN: '/login',
     MEMBER_EXIST: '/member/exist',
