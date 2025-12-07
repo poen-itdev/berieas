@@ -90,7 +90,7 @@ public class SecurityConfig {
         System.out.println("DB에서 조회한 domain: " + domain);
         
         // 개발용 + 운영용 도메인 설정
-        configuration.setAllowedOrigins(List.of("http://localhost", "http://127.0.0.1", "http://" + domain));
+        configuration.setAllowedOrigins(List.of("http://localhost", "http://127.0.0.1", "http://" + domain, "https://" + domain));
         
         System.out.println("허용된 origins: " + configuration.getAllowedOrigins());
         System.out.println("=====================");
