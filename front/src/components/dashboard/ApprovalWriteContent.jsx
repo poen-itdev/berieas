@@ -432,7 +432,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
         !formData.approvalTitle ||
         formData.approvalTitle.trim() === ''
       ) {
-        alert('양식과 제목을 선택해주세요.');
+        alert(t('formAndTitleRequired'));
         return false;
       }
 
@@ -477,13 +477,13 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
         return true;
       } else {
         alert(
-          `임시저장에 실패했습니다. (${response.status}: ${response.statusText})`
+          `${t('temporarySaveFailed')} (${response.status}: ${response.statusText})`
         );
         return false;
       }
     } catch (error) {
       console.error('임시저장 실패:', error);
-      alert('임시저장에 실패했습니다: ' + error.message);
+      alert(`${t('temporarySaveFailed')}: ${error.message}`);
       return false;
     } finally {
       setLoading(false);
@@ -550,12 +550,12 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
           navigate('/progress-list');
         } else {
           alert(
-            `문서 삭제에 실패했습니다. (${response.status}: ${response.statusText})`
+            `${t('documentDeleteFailed')} (${response.status}: ${response.statusText})`
           );
         }
       } catch (error) {
         console.error('문서 삭제 실패:', error);
-        alert('문서 삭제에 실패했습니다: ' + error.message);
+        alert(`${t('documentDeleteFailed')}: ${error.message}`);
       }
     } else {
       setFormData({
@@ -591,13 +591,13 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
         !formData.approvalTitle ||
         formData.approvalTitle.trim() === ''
       ) {
-        alert('양식과 제목을 선택해주세요.');
+        alert(t('formAndTitleRequired'));
         return;
       }
 
       // 결재자 필수 검증
       if (selectedApprovers.length === 0) {
-        alert('결재자를 최소 1명 이상 선택해주세요.');
+        alert(t('approverRequired'));
         return;
       }
 
@@ -642,14 +642,14 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
       } else {
         console.error('제출 실패 상세:', response);
         alert(
-          `기안서 제출에 실패했습니다. (${response.status}: ${
+          `${t('draftSubmitFailed')} (${response.status}: ${
             response.statusText
-          })\n에러: ${response.data || '알 수 없는 오류'}`
+          })\n${response.data || t('errorOccurred')}`
         );
       }
     } catch (error) {
       console.error('기안서 제출 실패:', error);
-      alert('기안서 제출에 실패했습니다: ' + error.message);
+      alert(`${t('draftSubmitFailed')}: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -804,7 +804,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                   value={selectedApprovers}
                   onChange={(event, newValue) => {
                     if (newValue.length > 5) {
-                      alert('결재자는 최대 5명까지 선택 가능합니다.');
+                      alert(t('maxApproversExceeded'));
                       return;
                     }
                     setSelectedApprovers(newValue);

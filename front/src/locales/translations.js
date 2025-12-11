@@ -123,6 +123,14 @@ export const translations = {
     close: '닫기',
     adminPageOnly: '관리자페이지 입니다',
     adminPermissionRequired: '이 페이지는 관리자 권한이 필요한 페이지입니다.',
+    formTitleRequired: '양식 제목과 구분을 입력해주세요.',
+    formContentRequired: '양식 내용을 입력해주세요.',
+    formRegistered: '양식이 등록되었습니다.',
+    formRegisterFailed: '양식 등록에 실패했습니다.',
+    formLoadFailed: '양식을 불러올 수 없습니다.',
+    confirmDeleteForm: '정말 이 양식을 삭제하시겠습니까?',
+    formDeleted: '양식이 삭제되었습니다.',
+    formDeleteFailed: '양식 삭제에 실패했습니다.',
 
     // 기안서 작성
     createDraftTitle: '기안서 작성',
@@ -163,6 +171,13 @@ export const translations = {
     resetContent: '내용 초기화',
     confirmDelete: '삭제하시겠습니까?',
     confirmReset: '초기화하시겠습니까?',
+    formAndTitleRequired: '양식과 제목을 선택해주세요.',
+    approverRequired: '결재자를 최소 1명 이상 선택해주세요.',
+    maxApproversExceeded: '결재자는 최대 5명까지 선택 가능합니다.',
+    temporarySaveFailed: '임시저장에 실패했습니다.',
+    documentDeleteFailed: '문서 삭제에 실패했습니다.',
+    draftSubmitFailed: '기안서 제출에 실패했습니다.',
+    draftCancelFailed: '기안취소에 실패했습니다.',
 
     // 결재 문서 리스트
     documentsToApprove: '결재할 문서',
@@ -416,6 +431,14 @@ export const translations = {
     close: 'Close',
     adminPageOnly: 'Admin Page Only',
     adminPermissionRequired: 'This page requires administrator permission.',
+    formTitleRequired: 'Please enter form title and type.',
+    formContentRequired: 'Please enter form content.',
+    formRegistered: 'Form has been registered.',
+    formRegisterFailed: 'Failed to register form.',
+    formLoadFailed: 'Failed to load form.',
+    confirmDeleteForm: 'Are you sure you want to delete this form?',
+    formDeleted: 'Form has been deleted.',
+    formDeleteFailed: 'Failed to delete form.',
 
     // 기안서 작성
     createDraftTitle: 'Create Draft',
@@ -456,6 +479,13 @@ export const translations = {
     resetContent: 'Reset Content',
     confirmDelete: 'Are you sure you want to delete?',
     confirmReset: 'Are you sure you want to reset?',
+    formAndTitleRequired: 'Please select form and title.',
+    approverRequired: 'Please select at least 1 approver.',
+    maxApproversExceeded: 'You can select up to 5 approvers.',
+    temporarySaveFailed: 'Failed to save temporarily.',
+    documentDeleteFailed: 'Failed to delete document.',
+    draftSubmitFailed: 'Failed to submit draft.',
+    draftCancelFailed: 'Failed to cancel draft.',
 
     // 결재 문서 리스트
     documentsToApprove: 'Documents to Approve',
