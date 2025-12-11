@@ -93,19 +93,19 @@ const FormManagementContent = () => {
       }
     } catch (error) {
       console.error('양식 조회 실패:', error);
-      alert('양식을 불러올 수 없습니다.');
+      alert(t('formLoadFailed'));
     }
   };
 
   // 양식 저장
   const handleSaveForm = async () => {
     if (!formData.formTitle || !formData.formType) {
-      alert('양식 제목과 구분을 입력해주세요.');
+      alert(t('formTitleRequired'));
       return;
     }
 
     if (!formData.formDocument.trim()) {
-      alert('양식 내용을 입력해주세요.');
+      alert(t('formContentRequired'));
       return;
     }
 
@@ -118,15 +118,15 @@ const FormManagementContent = () => {
       });
 
       if (response.ok) {
-        alert('양식이 등록되었습니다.');
+        alert(t('formRegistered'));
         setDialogOpen(false);
         fetchForms();
       } else {
-        alert(`양식 등록에 실패했습니다.\n${response.data || ''}`);
+        alert(`${t('formRegisterFailed')}\n${response.data || ''}`);
       }
     } catch (error) {
       console.error('양식 등록 실패:', error);
-      alert('양식 등록에 실패했습니다: ' + error.message);
+      alert(`${t('formRegisterFailed')}: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -134,7 +134,7 @@ const FormManagementContent = () => {
 
   // 양식 삭제
   const handleDeleteForm = async (formNo) => {
-    if (!confirm('정말 이 양식을 삭제하시겠습니까?')) return;
+    if (!confirm(t('confirmDeleteForm'))) return;
 
     try {
       setLoading(true);
@@ -143,14 +143,14 @@ const FormManagementContent = () => {
       });
 
       if (response.ok) {
-        alert('양식이 삭제되었습니다.');
+        alert(t('formDeleted'));
         fetchForms();
       } else {
-        alert('양식 삭제에 실패했습니다.');
+        alert(t('formDeleteFailed'));
       }
     } catch (error) {
       console.error('양식 삭제 실패:', error);
-      alert('양식 삭제에 실패했습니다: ' + error.message);
+      alert(`${t('formDeleteFailed')}: ${error.message}`);
     } finally {
       setLoading(false);
     }
