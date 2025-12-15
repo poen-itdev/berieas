@@ -36,4 +36,7 @@ public interface MemberRepository extends JpaRepository<Member, String>{
        "or m.memberEmail like concat('%', :keyword, '%')")
     List<Member> findAllByKeyword(@Param("keyword") String keyword);
 
+    // 이름으로 멤버 조회
+    Optional<Member> findByMemberName(String memberName);
+
 }

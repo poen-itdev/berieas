@@ -25,6 +25,7 @@ import com.poen.berieas.back.domain.approval.repository.ApprovalRepository;
 import com.poen.berieas.back.domain.approval.repository.ApprovalSettingRepository;
 import com.poen.berieas.back.domain.member.entity.Member;
 import com.poen.berieas.back.domain.member.repository.MemberRepository;
+import com.poen.berieas.back.util.MessageUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -37,6 +38,7 @@ public class ApprovalDetailService {
     private final ApprovalSettingRepository approvalSettingRepository;
     private final MemberRepository memberRepository;
     private final ApprovalRepository approvalRepository;
+    private final MessageUtil messageUtil;
 
     // 파일 저장
     @Value("${file.upload-dir}")
@@ -51,18 +53,18 @@ public class ApprovalDetailService {
     public void addDraft(ApprovalRequestDto dto, List<MultipartFile> files) {
 
         ApprovalSetting form = approvalSettingRepository.findByFormNo(dto.getFormNo())
-            .orElseThrow(() ->  new IllegalArgumentException("양식이 존재하지 않습니다."));
+            .orElseThrow(() ->  new IllegalArgumentException(messageUtil.getMessage("error.approval.form.not.found")));
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new IllegalArgumentException("멤버가 존재하지 않습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.exists")));
 
         Approval approval;
         
         // approvalNo가 있으면 기존 문서 수정, 없으면 새로 생성
         if (dto.getApprovalNo() != null && dto.getApprovalNo() > 0) {
             approval = approvalRepository.findByApprovalNo(dto.getApprovalNo())
-                .orElseThrow(() -> new IllegalArgumentException("기안서가 존재하지 않습니다."));
+                .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.draft.not.found")));
         } else {
             // 새로 생성
             approval = new Approval();
@@ -76,13 +78,26 @@ public class ApprovalDetailService {
         // 상태 및 필드 업데이트
         approval.setApprovalStartDate(LocalDateTime.now());
         approval.setApprovalStatus("진행중");
-        approval.setSignId1(dto.getSignId1());
-        approval.setSignId2(dto.getSignId2());
-        approval.setSignId3(dto.getSignId3());
-        approval.setSignId4(dto.getSignId4());
-        approval.setSignId5(dto.getSignId5());
+        
+        // 양식에 결재자가 지정되어 있으면 양식의 결재자 사용, 없으면 dto의 결재자 사용
+        String signId1 = (form.getFormSignId1() != null && !form.getFormSignId1().isBlank()) 
+            ? form.getFormSignId1() : dto.getSignId1();
+        String signId2 = (form.getFormSignId2() != null && !form.getFormSignId2().isBlank()) 
+            ? form.getFormSignId2() : dto.getSignId2();
+        String signId3 = (form.getFormSignId3() != null && !form.getFormSignId3().isBlank()) 
+            ? form.getFormSignId3() : dto.getSignId3();
+        String signId4 = (form.getFormSignId4() != null && !form.getFormSignId4().isBlank()) 
+            ? form.getFormSignId4() : dto.getSignId4();
+        String signId5 = (form.getFormSignId5() != null && !form.getFormSignId5().isBlank()) 
+            ? form.getFormSignId5() : dto.getSignId5();
+        
+        approval.setSignId1(signId1);
+        approval.setSignId2(signId2);
+        approval.setSignId3(signId3);
+        approval.setSignId4(signId4);
+        approval.setSignId5(signId5);
         approval.setReferenceId(dto.getReferenceId());
-        approval.setNextId(dto.getSignId1());
+        approval.setNextId(signId1);
         approval.setUpdateId(memberId);
 
         approvalRepository.save(approval);
@@ -146,7 +161,7 @@ public class ApprovalDetailService {
                         }
                     }
                 } catch (IOException e) {
-                    throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);
+                    throw new RuntimeException(messageUtil.getMessage("error.file.save.failed") + ": " + file.getOriginalFilename(), e);
                 }
             }
         }
@@ -158,18 +173,18 @@ public class ApprovalDetailService {
     public void temporaryDraft(ApprovalRequestDto dto, List<MultipartFile> files) {
 
         ApprovalSetting form = approvalSettingRepository.findByFormNo(dto.getFormNo())
-            .orElseThrow(() ->  new IllegalArgumentException("양식이 존재하지 않습니다."));
+            .orElseThrow(() ->  new IllegalArgumentException(messageUtil.getMessage("error.approval.form.not.found")));
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new IllegalArgumentException("멤버가 존재하지 않습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.exists")));
 
         Approval approval;
         
         // approvalNo가 있으면 기존 문서 수정, 없으면 새로 생성
         if (dto.getApprovalNo() != null && dto.getApprovalNo() > 0) {
             approval = approvalRepository.findByApprovalNo(dto.getApprovalNo())
-                .orElseThrow(() -> new IllegalArgumentException("기안서가 존재하지 않습니다."));
+                .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.draft.not.found")));
         } else {
             // 새로 생성
             approval = new Approval();
@@ -182,13 +197,25 @@ public class ApprovalDetailService {
             approval.setRegId(memberId);
         }
 
-        approval.setSignId1(dto.getSignId1());
-        approval.setSignId2(dto.getSignId2());
-        approval.setSignId3(dto.getSignId3());
-        approval.setSignId4(dto.getSignId4());
-        approval.setSignId5(dto.getSignId5());
+        // 양식에 결재자가 지정되어 있으면 양식의 결재자 사용, 없으면 dto의 결재자 사용
+        String signId1 = (form.getFormSignId1() != null && !form.getFormSignId1().isBlank()) 
+            ? form.getFormSignId1() : dto.getSignId1();
+        String signId2 = (form.getFormSignId2() != null && !form.getFormSignId2().isBlank()) 
+            ? form.getFormSignId2() : dto.getSignId2();
+        String signId3 = (form.getFormSignId3() != null && !form.getFormSignId3().isBlank()) 
+            ? form.getFormSignId3() : dto.getSignId3();
+        String signId4 = (form.getFormSignId4() != null && !form.getFormSignId4().isBlank()) 
+            ? form.getFormSignId4() : dto.getSignId4();
+        String signId5 = (form.getFormSignId5() != null && !form.getFormSignId5().isBlank()) 
+            ? form.getFormSignId5() : dto.getSignId5();
+        
+        approval.setSignId1(signId1);
+        approval.setSignId2(signId2);
+        approval.setSignId3(signId3);
+        approval.setSignId4(signId4);
+        approval.setSignId5(signId5);
         approval.setReferenceId(dto.getReferenceId());
-        approval.setNextId(dto.getSignId1());
+        approval.setNextId(signId1);
         approval.setUpdateId(memberId);
 
         approvalRepository.save(approval);
@@ -252,7 +279,7 @@ public class ApprovalDetailService {
                         }
                     }
                 } catch (IOException e) {
-                    throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);
+                    throw new RuntimeException(messageUtil.getMessage("error.file.save.failed") + ": " + file.getOriginalFilename(), e);
                 }
             }
         }
@@ -263,13 +290,13 @@ public class ApprovalDetailService {
     public ApprovalResponseDto getDraft(int approvalNo) {
 
         Approval approval = approvalRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.not.found")));
         
         ApprovalDetail approvalDetail = approvalDetailRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.not.found")));
 
         ApprovalSetting form = approvalSettingRepository.findByFormNo(approvalDetail.getFormNo())
-            .orElseThrow(() -> new IllegalArgumentException("해당 양식을 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.form.not.found")));
 
         ApprovalResponseDto dto = new ApprovalResponseDto(
             approvalDetail.getFormNo(),
@@ -319,7 +346,7 @@ public class ApprovalDetailService {
     public Resource loadFile(int approvalNo, String file) throws IOException {
 
         ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.document.not.exists")));
 
         String filePath = switch (file) {
 
@@ -330,12 +357,12 @@ public class ApprovalDetailService {
             case "approvalAttachFile5" -> detail.getApprovalAttachPath5() + "/" + detail.getApprovalAttachFile5();
             case "signerAttachFile" -> detail.getSignerAttachPath() + "/" + detail.getSignerAttachFile();
             case "referenceAttachFile" -> detail.getReferenceAttachPath() + "/" + detail.getReferenceAttachFile();
-            default -> throw new IllegalArgumentException("잘못된 파일 파라미터입니다.");
+            default -> throw new IllegalArgumentException(messageUtil.getMessage("error.file.parameter.invalid"));
         };
 
         Path path = Paths.get(filePath);
         if (!Files.exists(path)) {
-            throw new IllegalArgumentException("파일이 존재하지 않습니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.file.not.found"));
         }
 
         return new FileSystemResource(path);
@@ -346,7 +373,7 @@ public class ApprovalDetailService {
     public void deleteFile(int approvalNo, String file) throws IOException {
 
         ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.document.not.exists")));
 
         String filePath = null;
 
@@ -382,7 +409,7 @@ public class ApprovalDetailService {
                 detail.setApprovalAttachInfo5(null);
             }
 
-            default -> throw new IllegalArgumentException("잘못된 파일 파라미터입니다.");
+            default -> throw new IllegalArgumentException(messageUtil.getMessage("error.file.parameter.invalid"));
         }
 
         if (filePath != null) {
@@ -398,7 +425,7 @@ public class ApprovalDetailService {
         
         // ApprovalDetail 삭제
         ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.document.not.exists")));
         
         // 첨부파일들도 함께 삭제
         try {
@@ -425,7 +452,7 @@ public class ApprovalDetailService {
         
         // Approval 삭제
         Approval approval = approvalRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("기안서가 존재하지 않습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.draft.not.found")));
         
         approvalRepository.delete(approval);
     }
@@ -437,21 +464,21 @@ public class ApprovalDetailService {
         
         // Approval 조회
         Approval approval = approvalRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("기안서가 존재하지 않습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.draft.not.found")));
         
         // 권한 확인: 기안자만 취소 가능
         if (!approval.getApprovalId().equals(memberId)) {
-            throw new IllegalArgumentException("기안자만 취소할 수 있습니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.approval.cancel.drafter.only"));
         }
         
         // 상태 확인: 진행중 상태만 취소 가능
         if (!"진행중".equals(approval.getApprovalStatus())) {
-            throw new IllegalArgumentException("진행중 상태의 기안서만 취소할 수 있습니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.approval.cancel.only.inprogress"));
         }
         
         // 취소 가능 조건 확인: 첫 번째 결재자(signId1)가 결재했으면 취소 불가
         if (approval.getSignDate1() != null) {
-            throw new IllegalArgumentException("첫 번째 결재자가 결재를 완료하여 취소할 수 없습니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.approval.cancel.first.signer.approved"));
         }
         
         // 취소 가능 조건 확인: signId2부터는 아무도 결재하지 않아야 함
@@ -459,7 +486,7 @@ public class ApprovalDetailService {
             approval.getSignDate3() != null || 
             approval.getSignDate4() != null || 
             approval.getSignDate5() != null) {
-            throw new IllegalArgumentException("두 번째 결재자 이후로 결재가 진행되어 취소할 수 없습니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.approval.cancel.second.signer.approved"));
         }
         
         // 상태를 기안중으로 변경

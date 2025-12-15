@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Typography,
@@ -15,6 +15,8 @@ import {
   ListItemText,
   Divider,
   Container,
+  Autocomplete,
+  Chip,
 } from '@mui/material';
 import { Add, Delete, Visibility } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
@@ -22,19 +24,139 @@ import { apiRequest } from '../../utils/apiHelper';
 import PageHeader from '../common/PageHeader';
 import PermissionGuard from '../common/PermissionGuard';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import {
+  ClassicEditor,
+  Bold,
+  Essentials,
+  Italic,
+  Paragraph,
+  Undo,
+  Heading,
+  Underline,
+  Strikethrough,
+  List as CKList,
+  Link,
+  Alignment,
+  FontColor,
+  FontBackgroundColor,
+  Table,
+  TableToolbar,
+  TableProperties,
+  TableCellProperties,
+  TableColumnResize,
+} from 'ckeditor5';
+import 'ckeditor5/ckeditor5.css';
 
 const FormManagementContent = () => {
   const { t } = useLanguage();
+  const editorRef = useRef(null);
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedForm, setSelectedForm] = useState(null);
+  const [members, setMembers] = useState([]);
+  const [selectedApprovers, setSelectedApprovers] = useState([]);
   const [formData, setFormData] = useState({
     formTitle: '',
     formType: '',
     formDocument: '',
+    signId1: '',
+    signId2: '',
+    signId3: '',
+    signId4: '',
+    signId5: '',
   });
+
+  // CKEditor 설정
+  const editorConfig = {
+    licenseKey: 'GPL', // GPL 라이선스 (오픈소스 무료 사용)
+    toolbar: {
+      items: [
+        'undo',
+        'redo',
+        '|',
+        'heading',
+        '|',
+        'bold',
+        'italic',
+        'underline',
+        'strikethrough',
+        '|',
+        'bulletedList',
+        'numberedList',
+        '|',
+        'fontColor',
+        'fontBackgroundColor',
+        '|',
+        'alignment',
+        '|',
+        'link',
+        '|',
+        'insertTable',
+        'tableColumn',
+        'tableRow',
+        'mergeTableCells',
+        'tableProperties',
+        'tableCellProperties',
+      ],
+    },
+    plugins: [
+      Bold,
+      Essentials,
+      Italic,
+      Paragraph,
+      Undo,
+      Heading,
+      Underline,
+      Strikethrough,
+      CKList,
+      Link,
+      Alignment,
+      FontColor,
+      FontBackgroundColor,
+      Table,
+      TableToolbar,
+      TableProperties,
+      TableCellProperties,
+      TableColumnResize,
+    ],
+    table: {
+      contentToolbar: [
+        'tableColumn',
+        'tableRow',
+        'mergeTableCells',
+        'tableProperties',
+        'tableCellProperties',
+      ],
+    },
+    heading: {
+      options: [
+        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+        {
+          model: 'heading1',
+          view: 'h1',
+          title: 'Heading 1',
+          class: 'ck-heading_heading1',
+        },
+        {
+          model: 'heading2',
+          view: 'h2',
+          title: 'Heading 2',
+          class: 'ck-heading_heading2',
+        },
+        {
+          model: 'heading3',
+          view: 'h3',
+          title: 'Heading 3',
+          class: 'ck-heading_heading3',
+        },
+      ],
+    },
+    placeholder: t('enterFormContent'),
+  };
+
   // 양식 목록 불러오기
   const fetchForms = async () => {
     try {
@@ -54,8 +176,23 @@ const FormManagementContent = () => {
     }
   };
 
+  // 회원 목록 불러오기
+  const fetchMembers = async () => {
+    try {
+      const response = await apiRequest(API_URLS.MEMBER_ACTIVE_MEMBERS, {
+        method: 'GET',
+      });
+      if (response.ok) {
+        setMembers(response.data);
+      }
+    } catch (error) {
+      console.error('회원 목록 가져오기 실패:', error);
+    }
+  };
+
   useEffect(() => {
     fetchForms();
+    fetchMembers();
   }, []);
 
   // 양식 등록/수정 다이얼로그 열기
@@ -65,15 +202,27 @@ const FormManagementContent = () => {
         formTitle: form.formTitle,
         formType: form.formType,
         formDocument: form.formDocument || '',
+        signId1: '',
+        signId2: '',
+        signId3: '',
+        signId4: '',
+        signId5: '',
       });
       setSelectedForm(form);
+      setSelectedApprovers([]);
     } else {
       setFormData({
         formTitle: '',
         formType: '',
         formDocument: '',
+        signId1: '',
+        signId2: '',
+        signId3: '',
+        signId4: '',
+        signId5: '',
       });
       setSelectedForm(null);
+      setSelectedApprovers([]);
     }
     setDialogOpen(true);
   };
@@ -384,25 +533,145 @@ const FormManagementContent = () => {
                 }
               />
 
-              <TextField
-                fullWidth
-                label={t('formContent')}
-                placeholder={t('enterFormContent')}
-                multiline
-                minRows={10}
-                value={formData.formDocument}
-                sx={{
-                  '& .MuiInputBase-input': {
-                    fontSize: { xs: '12px', sm: '14px' },
-                  },
-                  '& .MuiInputLabel-root': {
+              {/* 양식 내용 에디터 (CKEditor5 - 표 기능 포함) */}
+              <Box>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    mb: 1,
+                    color: 'rgba(0, 0, 0, 0.6)',
                     fontSize: { xs: '13px', sm: '14px' },
-                  },
-                }}
-                onChange={(e) =>
-                  setFormData({ ...formData, formDocument: e.target.value })
-                }
-              />
+                  }}
+                >
+                  {t('formContent')}
+                </Typography>
+                <Box
+                  sx={{
+                    '& .ck-editor': {
+                      '& .ck-toolbar': {
+                        backgroundColor: '#f8f9fa',
+                        borderRadius: '4px 4px 0 0',
+                      },
+                      '& .ck-content': {
+                        minHeight: '350px',
+                        fontSize: '14px',
+                        padding: '15px',
+                      },
+                    },
+                    '& .ck-content table': {
+                      borderCollapse: 'collapse',
+                      width: '100%',
+                      margin: '10px 0',
+                    },
+                    '& .ck-content table td, & .ck-content table th': {
+                      border: '1px solid #555',
+                      padding: '10px',
+                      minWidth: '50px',
+                    },
+                    '& .ck-content table th': {
+                      backgroundColor: '#f5f5f5',
+                      fontWeight: 600,
+                      textAlign: 'center',
+                    },
+                  }}
+                >
+                  <CKEditor
+                    editor={ClassicEditor}
+                    config={editorConfig}
+                    data={formData.formDocument}
+                    onChange={(event, editor) => {
+                      const data = editor.getData();
+                      setFormData({ ...formData, formDocument: data });
+                    }}
+                    onReady={(editor) => {
+                      editorRef.current = editor;
+                    }}
+                  />
+                </Box>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: 'block',
+                    mt: 1,
+                    color: '#666',
+                    fontSize: { xs: '11px', sm: '12px' },
+                  }}
+                >
+                  💡 {t('tableEditHelp') || '툴바의 "표 삽입" 버튼을 클릭하거나, 표 안에서 우클릭하여 행/열 추가, 셀 병합 등을 할 수 있습니다.'}
+                </Typography>
+              </Box>
+
+              {/* 결재자 선택 (선택사항) */}
+              <Box sx={{ mt: 2 }}>
+                <Typography
+                  variant="subtitle2"
+                  sx={{
+                    mb: 1,
+                    color: '#666',
+                    fontSize: { xs: '12px', sm: '14px' },
+                  }}
+                >
+                  {t('predefineApprovers')} ({t('optional')})
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: 'block',
+                    mb: 1,
+                    color: '#999',
+                    fontSize: { xs: '11px', sm: '12px' },
+                  }}
+                >
+                  {t('predefineApproversHelp')}
+                </Typography>
+                <Autocomplete
+                  multiple
+                  options={members}
+                  getOptionLabel={(option) =>
+                    `${option.memberName} (${option.memberDepartment})`
+                  }
+                  value={selectedApprovers}
+                  onChange={(event, newValue) => {
+                    if (newValue.length > 5) {
+                      alert(t('maxApproversExceeded'));
+                      return;
+                    }
+                    setSelectedApprovers(newValue);
+                    setFormData({
+                      ...formData,
+                      signId1: newValue[0]?.memberName || '',
+                      signId2: newValue[1]?.memberName || '',
+                      signId3: newValue[2]?.memberName || '',
+                      signId4: newValue[3]?.memberName || '',
+                      signId5: newValue[4]?.memberName || '',
+                    });
+                  }}
+                  renderTags={(value, getTagProps) =>
+                    value.map((option, index) => (
+                      <Chip
+                        {...getTagProps({ index })}
+                        key={option.memberId}
+                        label={option.memberName}
+                        color="primary"
+                        variant="outlined"
+                        size="small"
+                      />
+                    ))
+                  }
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      placeholder={t('selectApprovers')}
+                      variant="outlined"
+                      sx={{
+                        '& .MuiInputBase-input': {
+                          fontSize: { xs: '12px', sm: '14px' },
+                        },
+                      }}
+                    />
+                  )}
+                />
+              </Box>
             </Box>
           </DialogContent>
           <DialogActions
@@ -570,18 +839,50 @@ const FormManagementContent = () => {
                     sx={{
                       p: { xs: 1.5, sm: 2 },
                       bgcolor: '#f8f9fa',
+                      '& table': {
+                        borderCollapse: 'collapse',
+                        width: '100%',
+                        margin: '10px 0',
+                      },
+                      '& table td, & table th': {
+                        border: '1px solid #555',
+                        padding: '10px',
+                        minWidth: '50px',
+                      },
+                      '& table th': {
+                        backgroundColor: '#f5f5f5',
+                        fontWeight: 600,
+                        textAlign: 'center',
+                      },
                     }}
                   >
-                    <Typography
-                      variant="body2"
-                      sx={{
-                        whiteSpace: 'pre-wrap',
-                        wordBreak: 'break-word',
-                        fontSize: { xs: '12px', sm: '0.875rem' },
-                      }}
-                    >
-                      {selectedForm.formDocument || t('noContent')}
-                    </Typography>
+                    {selectedForm.formDocument ? (
+                      <Box
+                        dangerouslySetInnerHTML={{
+                          __html: selectedForm.formDocument,
+                        }}
+                        sx={{
+                          fontSize: { xs: '12px', sm: '0.875rem' },
+                          '& p': {
+                            margin: '8px 0',
+                          },
+                          '& h1, & h2, & h3': {
+                            marginTop: '16px',
+                            marginBottom: '8px',
+                          },
+                        }}
+                      />
+                    ) : (
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: '#999',
+                          fontSize: { xs: '12px', sm: '0.875rem' },
+                        }}
+                      >
+                        {t('noContent')}
+                      </Typography>
+                    )}
                   </Paper>
                 </Box>
               </Box>

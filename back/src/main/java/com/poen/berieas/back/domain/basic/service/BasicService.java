@@ -13,6 +13,7 @@ import com.poen.berieas.back.domain.basic.dto.BasicResponseDto;
 import com.poen.berieas.back.domain.basic.entity.Basic;
 import com.poen.berieas.back.domain.basic.repository.BasicRepository;
 import com.poen.berieas.back.domain.member.repository.MemberRepository;
+import com.poen.berieas.back.util.MessageUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -23,6 +24,7 @@ public class BasicService {
     
     private final BasicRepository basicRepository;
     private final MemberRepository memberRepository;
+    private final MessageUtil messageUtil;
 
     // 부서 리스트 
     public List<BasicResponseDto> getDepartments() {
@@ -58,14 +60,14 @@ public class BasicService {
     @Transactional
     public void deleteDepartment(int idx) {
 
-        Basic department = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException("해당 부서가 없습니다."));
+        Basic department = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.department.not.found")));
 
         // 해당 부서를 사용하는 멤버가 있는지 확인
         boolean hasMembers = memberRepository.findAll().stream()
             .anyMatch(member -> department.getName().equals(member.getMemberDepartment()));
 
         if (hasMembers) {
-            throw new IllegalArgumentException("해당 부서를 사용하는 멤버가 있어 삭제할 수 없습니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.department.in.use"));
         }
 
         basicRepository.delete(department);
@@ -75,7 +77,7 @@ public class BasicService {
     @Transactional
     public void updateDepartment(int idx, BasicRequestDto dto) {
 
-        Basic department = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException("해당 부서가 없습니다."));
+        Basic department = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.department.not.found")));
 
         department.setName(dto.getName());
         basicRepository.save(department);
@@ -115,7 +117,7 @@ public class BasicService {
     @Transactional
     public void deletePosition(int idx) {
 
-        Basic position = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException("해당 직급이 없습니다."));
+        Basic position = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.position.not.found")));
 
         basicRepository.delete(position);
     }
@@ -124,7 +126,7 @@ public class BasicService {
     @Transactional
     public void updatePosition(int idx, BasicRequestDto dto) {
 
-        Basic position = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException("해당 직급이 없습니다."));
+        Basic position = basicRepository.findByIdx(idx).orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.position.not.found")));
 
         position.setName(dto.getName());
         basicRepository.save(position);
