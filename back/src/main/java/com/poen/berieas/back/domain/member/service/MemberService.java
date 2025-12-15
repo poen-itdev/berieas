@@ -29,6 +29,7 @@ import com.poen.berieas.back.domain.member.dto.VerifyCodeRequestDto;
 import com.poen.berieas.back.domain.member.entity.Member;
 import com.poen.berieas.back.domain.member.entity.RoleType;
 import com.poen.berieas.back.domain.member.repository.MemberRepository;
+import com.poen.berieas.back.util.MessageUtil;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,7 @@ public class MemberService implements UserDetailsService{
     private final JwtService jwtService;
     private final PasswordResetRequestRepository passwordResetRequestRepository;
     private final EmailService emailService;
+    private final MessageUtil messageUtil;
 
     //== 존재 여부 ==//
     public Boolean existMember(MemberRequestDto dto) {
@@ -57,7 +59,7 @@ public class MemberService implements UserDetailsService{
         // 존재 여부 확인
         if(memberRepository.existsByMemberId(dto.getMemberId())) {
 
-            throw new IllegalArgumentException("이미 존재하는 멤버입니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.member.already.exists"));
         }
 
         System.out.println("회원 비밀번호=============" + dto.getMemberPw());
@@ -92,7 +94,7 @@ public class MemberService implements UserDetailsService{
 
         // useYn이 N이면 비활성화된 회원 - 로그인 불가
         if ("N".equals(member.getUseYn())) {
-            throw new UsernameNotFoundException("비활성화된 회원입니다.");
+            throw new UsernameNotFoundException(messageUtil.getMessage("error.member.deactivated"));
         }
 
         System.out.println("===== loadUserByUsername 호출 =====");
@@ -129,7 +131,7 @@ public class MemberService implements UserDetailsService{
         // boolean isAdmin = sessionRole.equals("ROLE" + RoleType.ADMIN.name());
 
         if(!isAdmin) {
-            throw new AccessDeniedException("관리자만 삭제할 수 있습니다.");
+            throw new AccessDeniedException(messageUtil.getMessage("error.access.admin.only"));
         }
 
         // 멤버 제거 
@@ -145,7 +147,7 @@ public class MemberService implements UserDetailsService{
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
 
         Member member = memberRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new UsernameNotFoundException("해당 멤버를 찾을 수 없습니다." + memberId));
+            .orElseThrow(() -> new UsernameNotFoundException(messageUtil.getMessage("error.member.not.found") + " " + memberId));
 
         return new MemberResponseDto(memberId, member.getMemberName(), member.getMemberEmail(), member.getMemberDepartment(), member.getMemberPosition(), member.getRole());
     }
@@ -155,10 +157,10 @@ public class MemberService implements UserDetailsService{
     public void changePasswordAtFirstLogin(String memberId, MemberRequestDto dto) {
 
         Member member = memberRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+                .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.exists")));
 
         if ("N".equals(member.getIsFirstLogin())) {
-            throw new IllegalStateException("이미 비밀번호를 변경한 사용자입니다.");
+            throw new IllegalStateException(messageUtil.getMessage("error.member.password.already.changed"));
         }
 
         // 비밀번호 업데이트
@@ -180,7 +182,7 @@ public class MemberService implements UserDetailsService{
         // 이메일 존재 확인
         if(!memberRepository.existsByMemberEmail(dto.getEmail())) {
             
-            throw new IllegalArgumentException("해당 이메일을 찾을 수 없습니다. 다시 입력해주세요.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.email.not.found"));
         }
 
         // 6자리 인증 코드 생성
@@ -205,11 +207,11 @@ public class MemberService implements UserDetailsService{
     public boolean verifyCode(VerifyCodeRequestDto dto) {
 
         PasswordResetRequest request = passwordResetRequestRepository.findTopByEmailAndCodeAndUsedOrderByCreatedAtDesc(dto.getEmail(), dto.getCode(), false)
-            .orElseThrow(() -> new IllegalArgumentException("인증 코드가 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.verification.code.not.found")));
 
         // 유효기간 확인
         if (request.getExpireTime().isBefore(LocalDateTime.now())) {
-            throw new IllegalArgumentException("인증 코드가 만료되었습니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.verification.code.expired"));
         }
 
         // 성공하면 사용 처리
@@ -225,10 +227,10 @@ public class MemberService implements UserDetailsService{
         // 인증된 기록 확인
         PasswordResetRequest request = passwordResetRequestRepository
             .findTopByEmailAndUsedOrderByCreatedAtDesc(dto.getMemberEmail(), true)
-            .orElseThrow(() -> new IllegalArgumentException("이메일 인증이 완료되지 않았습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.email.verification.not.completed")));
 
         Member member = memberRepository.findByMemberEmail(dto.getMemberEmail())
-            .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.exists")));
         // 새 비밀번호 해싱 후 저장
         member.setMemberPw(passwordEncoder.encode(dto.getMemberPw()));
         memberRepository.save(member);
@@ -299,11 +301,11 @@ public class MemberService implements UserDetailsService{
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         if (!isAdmin) {
-            throw new AccessDeniedException("관리자만 수정할 수 있습니다.");
+            throw new AccessDeniedException(messageUtil.getMessage("error.access.admin.only"));
         }
 
         Member member = memberRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다. id=" + memberId));
+                .orElseThrow(() -> new EntityNotFoundException(messageUtil.getMessage("error.member.not.found") + " id=" + memberId));
 
         member.updateMember(dto);
         memberRepository.save(member);
@@ -320,11 +322,11 @@ public class MemberService implements UserDetailsService{
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
 
         if (!isAdmin) {
-            throw new AccessDeniedException("관리자만 수정할 수 있습니다.");
+            throw new AccessDeniedException(messageUtil.getMessage("error.access.admin.only"));
         }
 
         Member member = memberRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다. id=" + memberId));
+                .orElseThrow(() -> new EntityNotFoundException(messageUtil.getMessage("error.member.not.found") + " id=" + memberId));
 
         if ("N".equals(member.getUseYn())) {
             member.setUseYn("Y");

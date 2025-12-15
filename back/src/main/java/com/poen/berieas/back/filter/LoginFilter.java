@@ -26,11 +26,14 @@ import org.springframework.security.web.servlet.util.matcher.PathPatternRequestM
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.util.StreamUtils;
 
+import com.poen.berieas.back.util.MessageUtil;
+
 
 public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private final AuthenticationSuccessHandler authenticationSuccessHandler;
     private final MemberRepository memberRepository;
+    private final MessageUtil messageUtil;
 
     public static final String SPRING_SECURITY_FORM_USERNAME_KEY = "memberId";
 
@@ -43,11 +46,12 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
 
     private String passwordParameter = SPRING_SECURITY_FORM_PASSWORD_KEY;
 
-    public LoginFilter(AuthenticationManager authenticationManager, AuthenticationSuccessHandler authenticationSuccessHandler, MemberRepository memberRepository) {
+    public LoginFilter(AuthenticationManager authenticationManager, AuthenticationSuccessHandler authenticationSuccessHandler, MemberRepository memberRepository, MessageUtil messageUtil) {
 
         super(DEFAULT_ANT_PATH_REQUEST_MATCHER, authenticationManager);
         this.authenticationSuccessHandler = authenticationSuccessHandler;
         this.memberRepository = memberRepository;
+        this.messageUtil = messageUtil;
     }
 
     @Override
@@ -82,7 +86,7 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
         if (memberOpt.isPresent()) {
             Member member = memberOpt.get();
             if ("N".equals(member.getUseYn())) {
-                throw new BadCredentialsException("비활성화된 회원입니다.");
+                throw new BadCredentialsException(messageUtil.getMessage("error.member.deactivated"));
             }
         }
 
@@ -112,13 +116,14 @@ public class LoginFilter extends AbstractAuthenticationProcessingFilter {
         
         String errorType = "INVALID_CREDENTIALS"; // 기본: 아이디/비밀번호 틀림
         
-        // 예외 체인을 재귀적으로 탐색하여 "비활성화된 회원" 메시지 찾기
+        // 예외 체인을 재귀적으로 탐색하여 비활성화된 회원 메시지 찾기
+        String deactivatedMessage = messageUtil.getMessage("error.member.deactivated");
         Throwable current = failed;
         int depth = 0;
         while (current != null && depth < 10) { // 무한 루프 방지
             String message = current.getMessage();
             
-            if (message != null && message.contains("비활성화된 회원")) {
+            if (message != null && message.contains(deactivatedMessage)) {
                 errorType = "DEACTIVATED_USER"; // 비활성화된 회원
                 break;
             }

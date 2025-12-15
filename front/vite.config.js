@@ -34,5 +34,13 @@ export default defineConfig(({ mode }) => {
       port,
       // allowedHosts,
     },
+    optimizeDeps: {
+      include: ['ckeditor5', '@ckeditor/ckeditor5-react'],
+    },
+    build: {
+      commonjsOptions: {
+        include: [/ckeditor5/, /node_modules/],
+      },
+    },
   };
 });
