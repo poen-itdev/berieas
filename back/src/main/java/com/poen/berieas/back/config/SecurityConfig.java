@@ -31,6 +31,7 @@ import com.poen.berieas.back.domain.member.repository.MemberRepository;
 import com.poen.berieas.back.filter.JWTFilter;
 import com.poen.berieas.back.filter.LoginFilter;
 import com.poen.berieas.back.handler.RefreshTokenLogoutHandler;
+import com.poen.berieas.back.util.MessageUtil;
 
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -43,15 +44,17 @@ public class SecurityConfig {
     private final JwtService jwtService;
     private final MemberRepository memberRepository;
     private final BasicRepository basicRepository;
+    private final MessageUtil messageUtil;
 
     public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, @Qualifier("LoginSuccessHandler")AuthenticationSuccessHandler loginSuccessHandler,
-        JwtService jwtService, MemberRepository memberRepository, BasicRepository basicRepository) {
+        JwtService jwtService, MemberRepository memberRepository, BasicRepository basicRepository, MessageUtil messageUtil) {
 
         this.authenticationConfiguration = authenticationConfiguration;
         this.loginSuccessHandler = loginSuccessHandler;
         this.jwtService = jwtService;
         this.memberRepository = memberRepository;
         this.basicRepository = basicRepository;
+        this.messageUtil = messageUtil;
     }
 
     // 커스텀 자체 로그인 필터를 위한 AuthenticationManager Bean 등록
@@ -90,7 +93,7 @@ public class SecurityConfig {
         System.out.println("DB에서 조회한 domain: " + domain);
         
         // 개발용 + 운영용 도메인 설정
-        configuration.setAllowedOrigins(List.of("http://localhost", "http://127.0.0.1", "http://" + domain));
+        configuration.setAllowedOrigins(List.of("http://localhost", "http://127.0.0.1", "http://" + domain, "https://" + domain));
         
         System.out.println("허용된 origins: " + configuration.getAllowedOrigins());
         System.out.println("=====================");
@@ -172,7 +175,7 @@ public class SecurityConfig {
                 .addFilterBefore(new JWTFilter(), LogoutFilter.class);
         
         http
-                .addFilterBefore(new LoginFilter(authenticationManager(authenticationConfiguration), loginSuccessHandler, memberRepository), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new LoginFilter(authenticationManager(authenticationConfiguration), loginSuccessHandler, memberRepository, messageUtil), UsernamePasswordAuthenticationFilter.class);
 
         //=================================== 세션 필터 설정 ===================================//
         http

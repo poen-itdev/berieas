@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -29,11 +29,35 @@ import SaveConfirmDialog from '../common/SaveConfirmDialog';
 import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
 import SuccessDialog from '../common/SuccessDialog';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { CKEditor } from '@ckeditor/ckeditor5-react';
+import {
+  ClassicEditor,
+  Bold,
+  Essentials,
+  Italic,
+  Paragraph,
+  Undo,
+  Heading,
+  Underline,
+  Strikethrough,
+  List as CKList,
+  Link,
+  Alignment,
+  FontColor,
+  FontBackgroundColor,
+  Table as CKTable,
+  TableToolbar,
+  TableProperties,
+  TableCellProperties,
+  TableColumnResize,
+} from 'ckeditor5';
+import 'ckeditor5/ckeditor5.css';
 
 const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const editorRef = useRef(null);
 
   const [formData, setFormData] = useState({
     formNo: '',
@@ -48,6 +72,94 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
     signId5: '',
     referenceId: '',
   });
+
+  // CKEditor 설정
+  const editorConfig = {
+    licenseKey: 'GPL',
+    toolbar: {
+      items: [
+        'undo',
+        'redo',
+        '|',
+        'heading',
+        '|',
+        'bold',
+        'italic',
+        'underline',
+        'strikethrough',
+        '|',
+        'bulletedList',
+        'numberedList',
+        '|',
+        'fontColor',
+        'fontBackgroundColor',
+        '|',
+        'alignment',
+        '|',
+        'link',
+        '|',
+        'insertTable',
+        'tableColumn',
+        'tableRow',
+        'mergeTableCells',
+        'tableProperties',
+        'tableCellProperties',
+      ],
+    },
+    plugins: [
+      Bold,
+      Essentials,
+      Italic,
+      Paragraph,
+      Undo,
+      Heading,
+      Underline,
+      Strikethrough,
+      CKList,
+      Link,
+      Alignment,
+      FontColor,
+      FontBackgroundColor,
+      CKTable,
+      TableToolbar,
+      TableProperties,
+      TableCellProperties,
+      TableColumnResize,
+    ],
+    table: {
+      contentToolbar: [
+        'tableColumn',
+        'tableRow',
+        'mergeTableCells',
+        'tableProperties',
+        'tableCellProperties',
+      ],
+    },
+    heading: {
+      options: [
+        { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
+        {
+          model: 'heading1',
+          view: 'h1',
+          title: 'Heading 1',
+          class: 'ck-heading_heading1',
+        },
+        {
+          model: 'heading2',
+          view: 'h2',
+          title: 'Heading 2',
+          class: 'ck-heading_heading2',
+        },
+        {
+          model: 'heading3',
+          view: 'h3',
+          title: 'Heading 3',
+          class: 'ck-heading_heading3',
+        },
+      ],
+    },
+    placeholder: t('enterContent'),
+  };
 
   const [attachedFiles, setAttachedFiles] = useState([]);
   const [selectedForm, setSelectedForm] = useState(null);
@@ -345,11 +457,18 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
   };
 
   const handleFormSelect = async (form) => {
-    setSelectedForm(form);
+    // 양식 변경 시 기존 결재자 초기화
+    setSelectedApprovers([]);
+    
     setFormData({
       ...formData,
       formNo: form.id.toString(),
       formTitle: form.title,
+      signId1: '',
+      signId2: '',
+      signId3: '',
+      signId4: '',
+      signId5: '',
     });
 
     // 백엔드에서 양식 템플릿 가져오기
@@ -380,18 +499,45 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
             documentContent = response.data.formDocument || '';
           }
 
-          setFormData((prev) => ({
-            ...prev,
-            approvalDocument: documentContent,
-          }));
+          // 양식에 미리 정의된 결재자가 있는지 확인
+          const formApprovers = response.data.approvers || [];
+          
+          // selectedForm에 approvers 정보 포함하여 저장
+          setSelectedForm({
+            ...form,
+            approvers: formApprovers
+          });
+
+          if (formApprovers.length > 0) {
+            // 양식에 결재자가 정의되어 있으면 자동 설정 (수정 불가)
+            setSelectedApprovers(formApprovers);
+            setFormData((prev) => ({
+              ...prev,
+              approvalDocument: documentContent,
+              signId1: formApprovers[0]?.memberName || '',
+              signId2: formApprovers[1]?.memberName || '',
+              signId3: formApprovers[2]?.memberName || '',
+              signId4: formApprovers[3]?.memberName || '',
+              signId5: formApprovers[4]?.memberName || '',
+            }));
+          } else {
+            // 결재자가 없으면 기존 결재자 초기화된 상태로 유지
+            setFormData((prev) => ({
+              ...prev,
+              approvalDocument: documentContent,
+            }));
+          }
         }
       } catch (error) {
         console.error('양식 템플릿 가져오기 실패:', error);
+        setSelectedForm(form);
         setFormData((prev) => ({
           ...prev,
           approvalDocument: form.template || '',
         }));
       }
+    } else {
+      setSelectedForm(form);
     }
 
     setFormDialogOpen(false);
@@ -432,7 +578,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
         !formData.approvalTitle ||
         formData.approvalTitle.trim() === ''
       ) {
-        alert('양식과 제목을 선택해주세요.');
+        alert(t('formAndTitleRequired'));
         return false;
       }
 
@@ -477,13 +623,13 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
         return true;
       } else {
         alert(
-          `임시저장에 실패했습니다. (${response.status}: ${response.statusText})`
+          `${t('temporarySaveFailed')} (${response.status}: ${response.statusText})`
         );
         return false;
       }
     } catch (error) {
       console.error('임시저장 실패:', error);
-      alert('임시저장에 실패했습니다: ' + error.message);
+      alert(`${t('temporarySaveFailed')}: ${error.message}`);
       return false;
     } finally {
       setLoading(false);
@@ -550,12 +696,12 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
           navigate('/progress-list');
         } else {
           alert(
-            `문서 삭제에 실패했습니다. (${response.status}: ${response.statusText})`
+            `${t('documentDeleteFailed')} (${response.status}: ${response.statusText})`
           );
         }
       } catch (error) {
         console.error('문서 삭제 실패:', error);
-        alert('문서 삭제에 실패했습니다: ' + error.message);
+        alert(`${t('documentDeleteFailed')}: ${error.message}`);
       }
     } else {
       setFormData({
@@ -591,13 +737,13 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
         !formData.approvalTitle ||
         formData.approvalTitle.trim() === ''
       ) {
-        alert('양식과 제목을 선택해주세요.');
+        alert(t('formAndTitleRequired'));
         return;
       }
 
       // 결재자 필수 검증
       if (selectedApprovers.length === 0) {
-        alert('결재자를 최소 1명 이상 선택해주세요.');
+        alert(t('approverRequired'));
         return;
       }
 
@@ -642,14 +788,14 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
       } else {
         console.error('제출 실패 상세:', response);
         alert(
-          `기안서 제출에 실패했습니다. (${response.status}: ${
+          `${t('draftSubmitFailed')} (${response.status}: ${
             response.statusText
-          })\n에러: ${response.data || '알 수 없는 오류'}`
+          })\n${response.data || t('errorOccurred')}`
         );
       }
     } catch (error) {
       console.error('기안서 제출 실패:', error);
-      alert('기안서 제출에 실패했습니다: ' + error.message);
+      alert(`${t('draftSubmitFailed')}: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -795,6 +941,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
               <Box sx={{ mb: 2 }}>
                 <Autocomplete
                   multiple
+                  disabled={selectedForm?.approvers && selectedForm.approvers.length > 0}
                   options={members.filter(
                     (member) => member.memberId !== userInfo?.memberId
                   )}
@@ -804,7 +951,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                   value={selectedApprovers}
                   onChange={(event, newValue) => {
                     if (newValue.length > 5) {
-                      alert('결재자는 최대 5명까지 선택 가능합니다.');
+                      alert(t('maxApproversExceeded'));
                       return;
                     }
                     setSelectedApprovers(newValue);
@@ -833,11 +980,15 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                     <TextField
                       {...params}
                       label={t('approverLabel')}
-                      placeholder={t('selectApprovers')}
+                      placeholder={
+                        selectedForm?.approvers && selectedForm.approvers.length > 0
+                          ? t('predefinedByForm')
+                          : t('selectApprovers')
+                      }
                       variant="outlined"
                       sx={{
                         '& .MuiOutlinedInput-root': {
-                          backgroundColor: '#fff',
+                          backgroundColor: selectedForm?.approvers && selectedForm.approvers.length > 0 ? '#f5f5f5' : '#fff',
                         },
                       }}
                     />
@@ -1053,24 +1204,51 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
               >
                 {t('content')}
               </Typography>
-              <Box sx={{ p: 2, height: 'calc(100% - 56px)' }}>
-                <TextField
-                  fullWidth
-                  multiline
-                  rows={20}
-                  value={formData.approvalDocument}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      approvalDocument: e.target.value,
-                    })
-                  }
-                  placeholder={t('enterContent')}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      height: '100%',
-                      alignItems: 'flex-start',
+              <Box
+                sx={{
+                  p: 2,
+                  height: 'calc(100% - 56px)',
+                  '& .ck-editor': {
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    '& .ck-toolbar': {
+                      backgroundColor: '#f8f9fa',
                     },
+                    '& .ck-content': {
+                      minHeight: '400px',
+                      flex: 1,
+                      fontSize: '14px',
+                      padding: '15px',
+                    },
+                  },
+                  '& .ck-content table': {
+                    borderCollapse: 'collapse',
+                    width: '100%',
+                    margin: '10px 0',
+                  },
+                  '& .ck-content table td, & .ck-content table th': {
+                    border: '1px solid #555',
+                    padding: '10px',
+                    minWidth: '50px',
+                  },
+                  '& .ck-content table th': {
+                    backgroundColor: '#f5f5f5',
+                    fontWeight: 600,
+                    textAlign: 'center',
+                  },
+                }}
+              >
+                <CKEditor
+                  editor={ClassicEditor}
+                  config={editorConfig}
+                  data={formData.approvalDocument}
+                  onChange={(event, editor) => {
+                    const data = editor.getData();
+                    setFormData({ ...formData, approvalDocument: data });
+                  }}
+                  onReady={(editor) => {
+                    editorRef.current = editor;
                   }}
                 />
               </Box>

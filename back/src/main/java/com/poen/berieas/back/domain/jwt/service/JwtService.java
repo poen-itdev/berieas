@@ -8,6 +8,7 @@ import com.poen.berieas.back.domain.jwt.dto.RefreshRequestDto;
 import com.poen.berieas.back.domain.jwt.entity.RefreshToken;
 import com.poen.berieas.back.domain.jwt.repository.RefreshRepository;
 import com.poen.berieas.back.util.JWTUtil;
+import com.poen.berieas.back.util.MessageUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 public class JwtService {
     
     private final RefreshRepository refreshRepository;
+    private final MessageUtil messageUtil;
 
     // Refresh 토큰으로 Access 토큰 재발급 로직(Rotate 포함)
     public JWTResponseDto refreshRotate(RefreshRequestDto dto) {
@@ -27,7 +29,7 @@ public class JwtService {
         Boolean isValid = JWTUtil.isValid(refreshToken, false);
         if(!isValid) {
 
-            throw new RuntimeException("유효하지 않은 토큰입니다.");
+            throw new RuntimeException(messageUtil.getMessage("error.jwt.invalid"));
         }
 
         // 정보 추출

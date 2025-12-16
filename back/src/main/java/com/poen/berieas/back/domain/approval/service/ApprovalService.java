@@ -32,6 +32,7 @@ import com.poen.berieas.back.domain.approval.repository.ApprovalDetailRepository
 import com.poen.berieas.back.domain.approval.repository.ApprovalRepository;
 import com.poen.berieas.back.domain.member.entity.Member;
 import com.poen.berieas.back.domain.member.repository.MemberRepository;
+import com.poen.berieas.back.util.MessageUtil;
 
 import lombok.RequiredArgsConstructor;
 
@@ -51,6 +52,7 @@ public class ApprovalService {
     private final ApprovalRepository approvalRepository;
     private final ApprovalDetailRepository approvalDetailRepository;
     private final MemberRepository memberRepository;
+    private final MessageUtil messageUtil;
     
     // 대시보드(전체)
     public int totalApprovalCount() {
@@ -134,7 +136,7 @@ public class ApprovalService {
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         
-        Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new IllegalArgumentException("해당 유저가 없다."));
+        Member member = memberRepository.findByMemberId(memberId).orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.found")));
 
         List<Approval> approvals = approvalRepository.findPendingApprovals(member.getMemberName());
         return approvals.stream()
@@ -158,7 +160,7 @@ public class ApprovalService {
 
     String loginId = SecurityContextHolder.getContext().getAuthentication().getName();
 Member me = memberRepository.findByMemberId(loginId)
-        .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+        .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.found")));
 
 Page<Approval> approvals =
         approvalRepository.findAllForOverallList(me.getMemberId(), me.getMemberName(), pageable);
@@ -217,7 +219,7 @@ Page<Approval> approvals =
         // 로그인한 유저의 memberId 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member me = memberRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.found")));
 
         Page<Approval> approvals = approvalRepository.findInprogressApprovals(me.getMemberId(), me.getMemberName(), pageable);
 
@@ -275,7 +277,7 @@ Page<Approval> approvals =
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.found")));
 
         Page<Approval> approvals = approvalRepository.findTemporarySavedApprovals(member.getMemberId(), pageable);
 
@@ -335,7 +337,7 @@ Page<Approval> approvals =
 
   String loginId = SecurityContextHolder.getContext().getAuthentication().getName();
   Member member = memberRepository.findByMemberId(loginId)
-      .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+      .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.found")));
 
   // ✅ 반려 전용 쿼리 호출 (전체 쿼리 호출 금지!)
   Page<Approval> approvals =
@@ -371,7 +373,7 @@ Page<Approval> approvals =
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.found")));
 
         Page<Approval> approvals = approvalRepository.findCompletedApprovals(memberId, member.getMemberName(), pageable);
         
@@ -433,11 +435,11 @@ Page<Approval> approvals =
         System.out.println("[첨언] 로그인 memberId: " + memberId);
 
         Member member = memberRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.found")));
         Approval approval = approvalRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.not.found")));
         ApprovalDetail detail = approvalDetailRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("문서가 존재하지 않습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.document.not.exists")));
 
         boolean isDrafter = memberId.equals(approval.getApprovalId()); // 기안자
         System.out.println("[첨언] isDrafter: " + isDrafter + " (memberId=" + memberId + ", approvalId=" + approval.getApprovalId() + ")");
@@ -468,7 +470,7 @@ Page<Approval> approvals =
         System.out.println("[첨언] referencer: " + referencer);
 
         if (!isDrafter && !isSigner && !referencer) {
-            throw new IllegalArgumentException("첨언 권한이 없습니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.approval.comment.no.permission"));
         }
 
         // ----- 댓글 저장 -----
@@ -480,7 +482,7 @@ Page<Approval> approvals =
             else if (memberName.equals(approval.getSignId3())) { approval.setSignRemark3(dto.getComment()); System.out.println("[첨언] signRemark3에 저장"); }
             else if (memberName.equals(approval.getSignId4())) { approval.setSignRemark4(dto.getComment()); System.out.println("[첨언] signRemark4에 저장"); }
             else if (memberName.equals(approval.getSignId5())) { approval.setSignRemark5(dto.getComment()); System.out.println("[첨언] signRemark5에 저장"); }
-            else throw new IllegalArgumentException("결재자 정보가 일치하지 않습니다.");
+            else throw new IllegalArgumentException(messageUtil.getMessage("error.approval.signer.mismatch"));
 
         } else if (isDrafter) {
             System.out.println("[첨언] 기안자로 댓글 저장 - drafterRemark");
@@ -527,7 +529,7 @@ Page<Approval> approvals =
 
                         // 슬롯이 없으면 업로드 불가
                         if (slotIndex == -1) {
-                            throw new RuntimeException("첨부파일 최대 개수(5개)를 초과했습니다. 기존 파일을 삭제 후 다시 시도하세요.");
+                            throw new RuntimeException(messageUtil.getMessage("error.approval.file.max.exceeded"));
                         }
 
                         switch (slotIndex) {
@@ -544,7 +546,7 @@ Page<Approval> approvals =
 
                         // 이미 첨부파일이 존재하면 예외
                         if (detail.getSignerAttachFile() != null) {
-                            throw new RuntimeException("결재자는 첨부파일을 1개만 업로드할 수 있습니다.");
+                            throw new RuntimeException(messageUtil.getMessage("error.approval.file.signer.limit"));
                         }
 
                         detail.setSignerAttachFile(savedFileName);
@@ -555,7 +557,7 @@ Page<Approval> approvals =
                     else if (referencer) {
 
                         if (detail.getReferenceAttachFile() != null) {
-                            throw new RuntimeException("참조자는 첨부파일을 1개만 업로드할 수 있습니다.");
+                            throw new RuntimeException(messageUtil.getMessage("error.approval.file.reference.limit"));
                         }
 
                         detail.setReferenceAttachFile(savedFileName);
@@ -564,7 +566,7 @@ Page<Approval> approvals =
                     }
 
                 } catch (IOException e) {
-                    throw new RuntimeException("파일 저장 실패: " + file.getOriginalFilename(), e);
+                    throw new RuntimeException(messageUtil.getMessage("error.file.save.failed") + ": " + file.getOriginalFilename(), e);
                 }
             }
         }
@@ -616,7 +618,7 @@ Page<Approval> approvals =
         }
 
         if (!isDrafter && !isSigner && !referencer) {
-            throw new IllegalArgumentException("첨언 수정 권한이 없습니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.approval.comment.no.permission"));
         }
 
         // 댓글 수정
@@ -626,7 +628,7 @@ Page<Approval> approvals =
             else if (memberName.equals(approval.getSignId3())) approval.setSignRemark3(dto.getComment());
             else if (memberName.equals(approval.getSignId4())) approval.setSignRemark4(dto.getComment());
             else if (memberName.equals(approval.getSignId5())) approval.setSignRemark5(dto.getComment());
-            else throw new IllegalArgumentException("결재자 정보가 일치하지 않습니다.");
+            else throw new IllegalArgumentException(messageUtil.getMessage("error.approval.signer.mismatch"));
         } else if (isDrafter) {
             detail.setDrafterRemark(dto.getComment());
         } else if (referencer) {
@@ -676,7 +678,7 @@ Page<Approval> approvals =
         }
 
         if (!isDrafter && !isSigner && !referencer) {
-            throw new IllegalArgumentException("첨언 삭제 권한이 없습니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.approval.comment.no.permission"));
         }
 
         // 댓글 삭제 (null로 설정)
@@ -686,7 +688,7 @@ Page<Approval> approvals =
             else if (memberName.equals(approval.getSignId3())) approval.setSignRemark3(null);
             else if (memberName.equals(approval.getSignId4())) approval.setSignRemark4(null);
             else if (memberName.equals(approval.getSignId5())) approval.setSignRemark5(null);
-            else throw new IllegalArgumentException("결재자 정보가 일치하지 않습니다.");
+            else throw new IllegalArgumentException(messageUtil.getMessage("error.approval.signer.mismatch"));
             
             // 결재자 첨부파일도 삭제
             detail.setSignerAttachFile(null);
@@ -717,13 +719,13 @@ Page<Approval> approvals =
 
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.found")));
 
         Approval approval = approvalRepository.findByApprovalNo(approvalNo)
-            .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.not.found")));
 
         if (!member.getMemberName().equals(approval.getNextId())) {
-            throw new IllegalArgumentException("현재 결재자가 아닙니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.approval.not.current.signer"));
         }
 
         // 결재 1
@@ -773,7 +775,7 @@ Page<Approval> approvals =
             approval.setApprovalStatus("완료");
         }
         else {
-            throw new IllegalArgumentException("이미 결재한 사용자이거나 승인할 수 없는 단계입니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.approval.already.approved"));
         }
 
         approval.setUpdateId(memberId);
@@ -788,13 +790,13 @@ Page<Approval> approvals =
         
         String memberId = SecurityContextHolder.getContext().getAuthentication().getName();
         Member member = memberRepository.findByMemberId(memberId)
-            .orElseThrow(() -> new IllegalArgumentException("멤버를 찾을 수 없습니다."));
+            .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.member.not.found")));
 
         Approval approval = approvalRepository.findByApprovalNo(approvalNo)
-                .orElseThrow(() -> new IllegalArgumentException("해당 문서를 찾을 수 없습니다."));
+                .orElseThrow(() -> new IllegalArgumentException(messageUtil.getMessage("error.approval.not.found")));
 
         if (!member.getMemberName().equals(approval.getNextId())) {
-            throw new IllegalArgumentException("현재 결재자가 아닙니다.");
+            throw new IllegalArgumentException(messageUtil.getMessage("error.approval.not.current.signer"));
         }
 
         if (member.getMemberName().equals(approval.getSignId1()) && approval.getSignDate1() == null) {

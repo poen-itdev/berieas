@@ -25,6 +25,7 @@ import PageHeader from '../common/PageHeader';
 import { useLanguage } from '../../contexts/LanguageContext';
 import SuccessDialog from '../common/SuccessDialog';
 import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
+import 'ckeditor5/ckeditor5.css';
 
 const ApprovalDetailContent = ({ userInfo }) => {
   const { t, formatDate } = useLanguage();
@@ -199,10 +200,10 @@ const ApprovalDetailContent = ({ userInfo }) => {
       if (response.ok) {
         navigate('/progress-list');
       } else {
-        alert(response.data || '기안취소에 실패했습니다. 조건을 확인해주세요.');
+        alert(response.data || t('draftCancelFailed'));
       }
     } catch (error) {
-      alert('기안취소에 실패했습니다: ' + error.message);
+      alert(`${t('draftCancelFailed')}: ${error.message}`);
     } finally {
       setSubmitting(false);
     }
@@ -712,6 +713,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
           <Box sx={{ mb: 4 }}>
             <Paper variant="outlined" sx={{ p: 3, minHeight: 200 }}>
               <div
+                className="ck-content"
                 dangerouslySetInnerHTML={{
                   __html: approvalData.approvalDocument || t('noContent'),
                 }}
