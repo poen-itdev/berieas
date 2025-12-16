@@ -25,6 +25,7 @@ import PageHeader from '../common/PageHeader';
 import { useLanguage } from '../../contexts/LanguageContext';
 import SuccessDialog from '../common/SuccessDialog';
 import DeleteConfirmDialog from '../common/DeleteConfirmDialog';
+import 'ckeditor5/ckeditor5.css';
 
 const ApprovalDetailContent = ({ userInfo }) => {
   const { t, formatDate } = useLanguage();
@@ -712,6 +713,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
           <Box sx={{ mb: 4 }}>
             <Paper variant="outlined" sx={{ p: 3, minHeight: 200 }}>
               <div
+                className="ck-content"
                 dangerouslySetInnerHTML={{
                   __html: approvalData.approvalDocument || t('noContent'),
                 }}
