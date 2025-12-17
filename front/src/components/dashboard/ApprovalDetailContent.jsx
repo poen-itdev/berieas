@@ -18,7 +18,7 @@ import {
   Dialog,
   DialogContent,
 } from '@mui/material';
-import { Download, CheckCircle, Cancel, AttachFile, Close } from '@mui/icons-material';
+import { Download, CheckCircle, Cancel, AttachFile, Close, Print } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 import PageHeader from '../common/PageHeader';
@@ -31,6 +31,97 @@ const ApprovalDetailContent = ({ userInfo }) => {
   const { t, formatDate } = useLanguage();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  // 인쇄 스타일
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @media print {
+        @page {
+          size: A4;
+          margin: 8mm;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        body * {
+          visibility: hidden;
+        }
+        #approval-detail-print-area,
+        #approval-detail-print-area * {
+          visibility: visible;
+        }
+        #approval-detail-print-area {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          transform-origin: top left;
+          transform: scale(0.85);
+          padding: 10px !important;
+        }
+        /* 폰트 크기 줄이기 */
+        #approval-detail-print-area * {
+          font-size: 11px !important;
+          line-height: 1.4 !important;
+        }
+        #approval-detail-print-area h4 {
+          font-size: 18px !important;
+          margin-bottom: 12px !important;
+        }
+        #approval-detail-print-area h6 {
+          font-size: 13px !important;
+        }
+        /* 테이블 최적화 */
+        #approval-detail-print-area table {
+          width: 100% !important;
+          max-width: 100% !important;
+          table-layout: fixed !important;
+          page-break-inside: auto;
+        }
+        #approval-detail-print-area td,
+        #approval-detail-print-area th {
+          word-wrap: break-word;
+          word-break: break-word;
+          overflow-wrap: break-word;
+          padding: 4px 6px !important;
+          font-size: 10px !important;
+        }
+        #approval-detail-print-area tr {
+          page-break-inside: avoid;
+          page-break-after: auto;
+        }
+        /* CKEditor 테이블 */
+        #approval-detail-print-area .ck-content table {
+          width: 100% !important;
+          max-width: 100% !important;
+        }
+        #approval-detail-print-area .ck-content td,
+        #approval-detail-print-area .ck-content th {
+          font-size: 10px !important;
+          padding: 3px 5px !important;
+        }
+        /* 패딩/마진 줄이기 */
+        #approval-detail-print-area > * {
+          margin-bottom: 8px !important;
+        }
+        /* Chip 크기 줄이기 */
+        #approval-detail-print-area .MuiChip-root {
+          height: 20px !important;
+          font-size: 10px !important;
+        }
+        /* Paper 패딩 줄이기 */
+        #approval-detail-print-area .MuiPaper-root {
+          padding: 8px !important;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
   const [approvalData, setApprovalData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
@@ -128,6 +219,11 @@ const ApprovalDetailContent = ({ userInfo }) => {
       loadApprovalDetail();
     }
   }, [approvalNo]);
+
+  // 인쇄 기능
+  const handlePrint = () => {
+    window.print();
+  };
 
   // 결재 처리
   const handleApproval = async (action) => {
@@ -328,21 +424,12 @@ const ApprovalDetailContent = ({ userInfo }) => {
       );
 
       if (response.ok) {
-        // 새 첨언 객체 생성 - 올바른 형태로
-        const newComment = {
-          id: `comment-${Date.now()}`,
-          content: comment.trim(),
-          author: userInfo?.memberName || '익명',
-          date: new Date().toLocaleString(),
-          type: 'new',
-          files: commentFiles.map((f) => f.name), // 첨부파일명 표시용
-        };
-
-        setComments((prev) => [...prev, newComment]); // UI 즉시 반영
         setComment(''); // 입력창 초기화
         setCommentFiles([]); // 파일 초기화
         setSuccessMessage(t('commentRegistered'));
         setShowSuccessDialog(true);
+        // 데이터 다시 로드해서 첨언 업데이트
+        await loadApprovalDetail();
       } else {
         setSuccessMessage(response.data || t('commentRegistrationFailed'));
         setShowSuccessDialog(true);
@@ -376,17 +463,12 @@ const ApprovalDetailContent = ({ userInfo }) => {
       );
 
       if (response.ok) {
-        setComments(
-          comments.map((c) =>
-            c.id === editingComment
-              ? { ...c, content: comment.trim(), date: new Date().toLocaleString() }
-              : c
-          )
-        );
         setComment('');
         setEditingComment(null);
         setSuccessMessage(t('commentRegistered'));
         setShowSuccessDialog(true);
+        // 데이터 다시 로드해서 첨언 업데이트
+        await loadApprovalDetail();
       } else {
         setSuccessMessage(response.data || t('commentRegistrationFailed'));
         setShowSuccessDialog(true);
@@ -415,11 +497,12 @@ const ApprovalDetailContent = ({ userInfo }) => {
         );
 
         if (response.ok) {
-          setComments(comments.filter((c) => c.id !== commentToDelete));
           setShowDeleteCommentDialog(false);
           setCommentToDelete(null);
           setSuccessMessage(t('commentDeleted'));
           setShowSuccessDialog(true);
+          // 데이터 다시 로드해서 첨언 업데이트
+          await loadApprovalDetail();
         } else {
           setShowDeleteCommentDialog(false);
           setSuccessMessage(response.data || t('commentRegistrationFailed'));
@@ -582,7 +665,7 @@ const ApprovalDetailContent = ({ userInfo }) => {
           fontSize={{ xs: '20px', sm: '30px' }}
         />
 
-        <Paper sx={{ p: { xs: 2, sm: 4 }, mt: 3 }}>
+        <Paper sx={{ p: { xs: 2, sm: 4 }, mt: 3 }} id="approval-detail-print-area">
           {/* 문서 제목 */}
           <Typography
             variant="h4"
@@ -1031,8 +1114,33 @@ const ApprovalDetailContent = ({ userInfo }) => {
 
           {/* 결재 버튼 */}
           <Box
-            sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 4 }}
+            sx={{ 
+              display: 'flex', 
+              gap: 2, 
+              justifyContent: 'center', 
+              mt: 4,
+              '@media print': {
+                display: 'none !important',
+              },
+            }}
           >
+            {/* 인쇄 버튼 - 항상 표시 */}
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<Print />}
+              onClick={handlePrint}
+              sx={{
+                minWidth: 120,
+                backgroundColor: '#43a047',
+                '&:hover': {
+                  backgroundColor: '#388e3c',
+                },
+              }}
+            >
+              {t('print')}
+            </Button>
+
             {/* 기안자인 경우 - 기안취소 버튼 */}
             {(() => {
               const isAuthor =

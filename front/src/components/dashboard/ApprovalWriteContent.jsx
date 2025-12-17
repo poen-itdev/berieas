@@ -501,11 +501,19 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
 
           // 양식에 미리 정의된 결재자가 있는지 확인
           const formApprovers = response.data.approvers || [];
+          const signModifyYn = response.data.signModifyYn || false;
           
-          // selectedForm에 approvers 정보 포함하여 저장
+          console.log('🔍 양식 선택 디버깅:', {
+            formApprovers,
+            signModifyYn,
+            responseData: response.data
+          });
+          
+          // selectedForm에 approvers 정보와 수정 허용 여부 포함하여 저장
           setSelectedForm({
             ...form,
-            approvers: formApprovers
+            approvers: formApprovers,
+            signModifyYn: signModifyYn
           });
 
           if (formApprovers.length > 0) {
@@ -939,9 +947,14 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                 />
               </Box>
               <Box sx={{ mb: 2 }}>
+                {console.log('🎯 결재자 Autocomplete disabled 체크:', {
+                  hasApprovers: selectedForm?.approvers && selectedForm.approvers.length > 0,
+                  signModifyYn: selectedForm?.signModifyYn,
+                  disabled: selectedForm?.approvers && selectedForm.approvers.length > 0 && !selectedForm?.signModifyYn
+                })}
                 <Autocomplete
                   multiple
-                  disabled={selectedForm?.approvers && selectedForm.approvers.length > 0}
+                  disabled={selectedForm?.approvers && selectedForm.approvers.length > 0 && !selectedForm?.signModifyYn}
                   options={members.filter(
                     (member) => member.memberId !== userInfo?.memberId
                   )}
@@ -988,7 +1001,7 @@ const ApprovalWriteContent = ({ userInfo, onSaveBeforeNew }) => {
                       variant="outlined"
                       sx={{
                         '& .MuiOutlinedInput-root': {
-                          backgroundColor: selectedForm?.approvers && selectedForm.approvers.length > 0 ? '#f5f5f5' : '#fff',
+                          backgroundColor: (selectedForm?.approvers && selectedForm.approvers.length > 0 && !selectedForm?.signModifyYn) ? '#f5f5f5' : '#fff',
                         },
                       }}
                     />

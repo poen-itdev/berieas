@@ -13,7 +13,6 @@ import com.poen.berieas.back.domain.approval.dto.ApprovalSettingResponseDto;
 import com.poen.berieas.back.domain.approval.dto.FormRequestDto;
 import com.poen.berieas.back.domain.approval.entity.ApprovalSetting;
 import com.poen.berieas.back.domain.approval.repository.ApprovalSettingRepository;
-import com.poen.berieas.back.domain.member.entity.Member;
 import com.poen.berieas.back.domain.member.repository.MemberRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -63,8 +62,47 @@ public class ApprovalSettingService {
         approvalSetting.setFormSignId4(dto.getSignId4());
         approvalSetting.setFormSignId5(dto.getSignId5());
         
+        // 결재자 수정 허용 여부 (기본값: false)
+        approvalSetting.setSignModifyYn(dto.getSignModifyYn() != null ? dto.getSignModifyYn() : false);
+        
         approvalSetting.setRegId(memberId);
         approvalSetting.setRegDate(LocalDateTime.now());
+        approvalSetting.setUpdateId(memberId);
+        approvalSetting.setUpdateDate(LocalDateTime.now());
+
+        approvalSettingRepository.save(approvalSetting);
+    }
+
+    // 양식 수정
+    @Transactional
+    public void updateForm(int formNo, FormRequestDto dto) {
+        
+        ApprovalSetting approvalSetting = approvalSettingRepository.findByFormNo(formNo)
+            .orElseThrow(() -> new IllegalArgumentException("해당 양식을 찾을 수 없습니다."));
+        
+        String memberId;
+        try {
+            memberId = org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getName();
+        } catch (Exception e) {
+            memberId = "system";
+        }
+
+        // 양식 정보 업데이트
+        approvalSetting.setFormType(dto.getFormType());
+        approvalSetting.setFormTitle(dto.getFormTitle());
+        approvalSetting.setFormDocument(dto.getFormDocument());
+        
+        // 결재자 설정 (선택사항)
+        approvalSetting.setFormSignId1(dto.getSignId1());
+        approvalSetting.setFormSignId2(dto.getSignId2());
+        approvalSetting.setFormSignId3(dto.getSignId3());
+        approvalSetting.setFormSignId4(dto.getSignId4());
+        approvalSetting.setFormSignId5(dto.getSignId5());
+        
+        // 결재자 수정 허용 여부 (기본값: false)
+        approvalSetting.setSignModifyYn(dto.getSignModifyYn() != null ? dto.getSignModifyYn() : false);
+        
         approvalSetting.setUpdateId(memberId);
         approvalSetting.setUpdateDate(LocalDateTime.now());
 
@@ -117,6 +155,7 @@ public class ApprovalSettingService {
             form.getFormType(), 
             form.getFormTitle(), 
             form.getFormDocument(),
+            form.getSignModifyYn() != null ? form.getSignModifyYn() : false,
             approvers
         );
     }

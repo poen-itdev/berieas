@@ -19,6 +19,7 @@ public class JwtService {
     
     private final RefreshRepository refreshRepository;
     private final MessageUtil messageUtil;
+    private final JWTUtil jwtUtil;
 
     // Refresh 토큰으로 Access 토큰 재발급 로직(Rotate 포함)
     public JWTResponseDto refreshRotate(RefreshRequestDto dto) {
@@ -26,19 +27,19 @@ public class JwtService {
         String refreshToken = dto.getRefreshToken();
 
         // Refresh 토큰 검증 
-        Boolean isValid = JWTUtil.isValid(refreshToken, false);
+        Boolean isValid = jwtUtil.isValid(refreshToken, false);
         if(!isValid) {
 
             throw new RuntimeException(messageUtil.getMessage("error.jwt.invalid"));
         }
 
         // 정보 추출
-        String memberId = JWTUtil.getMemberId(refreshToken);
-        String role = JWTUtil.getRole(refreshToken);
+        String memberId = jwtUtil.getMemberId(refreshToken);
+        String role = jwtUtil.getRole(refreshToken);
 
         // 토큰 생성
-        String newAccesstoken = JWTUtil.createJwt(memberId, role, true);
-        String newRefreshToken = JWTUtil.createJwt(memberId, role, false);
+        String newAccesstoken = jwtUtil.createJwt(memberId, role, true);
+        String newRefreshToken = jwtUtil.createJwt(memberId, role, false);
 
         // 기존 Refresh 토큰 DB 삭제 후 신규 추가
         RefreshToken refreshToken2 = RefreshToken.builder()

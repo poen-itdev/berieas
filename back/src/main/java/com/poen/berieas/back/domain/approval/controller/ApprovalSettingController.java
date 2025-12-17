@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody; // 이거 몬지 모는데 수정함
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.poen.berieas.back.domain.approval.dto.ApprovalSettingListResponseDto;
@@ -43,7 +44,22 @@ public class ApprovalSettingController {
             e.printStackTrace();
             return ResponseEntity.badRequest().body("양식 등록 실패: " + e.getMessage());
         }
-    } // 여기도 수정됨
+    }
+
+    // 양식 수정
+    @PutMapping(value = "/form/update/{formNo}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> updateFormApi(
+            @PathVariable(name = "formNo") int formNo,
+            @RequestBody FormRequestDto dto) {
+        
+        try {
+            approvalSettingService.updateForm(formNo, dto);
+            return ResponseEntity.ok("양식 수정 완료");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("양식 수정 실패: " + e.getMessage());
+        }
+    }
 
     // 양식 삭제
     @DeleteMapping(value = "/form/delete/{formNo}", consumes = MediaType.APPLICATION_JSON_VALUE)

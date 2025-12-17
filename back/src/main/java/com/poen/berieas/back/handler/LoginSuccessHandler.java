@@ -25,6 +25,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler{
     
     private final JwtService jwtService;
     private final MemberRepository memberRepository;
+    private final JWTUtil jwtUtil;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
@@ -36,8 +37,8 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler{
         String role = authentication.getAuthorities().iterator().next().getAuthority();
 
         // Jwt(Access/Refresh) 발급
-        String accessToken = JWTUtil.createJwt(memberId, role, true);
-        String refreshToken = JWTUtil.createJwt(memberId, role, false);
+        String accessToken = jwtUtil.createJwt(memberId, role, true);
+        String refreshToken = jwtUtil.createJwt(memberId, role, false);
 
         // 발급한 Refresh DB 테이블 저장
         jwtService.addRefresh(memberId, refreshToken);

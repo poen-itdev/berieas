@@ -22,6 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class JWTFilter extends OncePerRequestFilter{
     
+    private final JWTUtil jwtUtil;
+    
+    public JWTFilter(JWTUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
+    
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         // 헤더에서 access키에 담긴 토큰을 꺼냄 
@@ -43,10 +49,10 @@ public class JWTFilter extends OncePerRequestFilter{
         // 토큰 파싱
         String accessToken = authorization.split(" ")[1];
 
-        if (JWTUtil.isValid(accessToken, true)) {
+        if (jwtUtil.isValid(accessToken, true)) {
 
-            String memberId = JWTUtil.getMemberId(accessToken);
-            String role = JWTUtil.getRole(accessToken);
+            String memberId = jwtUtil.getMemberId(accessToken);
+            String role = jwtUtil.getRole(accessToken);
 
             List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role));
 

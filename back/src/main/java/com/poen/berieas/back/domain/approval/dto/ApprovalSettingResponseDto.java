@@ -16,6 +16,9 @@ public class ApprovalSettingResponseDto {
     private String formTitle;
     private String formDocument;
     
+    // 기안서 작성 시 결재자 수정 허용 여부
+    private Boolean signModifyYn;
+    
     // 결재라인 정보 (memberId, memberName 포함)
     private List<ApproverInfo> approvers;
     

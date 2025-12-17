@@ -17,4 +17,7 @@ public class FormRequestDto {
     private String signId3;
     private String signId4;
     private String signId5;
+    
+    // 기안서 작성 시 결재자 수정 허용 여부 (기본값: false)
+    private Boolean signModifyYn;
 }
