@@ -6,40 +6,48 @@ import java.util.Date;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
+import jakarta.annotation.PostConstruct;
 
+@Component
 public class JWTUtil {
     
-    private static final SecretKey secretKey;
-    private static final Long accessTokenExpiresIn;
-    private static final Long refreshTokenExpiresIn;
+    @Value("${jwt.secret}")
+    private String secretKeyString;
+    
+    @Value("${jwt.access-token-expiry}")
+    private Long accessTokenExpiresIn;
+    
+    @Value("${jwt.refresh-token-expiry}")
+    private Long refreshTokenExpiresIn;
+    
+    private SecretKey secretKey;
 
-    static {
-
-        String secretKeyString = "poenitdevelopoperations1234567890";
-        secretKey = new SecretKeySpec(secretKeyString.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
-
-        accessTokenExpiresIn = 3600L * 1000; // 1시간
-        refreshTokenExpiresIn = 1209600L * 1000; // 14일
+    @PostConstruct
+    public void init() {
+        this.secretKey = new SecretKeySpec(
+            secretKeyString.getBytes(StandardCharsets.UTF_8), 
+            Jwts.SIG.HS256.key().build().getAlgorithm()
+        );
     }
 
     // JWT 클레임 memberId 파싱
-    public static String getMemberId(String token) {
-
+    public String getMemberId(String token) {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("sub", String.class);
     }
 
     // Jwt 클레임 role 파싱
-    public static String getRole(String token) {
-
+    public String getRole(String token) {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("role", String.class);
     }
 
     // JWT 유효 여부(위조, 시간, Access/Refresh 여부)
-    public static Boolean isValid(String token, Boolean isAccess) {
-
+    public Boolean isValid(String token, Boolean isAccess) {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(secretKey)
@@ -55,15 +63,13 @@ public class JWTUtil {
 
             return true;
 
-        }catch(JwtException | IllegalArgumentException e) {
-
+        } catch(JwtException | IllegalArgumentException e) {
             return false;
         }
     }
 
     // JWT(Access/Refresh) 생성
-    public static String createJwt(String memberId, String role, Boolean isAccess) {
-
+    public String createJwt(String memberId, String role, Boolean isAccess) {
         long now = System.currentTimeMillis();
         long expiry = isAccess ? accessTokenExpiresIn : refreshTokenExpiresIn;
         String type = isAccess ? "access" : "refresh";

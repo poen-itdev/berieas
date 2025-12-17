@@ -31,6 +31,7 @@ import com.poen.berieas.back.domain.member.repository.MemberRepository;
 import com.poen.berieas.back.filter.JWTFilter;
 import com.poen.berieas.back.filter.LoginFilter;
 import com.poen.berieas.back.handler.RefreshTokenLogoutHandler;
+import com.poen.berieas.back.util.JWTUtil;
 import com.poen.berieas.back.util.MessageUtil;
 
 import jakarta.servlet.http.HttpServletResponse;
@@ -45,9 +46,10 @@ public class SecurityConfig {
     private final MemberRepository memberRepository;
     private final BasicRepository basicRepository;
     private final MessageUtil messageUtil;
+    private final JWTUtil jwtUtil;
 
     public SecurityConfig(AuthenticationConfiguration authenticationConfiguration, @Qualifier("LoginSuccessHandler")AuthenticationSuccessHandler loginSuccessHandler,
-        JwtService jwtService, MemberRepository memberRepository, BasicRepository basicRepository, MessageUtil messageUtil) {
+        JwtService jwtService, MemberRepository memberRepository, BasicRepository basicRepository, MessageUtil messageUtil, JWTUtil jwtUtil) {
 
         this.authenticationConfiguration = authenticationConfiguration;
         this.loginSuccessHandler = loginSuccessHandler;
@@ -55,6 +57,7 @@ public class SecurityConfig {
         this.memberRepository = memberRepository;
         this.basicRepository = basicRepository;
         this.messageUtil = messageUtil;
+        this.jwtUtil = jwtUtil;
     }
 
     // 커스텀 자체 로그인 필터를 위한 AuthenticationManager Bean 등록
@@ -122,7 +125,7 @@ public class SecurityConfig {
         http
                 .logout(logout -> logout
                     .logoutUrl("/logout")
-                    .addLogoutHandler(new RefreshTokenLogoutHandler(jwtService))
+                    .addLogoutHandler(new RefreshTokenLogoutHandler(jwtService, jwtUtil))
                     .logoutSuccessHandler((request, response, authentication) -> {
                         System.out.println("Logout Success Handler 실행됨");
                         response.setStatus(HttpServletResponse.SC_OK);
@@ -172,7 +175,7 @@ public class SecurityConfig {
 
         //=================================== 커스텀 필터 추가 ===================================//
         http
-                .addFilterBefore(new JWTFilter(), LogoutFilter.class);
+                .addFilterBefore(new JWTFilter(jwtUtil), LogoutFilter.class);
         
         http
                 .addFilterBefore(new LoginFilter(authenticationManager(authenticationConfiguration), loginSuccessHandler, memberRepository, messageUtil), UsernamePasswordAuthenticationFilter.class);

@@ -57,6 +57,9 @@ public class ApprovalSetting {
     @Column(name = "form_sign_id5")
     private String formSignId5;
 
+    @Column(name = "sign_modify_yn")
+    private Boolean signModifyYn;
+
     @Column(name = "form_reference_id")
     private String formReferenceId;
 

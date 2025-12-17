@@ -65,10 +65,32 @@ const DashboardPage = () => {
     }
   }, [location.pathname]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    
+    // 백엔드 로그아웃 API 호출
+    if (refreshToken) {
+      try {
+        await fetch('http://localhost:8080/logout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ refreshToken }),
+        });
+      } catch (error) {
+        console.error('로그아웃 API 호출 실패:', error);
+        // 실패해도 로컬 토큰은 삭제
+      }
+    }
+    
+    // 로컬 스토리지 정리
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('permissions');
+    localStorage.removeItem('language');
+    
+    // 로그인 페이지로 이동
     navigate('/login');
   };
 

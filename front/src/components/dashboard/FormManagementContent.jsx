@@ -17,8 +17,10 @@ import {
   Container,
   Autocomplete,
   Chip,
+  Checkbox,
+  FormControlLabel,
 } from '@mui/material';
-import { Add, Delete, Visibility } from '@mui/icons-material';
+import { Add, Delete, Visibility, Print, Edit } from '@mui/icons-material';
 import { API_URLS } from '../../config/api';
 import { apiRequest } from '../../utils/apiHelper';
 import PageHeader from '../common/PageHeader';
@@ -67,6 +69,7 @@ const FormManagementContent = () => {
     signId3: '',
     signId4: '',
     signId5: '',
+    signModifyYn: false,
   });
 
   // CKEditor 설정
@@ -195,6 +198,11 @@ const FormManagementContent = () => {
     fetchMembers();
   }, []);
 
+  // 인쇄 기능
+  const handlePrint = () => {
+    window.print();
+  };
+
   // 양식 등록/수정 다이얼로그 열기
   const handleDialogOpen = (form = null) => {
     if (form) {
@@ -207,6 +215,7 @@ const FormManagementContent = () => {
         signId3: '',
         signId4: '',
         signId5: '',
+        signModifyYn: false,
       });
       setSelectedForm(form);
       setSelectedApprovers([]);
@@ -220,6 +229,7 @@ const FormManagementContent = () => {
         signId3: '',
         signId4: '',
         signId5: '',
+        signModifyYn: false,
       });
       setSelectedForm(null);
       setSelectedApprovers([]);
@@ -246,7 +256,46 @@ const FormManagementContent = () => {
     }
   };
 
-  // 양식 저장
+  // 양식 수정
+  const handleEditForm = async (formNo) => {
+    try {
+      const response = await apiRequest(
+        `${API_URLS.APPROVAL_FORM_DETAIL}/${formNo}`,
+        {
+          method: 'GET',
+        }
+      );
+      if (response.ok) {
+        const formData = response.data;
+        
+        // 결재자 정보 로드
+        const approvers = formData.approvers || [];
+        setSelectedApprovers(approvers);
+        
+        // 폼 데이터 설정
+        setFormData({
+          formTitle: formData.formTitle,
+          formType: formData.formType,
+          formDocument: formData.formDocument || '',
+          signId1: approvers[0]?.memberName || '',
+          signId2: approvers[1]?.memberName || '',
+          signId3: approvers[2]?.memberName || '',
+          signId4: approvers[3]?.memberName || '',
+          signId5: approvers[4]?.memberName || '',
+          signModifyYn: formData.signModifyYn || false,
+        });
+        
+        // 수정 모드로 폼 설정
+        setSelectedForm({ ...formData, formNo: formNo });
+        setDialogOpen(true);
+      }
+    } catch (error) {
+      console.error('양식 조회 실패:', error);
+      alert(t('formLoadFailed'));
+    }
+  };
+
+  // 양식 저장 (신규 등록 또는 수정)
   const handleSaveForm = async () => {
     if (!formData.formTitle || !formData.formType) {
       alert(t('formTitleRequired'));
@@ -261,20 +310,27 @@ const FormManagementContent = () => {
     try {
       setLoading(true);
 
-      const response = await apiRequest(API_URLS.FORM_ADD, {
-        method: 'POST',
+      // 수정 모드인지 신규 등록 모드인지 확인
+      const isEditMode = selectedForm && selectedForm.formNo;
+      const apiUrl = isEditMode 
+        ? `${API_URLS.FORM_UPDATE}/${selectedForm.formNo}`
+        : API_URLS.FORM_ADD;
+      const method = isEditMode ? 'PUT' : 'POST';
+
+      const response = await apiRequest(apiUrl, {
+        method: method,
         body: JSON.stringify(formData),
       });
 
       if (response.ok) {
-        alert(t('formRegistered'));
+        alert(isEditMode ? t('formUpdated') : t('formRegistered'));
         setDialogOpen(false);
         fetchForms();
       } else {
-        alert(`${t('formRegisterFailed')}\n${response.data || ''}`);
+        alert(`${isEditMode ? t('formUpdateFailed') : t('formRegisterFailed')}\n${response.data || ''}`);
       }
     } catch (error) {
-      console.error('양식 등록 실패:', error);
+      console.error('양식 저장 실패:', error);
       alert(`${t('formRegisterFailed')}: ${error.message}`);
     } finally {
       setLoading(false);
@@ -423,6 +479,18 @@ const FormManagementContent = () => {
                           }}
                         >
                           <Visibility
+                            sx={{ fontSize: { xs: '18px', sm: '20px' } }}
+                          />
+                        </IconButton>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEditForm(form.formNo)}
+                          sx={{
+                            color: '#ff9800',
+                            padding: { xs: '4px', sm: '8px' },
+                          }}
+                        >
+                          <Edit
                             sx={{ fontSize: { xs: '18px', sm: '20px' } }}
                           />
                         </IconButton>
@@ -671,6 +739,44 @@ const FormManagementContent = () => {
                     />
                   )}
                 />
+                
+                {/* 결재자 수정 허용 체크박스 */}
+                {selectedApprovers.length > 0 && (
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={formData.signModifyYn}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            signModifyYn: e.target.checked,
+                          })
+                        }
+                        size="small"
+                      />
+                    }
+                    label={
+                      <Box>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontSize: { xs: '12px', sm: '14px' } }}
+                        >
+                          {t('allowApproverModification')}
+                        </Typography>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: '#999',
+                            fontSize: { xs: '10px', sm: '11px' },
+                          }}
+                        >
+                          {t('allowApproverModificationHelp')}
+                        </Typography>
+                      </Box>
+                    }
+                    sx={{ mt: 1, ml: 0 }}
+                  />
+                )}
               </Box>
             </Box>
           </DialogContent>
@@ -731,6 +837,17 @@ const FormManagementContent = () => {
               m: { xs: 1, sm: 2 },
               width: { xs: 'calc(100% - 16px)', sm: '100%' },
             },
+            '@media print': {
+              '& .MuiDialog-container': {
+                display: 'block !important',
+              },
+              '& .MuiDialog-paper': {
+                boxShadow: 'none !important',
+                margin: '0 !important',
+                maxWidth: '100% !important',
+                width: '100% !important',
+              },
+            },
           }}
         >
           <Box
@@ -761,6 +878,27 @@ const FormManagementContent = () => {
               {t('viewFormInfo')}
             </Typography>
           </Box>
+          <style>
+            {`
+              @media print {
+                body * {
+                  visibility: hidden;
+                }
+                .MuiDialog-root,
+                .MuiDialog-root * {
+                  visibility: visible;
+                }
+                .MuiDialog-root {
+                  position: absolute;
+                  left: 0;
+                  top: 0;
+                }
+                .MuiBackdrop-root {
+                  display: none !important;
+                }
+              }
+            `}
+          </style>
           <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
             {selectedForm && (
               <Box
@@ -885,6 +1023,81 @@ const FormManagementContent = () => {
                     )}
                   </Paper>
                 </Box>
+
+                {/* 결재자 정보 */}
+                {selectedForm.approvers && selectedForm.approvers.length > 0 && (
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        color: '#666',
+                        mb: 1,
+                        fontSize: { xs: '12px', sm: '0.875rem' },
+                      }}
+                    >
+                      {t('predefineApprovers')}
+                    </Typography>
+                    <Paper
+                      sx={{
+                        p: { xs: 1.5, sm: 2 },
+                        bgcolor: '#f8f9fa',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        {selectedForm.approvers.map((approver, index) => (
+                          <Box
+                            key={approver.memberId}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 1,
+                            }}
+                          >
+                            <Chip
+                              label={`${index + 1}차`}
+                              size="small"
+                              sx={{
+                                minWidth: '45px',
+                                bgcolor: '#1976d2',
+                                color: 'white',
+                                fontWeight: 600,
+                              }}
+                            />
+                            <Typography
+                              variant="body2"
+                              sx={{ fontSize: { xs: '12px', sm: '0.875rem' } }}
+                            >
+                              {approver.memberName} ({approver.memberDepartment} /{' '}
+                              {approver.memberPosition})
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Box>
+                    </Paper>
+                  </Box>
+                )}
+
+                {/* 결재자 수정 허용 여부 */}
+                {selectedForm.approvers && selectedForm.approvers.length > 0 && (
+                  <Box>
+                    <Typography
+                      variant="subtitle2"
+                      sx={{
+                        color: '#666',
+                        mb: 1,
+                        fontSize: { xs: '12px', sm: '0.875rem' },
+                      }}
+                    >
+                      {t('allowApproverModification')}
+                    </Typography>
+                    <Chip
+                      label={selectedForm.signModifyYn ? t('yes') : t('no')}
+                      size="small"
+                      color={selectedForm.signModifyYn ? 'success' : 'default'}
+                      sx={{ fontWeight: 600 }}
+                    />
+                  </Box>
+                )}
               </Box>
             )}
           </DialogContent>
@@ -894,8 +1107,24 @@ const FormManagementContent = () => {
               backgroundColor: '#f8f9fa',
               borderTop: '1px solid #e0e0e0',
               justifyContent: 'center',
+              gap: { xs: 1, sm: 2 },
             }}
           >
+            <Button
+              variant="contained"
+              startIcon={<Print />}
+              onClick={handlePrint}
+              sx={{
+                minWidth: { xs: '80px', sm: '109px' },
+                height: { xs: '32px', sm: '40px' },
+                fontWeight: 600,
+                fontSize: { xs: '12px', sm: '14px' },
+                backgroundColor: '#43a047',
+                '&:hover': { backgroundColor: '#388e3c' },
+              }}
+            >
+              {t('print')}
+            </Button>
             <Button
               onClick={() => setViewDialogOpen(false)}
               variant="outlined"

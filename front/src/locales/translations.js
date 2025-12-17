@@ -24,6 +24,9 @@ export const translations = {
     add: '추가',
     search: '검색',
     all: '전체',
+    print: '인쇄',
+    yes: '예',
+    no: '아니오',
 
     // 회원 관리
     memberList: '회원 목록',
@@ -125,12 +128,17 @@ export const translations = {
     optional: '선택사항',
     predefineApproversHelp:
       '결재자를 미리 지정하면, 이 양식으로 기안서 작성 시 결재자를 수정할 수 없습니다.',
+    allowApproverModification: '기안서 작성 시 결재자 수정 허용',
+    allowApproverModificationHelp:
+      '체크하면 기안서 작성 시 결재자를 수정할 수 있습니다.',
     adminPageOnly: '관리자페이지 입니다',
     adminPermissionRequired: '이 페이지는 관리자 권한이 필요한 페이지입니다.',
     formTitleRequired: '양식 제목과 구분을 입력해주세요.',
     formContentRequired: '양식 내용을 입력해주세요.',
     formRegistered: '양식이 등록되었습니다.',
+    formUpdated: '양식이 수정되었습니다.',
     formRegisterFailed: '양식 등록에 실패했습니다.',
+    formUpdateFailed: '양식 수정에 실패했습니다.',
     formLoadFailed: '양식을 불러올 수 없습니다.',
     confirmDeleteForm: '정말 이 양식을 삭제하시겠습니까?',
     formDeleted: '양식이 삭제되었습니다.',
@@ -349,6 +357,9 @@ export const translations = {
     add: 'Add',
     search: 'Search',
     all: 'All',
+    print: 'Print',
+    yes: 'Yes',
+    no: 'No',
 
     // 회원 관리
     memberList: 'Member List',
@@ -450,12 +461,17 @@ export const translations = {
     optional: 'Optional',
     predefineApproversHelp:
       'If you predefine approvers, they cannot be changed when drafting with this form.',
+    allowApproverModification: 'Allow approver modification when drafting',
+    allowApproverModificationHelp:
+      'If checked, approvers can be modified when drafting.',
     adminPageOnly: 'Admin Page Only',
     adminPermissionRequired: 'This page requires administrator permission.',
     formTitleRequired: 'Please enter form title and type.',
     formContentRequired: 'Please enter form content.',
     formRegistered: 'Form has been registered.',
+    formUpdated: 'Form has been updated.',
     formRegisterFailed: 'Failed to register form.',
+    formUpdateFailed: 'Failed to update form.',
     formLoadFailed: 'Failed to load form.',
     confirmDeleteForm: 'Are you sure you want to delete this form?',
     formDeleted: 'Form has been deleted.',
